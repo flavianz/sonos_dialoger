@@ -1,14 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/app.dart';
 
-class AssignmentPage extends StatefulWidget {
+class AssignmentPage extends ConsumerStatefulWidget {
   const AssignmentPage({super.key});
 
   @override
-  State<AssignmentPage> createState() => _AssignmentPageState();
+  ConsumerState<AssignmentPage> createState() => _AssignmentPageState();
 }
 
-class _AssignmentPageState extends State<AssignmentPage> {
+class _AssignmentPageState extends ConsumerState<AssignmentPage> {
   bool isLoading = false;
   String? error;
 
@@ -18,6 +21,11 @@ class _AssignmentPageState extends State<AssignmentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(userProvider);
+    if(!user.hasValue) {
+      context.go("/auth");
+      return Center();
+    }
     return Scaffold(
       body: Center(
         child: Padding(
@@ -98,8 +106,8 @@ class _AssignmentPageState extends State<AssignmentPage> {
                         });
                         try {
                           await FirebaseFirestore.instance
-                              .collection("users")
-                              .add({
+                              .collection("users").doc(user.value!.uid)
+                              .set({
                                 "access": passwordController.text,
                                 "first": firstNameController.text,
                                 "last": lastNameController.text,
@@ -110,9 +118,11 @@ class _AssignmentPageState extends State<AssignmentPage> {
                                 "Dein Access-Code ist nicht gültig. Eventuell wurde er geändert";
                           }
                         } finally {
-                          setState(() {
-                            isLoading = false;
-                          });
+                          if(context.mounted) {
+                            setState(() {
+                              isLoading = false;
+                            });
+                          }
                         }
                       },
                       child:

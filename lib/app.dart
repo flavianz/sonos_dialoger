@@ -58,8 +58,11 @@ class _AppState extends ConsumerState<App> {
       return AssignmentPage();
     }
 
-    return widget.child;
-    /*if (roles.isEmpty) {
+    final userData = userDataDoc.data()!;
+
+    final role = userData["role"];
+
+    if (!["admin", "coach", "dialog"].contains(role)) {
       return Scaffold(
         body: Padding(
           padding: EdgeInsets.all(32),
@@ -72,9 +75,9 @@ class _AppState extends ConsumerState<App> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Dir wurden noch keine Funktionen zugewiesen."),
+                  Text("Dir wurden noch keine Funktion zugewiesen."),
                   Text(
-                    "Wenn das ein Fehler ist, setze dich mit deinem Trainer oder der Mitgliederverwaltung des Vereins in Kontakt",
+                    "Wenn das ein Fehler ist, setze dich mit deinem Coach oder Admin des Vereins in Kontakt",
                   ),
                 ],
               ),
@@ -83,16 +86,13 @@ class _AppState extends ConsumerState<App> {
         ),
       );
     }
-    selectedRole = selectedRole ?? roles.keys.first;
 
-    final List<Map<String, dynamic>> destinations = [
-      {"icon": Icon(Icons.home), "label": "Übersicht", "url": "/"},
-    ];
+    late final List<Map<String, dynamic>> destinations;
 
     if (selectedRole == "admin") {
-      destinations.addAll([
+      destinations = [
         {
-          "icon": Icon(Icons.people_alt),
+          "icon": Icon(Icons.add),
           "label": "Mitglieder",
           "url": "/admin/members",
         },
@@ -106,33 +106,44 @@ class _AppState extends ConsumerState<App> {
           "label": "Einstellungen",
           "url": "/admin/settings",
         },
-      ]);
-    } else if (selectedRole == "player") {
-      destinations.addAll([
-        {
-          "icon": Icon(Icons.event),
-          "label": "Termine",
-          "url": "/player/team/${roles["player"][0] ?? ""}/events",
-        },
-      ]);
+      ];
     } else if (selectedRole == "coach") {
-      destinations.addAll([
+      destinations = [
         {
-          "icon": Icon(Icons.event),
-          "label": "Termine",
-          "url": "/coach/team/${roles["player"][0] ?? ""}/events",
+          "icon": Icon(Icons.add),
+          "label": "Mitglieder",
+          "url": "/admin/members",
         },
         {
           "icon": Icon(Icons.diversity_3),
-          "label": "Team",
-          "url": "/coach/team/${roles["player"][0] ?? ""}",
+          "label": "Teams",
+          "url": "/admin/teams",
         },
         {
-          "icon": Icon(Icons.timelapse_outlined),
-          "label": "Präsenz",
-          "url": "/coach/presence/${roles["player"][0] ?? ""}",
+          "icon": Icon(Icons.settings),
+          "label": "Einstellungen",
+          "url": "/admin/settings",
         },
-      ]);
+      ];
+    } else {
+      // role = dialog
+      destinations = [
+        {
+          "icon": Icon(Icons.add),
+          "label": "Mitglieder",
+          "url": "/admin/members",
+        },
+        {
+          "icon": Icon(Icons.diversity_3),
+          "label": "Teams",
+          "url": "/admin/teams",
+        },
+        {
+          "icon": Icon(Icons.settings),
+          "label": "Einstellungen",
+          "url": "/admin/settings",
+        },
+      ];
     }
 
     final isTablet = MediaQuery.of(context).size.aspectRatio > 1;
@@ -171,31 +182,6 @@ class _AppState extends ConsumerState<App> {
                               context.go(destinations[i]["url"]);
                             });
                           },
-                          leading:
-                              roles.length > 1
-                                  ? Column(
-                                    children: [
-                                      Image.asset("assets/tvo.png", height: 75),
-                                      DropdownButton(
-                                        items:
-                                            roles.keys.map((role) {
-                                              return DropdownMenuItem(
-                                                value: role,
-                                                child: Text(role),
-                                              );
-                                            }).toList(),
-                                        onChanged: (selectedRole) {
-                                          setState(() {
-                                            this.selectedRole = selectedRole;
-                                            context.go("/");
-                                            selectedIndex = 0;
-                                          });
-                                        },
-                                        value: selectedRole,
-                                      ),
-                                    ],
-                                  )
-                                  : Image.asset("assets/tvo.png", height: 75),
                         ),
                         Expanded(child: widget.child),
                       ],
@@ -219,20 +205,6 @@ class _AppState extends ConsumerState<App> {
                                 ),
                           selectedIndex: selectedIndex,
                           onDestinationSelected: (i) {
-                            if (i == destinations.length) {
-                              setState(() {
-                                final rolesList = roles.keys.toList();
-                                final currentIndex = rolesList.indexOf(
-                                  selectedRole ?? "",
-                                );
-                                selectedRole =
-                                    rolesList[(currentIndex + 1) %
-                                        rolesList.length];
-                                context.go("/");
-                                selectedIndex = 0;
-                              });
-                              return;
-                            }
                             setState(() {
                               selectedIndex = i;
                               context.pushReplacement(destinations[i]["url"]);
@@ -245,6 +217,6 @@ class _AppState extends ConsumerState<App> {
           ),
         ),
       ],
-    );*/
+    );
   }
 }

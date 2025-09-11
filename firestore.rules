@@ -2,8 +2,23 @@ rules_version = '2';
 
 service cloud.firestore {
     match /databases/{database}/documents {
-        match /users/{document=**} {
-            allow write: if request.resource.data["access"] == get(/databases/$(database)/documents/passwords/join).data["password"];
+        match /users/{user} {
+            function isAccessGranted(request, resource) {
+                let passwordData = get(/databases/$(database)/documents/passwords/join).data;
+                return isDialogAccessGranted(request, resource, passwordData) ||
+                        isCoachAccessGranted(request, resource, passwordData) ||
+                        isAdminAccessGranted(request, resource, passwordData);
+            }
+            function isDialogAccessGranted(request, resource, passwordData) {
+                return request.resource.data["role"] == "dialog" && request.resource.data["access"] == passwordData["dialog"];
+            }
+            function isCoachAccessGranted(request, resource, passwordData) {
+                return request.resource.data["role"] == "coach" && request.resource.data["access"] == passwordData["coach"];
+            }
+            function isAdminAccessGranted(request, resource, passwordData) {
+                return request.resource.data["role"] == "admin" && request.resource.data["access"] == passwordData["admin"];
+            }
+            allow write: if request.auth.uid == request.resource.id && isAccessGranted(request, resource);
             allow read: if resource == null || request.auth.uid == resource.id;
         }
 

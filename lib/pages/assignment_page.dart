@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 
+import '../basic_providers.dart';
+
 class AssignmentPage extends ConsumerStatefulWidget {
   const AssignmentPage({super.key});
 
@@ -38,12 +40,12 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text("Fast geschafft!", style: TextStyle(fontSize: 24)),
-                  Text("Wir brauchen nur noch einige Daten von dir"),
+                  Text("Wir brauchen nur noch wenige Daten von dir"),
                   SizedBox(height: 20),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                     child: Text(
-                      "Access-Code",
+                      "Zugriffs-Code",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -52,7 +54,7 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                     autocorrect: false,
                     obscureText: true,
                     decoration: InputDecoration(
-                      hintText: "Der Access-Code, den du erhalten hast",
+                      hintText: "Der Zugriffs-Code, den du erhalten hast",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -95,7 +97,11 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                   SizedBox(height: 30),
                   error == null
                       ? SizedBox.shrink()
-                      : Text(error!, style: TextStyle(color: Colors.red)),
+                      : Text(
+                        error!,
+                        style: TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
                   error == null ? SizedBox.shrink() : SizedBox(height: 30),
                   ConstrainedBox(
                     constraints: BoxConstraints(minHeight: 40),
@@ -103,35 +109,50 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                       onPressed: () async {
                         setState(() {
                           isLoading = true;
+                          error = null;
                         });
+
                         try {
-                          await FirebaseFirestore.instance
-                              .collection("users")
-                              .doc(user.value!.uid)
-                              .set({
+                          final result = await ref.read(
+                            callableProvider(
+                              CallableProviderArgs("createUser", {
                                 "access": passwordController.text,
                                 "first": firstNameController.text,
                                 "last": lastNameController.text,
-                              });
-                        } on FirebaseException catch (e) {
-                          if (e.code == "permission-denied") {
-                            error =
-                                "Dein Access-Code ist nicht gültig. Eventuell wurde er geändert";
-                          } else {
-                            error =
-                                "Es ist ein unbekannter Fehler auftetreten. Probiere es später nochmals";
-                          }
-                        } finally {
-                          if (context.mounted) {
+                              }),
+                            ).future,
+                          );
+
+                          if (result.data["result"] == true) {
                             setState(() {
                               isLoading = false;
+                              error = null;
+                            });
+                          } else {
+                            setState(() {
+                              isLoading = false;
+                              error =
+                                  "Dein Zugriffs-Code ist nicht gültig. Eventuell wurde er geändert";
                             });
                           }
+                        } catch (e) {
+                          setState(() {
+                            isLoading = false;
+                            print(e);
+                            error =
+                                "Ein unbekannter Fehler ist aufgetreten. Probiere es später erneut";
+                          });
                         }
                       },
                       child:
                           isLoading
-                              ? CircularProgressIndicator(color: Colors.white)
+                              ? SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
                               : Text("Beitreten"),
                     ),
                   ),

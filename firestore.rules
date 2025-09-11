@@ -3,22 +3,22 @@ rules_version = '2';
 service cloud.firestore {
     match /databases/{database}/documents {
         match /users/{user} {
-            function isAccessGranted(request, resource) {
+            function isAccessGranted(request) {
                 let passwordData = get(/databases/$(database)/documents/passwords/join).data;
-                return isDialogAccessGranted(request, resource, passwordData) ||
-                        isCoachAccessGranted(request, resource, passwordData) ||
-                        isAdminAccessGranted(request, resource, passwordData);
+                return isDialogAccessGranted(request, passwordData) ||
+                        isCoachAccessGranted(request, passwordData) ||
+                        isAdminAccessGranted(request, passwordData);
             }
-            function isDialogAccessGranted(request, resource, passwordData) {
-                return request.resource.data["role"] == "dialog" && request.resource.data["access"] == passwordData["dialog"];
+            function isDialogAccessGranted(request, passwordData) {
+                return request.resource.data["access"] == passwordData["dialog"];
             }
-            function isCoachAccessGranted(request, resource, passwordData) {
-                return request.resource.data["role"] == "coach" && request.resource.data["access"] == passwordData["coach"];
+            function isCoachAccessGranted(request, passwordData) {
+                return request.resource.data["access"] == passwordData["coach"];
             }
-            function isAdminAccessGranted(request, resource, passwordData) {
-                return request.resource.data["role"] == "admin" && request.resource.data["access"] == passwordData["admin"];
+            function isAdminAccessGranted(request, passwordData) {
+                return request.resource.data["access"] == passwordData["admin"];
             }
-            allow write: if request.auth.uid == request.resource.id && isAccessGranted(request, resource);
+            allow write: if request.auth.uid == request.resource.id && isAccessGranted(request);
             allow read: if resource == null || request.auth.uid == resource.id;
         }
 

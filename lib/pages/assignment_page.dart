@@ -22,7 +22,7 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-    if(!user.hasValue) {
+    if (!user.hasValue) {
       context.go("/auth");
       return Center();
     }
@@ -52,7 +52,7 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                     autocorrect: false,
                     obscureText: true,
                     decoration: InputDecoration(
-                      hintText: "Access-Code, den du erhalten hast",
+                      hintText: "Der Access-Code, den du erhalten hast",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -106,7 +106,8 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                         });
                         try {
                           await FirebaseFirestore.instance
-                              .collection("users").doc(user.value!.uid)
+                              .collection("users")
+                              .doc(user.value!.uid)
                               .set({
                                 "access": passwordController.text,
                                 "first": firstNameController.text,
@@ -116,9 +117,12 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                           if (e.code == "permission-denied") {
                             error =
                                 "Dein Access-Code ist nicht gültig. Eventuell wurde er geändert";
+                          } else {
+                            error =
+                                "Es ist ein unbekannter Fehler auftetreten. Probiere es später nochmals";
                           }
                         } finally {
-                          if(context.mounted) {
+                          if (context.mounted) {
                             setState(() {
                               isLoading = false;
                             });
@@ -127,7 +131,7 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                       },
                       child:
                           isLoading
-                              ? CircularProgressIndicator()
+                              ? CircularProgressIndicator(color: Colors.white)
                               : Text("Beitreten"),
                     ),
                   ),

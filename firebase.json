@@ -1,4 +1,25 @@
 {
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "sonos-dialoger",
+          "appId": "1:378625854578:android:13469522061972376f06eb",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "sonos-dialoger",
+          "configurations": {
+            "android": "1:378625854578:android:13469522061972376f06eb",
+            "ios": "1:378625854578:ios:e527320ce22bf2bc6f06eb",
+            "web": "1:378625854578:web:53d75240b73c66996f06eb"
+          }
+        }
+      }
+    }
+  },
   "firestore": {
     "database": "(default)",
     "rules": "firestore.rules",

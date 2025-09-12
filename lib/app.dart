@@ -35,7 +35,6 @@ class App extends ConsumerStatefulWidget {
 
 class _AppState extends ConsumerState<App> {
   int selectedIndex = 0;
-  String? selectedRole;
 
   @override
   Widget build(BuildContext context) {
@@ -89,12 +88,12 @@ class _AppState extends ConsumerState<App> {
 
     late final List<Map<String, dynamic>> destinations;
 
-    if (selectedRole == "admin") {
+    if (role == "admin") {
       destinations = [
         {
-          "icon": Icon(Icons.add),
-          "label": "Mitglieder",
-          "url": "/admin/members",
+          "icon": Icon(Icons.diversity_3),
+          "label": "Dialoger",
+          "url": "/admin/dialoger",
         },
         {
           "icon": Icon(Icons.diversity_3),
@@ -107,7 +106,7 @@ class _AppState extends ConsumerState<App> {
           "url": "/admin/settings",
         },
       ];
-    } else if (selectedRole == "coach") {
+    } else if (role == "coach") {
       destinations = [
         {
           "icon": Icon(Icons.add),
@@ -192,22 +191,16 @@ class _AppState extends ConsumerState<App> {
                         NavigationBar(
                           destinations:
                               destinations.map((element) {
-                                  return NavigationDestination(
-                                    icon: element["icon"],
-                                    label: element["label"],
-                                  );
-                                }).toList()
-                                ..add(
-                                  NavigationDestination(
-                                    icon: Icon(Icons.change_circle_outlined),
-                                    label: "Change role",
-                                  ),
-                                ),
+                                return NavigationDestination(
+                                  icon: element["icon"],
+                                  label: element["label"],
+                                );
+                              }).toList(),
                           selectedIndex: selectedIndex,
                           onDestinationSelected: (i) {
                             setState(() {
                               selectedIndex = i;
-                              context.pushReplacement(destinations[i]["url"]);
+                              context.go(destinations[i]["url"]);
                             });
                           },
                           elevation: 5,

@@ -34,17 +34,46 @@ class DialogerPage extends ConsumerWidget {
       ),
       child: Scaffold(
         appBar: AppBar(title: Text("Dialoger")),
-        body: ListView(
-          children:
-              dialogerDocs.value!.docs.map((doc) {
-                final data = doc.data();
-                return Column(
-                  children: [
-                    Row(children: [Text("${data["first"]} ${data["last"]}")]),
-                    Divider(),
-                  ],
-                );
-              }).toList(),
+        body: Column(
+          children: [
+            Divider(color: Theme.of(context).primaryColor),
+            Expanded(
+              child: ListView(
+                children:
+                    dialogerDocs.value!.docs.map((doc) {
+                      final data = doc.data();
+                      return Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {},
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      "${data["first"]} ${data["last"]}",
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(Icons.edit),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(Icons.delete),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Divider(),
+                        ],
+                      );
+                    }).toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );

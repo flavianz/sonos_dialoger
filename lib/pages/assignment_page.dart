@@ -92,7 +92,8 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                             await ref
                                 .read(userProvider)
                                 .value
-                                ?.getIdToken(true);
+                                ?.getIdToken(true)
+                                .then((r) => print("reloaded id token"));
                           } else {
                             setState(() {
                               isLoading = false;

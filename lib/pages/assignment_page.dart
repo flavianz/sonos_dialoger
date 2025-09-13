@@ -89,6 +89,10 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                               isLoading = false;
                               error = null;
                             });
+                            await ref
+                                .read(userProvider)
+                                .value
+                                ?.getIdToken(true);
                           } else {
                             setState(() {
                               isLoading = false;
@@ -114,7 +118,7 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                                   color: Colors.white,
                                 ),
                               )
-                              : Text("Beitreten"),
+                              : Text("Verknüpfen"),
                     ),
                   ),
                 ],

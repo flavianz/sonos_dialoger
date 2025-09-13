@@ -3,10 +3,12 @@ import {initializeApp} from "firebase-admin/app";
 import {setGlobalOptions} from "firebase-functions";
 import {getFirestore} from "firebase-admin/firestore";
 import {onCall} from "firebase-functions/https";
+import {getAuth} from "firebase-admin/auth";
 
 initializeApp();
 setGlobalOptions({ region: "europe-west3" });
 const db = getFirestore();
+const auth = getAuth();
 
 exports.assignUser = onCall(async (request) => {
     const accessCode = request.data["access"];
@@ -19,7 +21,9 @@ exports.assignUser = onCall(async (request) => {
     }
 
     const userData  = userDoc.data()!;
-    if(userData["linked"] !== false) {
+    const role = userData["role"];
+
+    if(userData["linked"] !== false || !role) {
         return {"result": false};
     }
 
@@ -30,6 +34,8 @@ exports.assignUser = onCall(async (request) => {
     });
     batch.delete(db.doc(`/users/${accessCode}`));
     await batch.commit();
+
+    await auth.setCustomUserClaims(request.auth.uid, {role});
 
     logger.log(`Assigned ${request.auth.uid} to user`);
 

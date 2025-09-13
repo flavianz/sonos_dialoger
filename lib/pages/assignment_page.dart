@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +17,6 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
   String? error;
 
   final passwordController = TextEditingController();
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +37,8 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text("Fast geschafft!", style: TextStyle(fontSize: 24)),
-                  Text("Wir brauchen nur noch wenige Daten von dir"),
-                  SizedBox(height: 20),
+                  Text("Wir brauchen nur noch deinen Zugriffs-Code"),
+                  SizedBox(height: 30),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                     child: Text(
@@ -55,40 +52,6 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                     obscureText: true,
                     decoration: InputDecoration(
                       hintText: "Der Zugriffs-Code, den du erhalten hast",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 30),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-                    child: Text(
-                      "Vorname",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  TextField(
-                    controller: firstNameController,
-                    decoration: InputDecoration(
-                      hintText: "Dein Vorname",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-                    child: Text(
-                      "Nachname",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  TextField(
-                    controller: lastNameController,
-                    decoration: InputDecoration(
-                      hintText: "Dein Nachname",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -115,10 +78,8 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                         try {
                           final result = await ref.read(
                             callableProvider(
-                              CallableProviderArgs("createUser", {
+                              CallableProviderArgs("assignUser", {
                                 "access": passwordController.text,
-                                "first": firstNameController.text,
-                                "last": lastNameController.text,
                               }),
                             ).future,
                           );

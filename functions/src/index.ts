@@ -8,32 +8,30 @@ initializeApp();
 setGlobalOptions({ region: "europe-west3" });
 const db = getFirestore();
 
-exports.createUser = onCall(async (request) => {
+exports.assignUser = onCall(async (request) => {
     const accessCode = request.data["access"];
-    if(!accessCode && accessCode == "" || !request.auth || (typeof request.data["first"]) != "string" || (typeof request.data["last"]) != "string") {
+    if(!accessCode && accessCode === "" || !request.auth) {
         return {"result": false};
     }
-    const passwordDoc = (await db.doc("/passwords/join").get());
-    if(!passwordDoc.exists || !passwordDoc.data()) {
-        logger.error("no join passwords doc available");
+    const userDoc = (await db.doc(`/users/${accessCode}`).get());
+    if(!userDoc.exists || !userDoc.data()) {
         return {"result": false};
     }
-    const passwordData = passwordDoc.data()!;
-    let role = "";
-    if(passwordData["admin"] == accessCode) {
-        role = "admin";
-    } else if(passwordData["coach"] == accessCode) {
-        role = "coach";
-    } else if(passwordData["dialog"] == accessCode) {
-        role = "dialog";
-    }
-    else {
+
+    const userData  = userDoc.data()!;
+    if(userData["linked"] !== false) {
         return {"result": false};
     }
-    await db.doc(`/users/${request.auth.uid}`).create({
-        first: request.data["first"],
-        last: request.data["last"],
-        role
-    })
+
+    const batch = db.batch();
+    batch.create(db.doc(`/users/${request.auth.uid}`), {
+        ...userData,
+        "linked": true
+    });
+    batch.delete(db.doc(`/users/${accessCode}`));
+    await batch.commit();
+
+    logger.log(`Assigned ${request.auth.uid} to user`);
+
     return {"result": true};
 });

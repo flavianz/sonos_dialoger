@@ -6,7 +6,14 @@ service cloud.firestore {
             return auth.token.role == "admin";
         }
         match /users/{userId} {
+            function containsAllAndOnlyRequiredFields(data) {
+                let keys = ["first", "last", "role", "linked"];
+                return data.keys().hasOnly(keys) && data.keys().hasAll(["first", "last", "role", "linked"])
+                    && data.first is string && data.last is string && data.linked is bool
+                    && data["role"] in ["admin", "coach", "dialog"];
+            }
             allow read: if resource == null || request.auth.uid == userId || isAdmin(request.auth);
+            allow write: if isAdmin(request.auth) && containsAllAndOnlyRequiredFields(request.resource.data);
         }
     }
 }

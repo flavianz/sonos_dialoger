@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
+import 'package:sonos_dialoger/components/input_box.dart';
 
 import '../basic_providers.dart';
 
@@ -15,8 +16,7 @@ class AssignmentPage extends ConsumerStatefulWidget {
 class _AssignmentPageState extends ConsumerState<AssignmentPage> {
   bool isLoading = false;
   String? error;
-
-  final passwordController = TextEditingController();
+  String password = "";
 
   @override
   Widget build(BuildContext context) {
@@ -39,23 +39,13 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                   Text("Fast geschafft!", style: TextStyle(fontSize: 24)),
                   Text("Wir brauchen nur noch deinen Zugriffs-Code"),
                   SizedBox(height: 30),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-                    child: Text(
-                      "Zugriffs-Code",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  TextField(
-                    controller: passwordController,
-                    autocorrect: false,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: "Der Zugriffs-Code, den du erhalten hast",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                  InputBox.text(
+                    "Zugriffs-Code",
+                    password,
+                    (str) => setState(() {
+                      password = str ?? "";
+                    }),
+                    hint: "Der Zugriffs-Code, den du erhalten hast",
                   ),
                   SizedBox(height: 30),
                   error == null
@@ -65,6 +55,7 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                         style: TextStyle(color: Colors.red),
                         textAlign: TextAlign.center,
                       ),
+
                   error == null ? SizedBox.shrink() : SizedBox(height: 30),
                   ConstrainedBox(
                     constraints: BoxConstraints(minHeight: 40),
@@ -79,7 +70,7 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                           final result = await ref.read(
                             callableProvider(
                               CallableProviderArgs("assignUser", {
-                                "access": passwordController.text,
+                                "access": password,
                               }),
                             ).future,
                           );
@@ -113,8 +104,8 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                       child:
                           isLoading
                               ? SizedBox(
-                                height: 16,
-                                width: 16,
+                                height: 20,
+                                width: 20,
                                 child: CircularProgressIndicator(
                                   color: Colors.white,
                                 ),

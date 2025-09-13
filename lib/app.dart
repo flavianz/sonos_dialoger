@@ -145,7 +145,7 @@ class _AppState extends ConsumerState<App> {
       ];
     }
 
-    final isTablet = MediaQuery.of(context).size.aspectRatio > 1;
+    final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
 
     return Stack(
       children: [
@@ -154,7 +154,7 @@ class _AppState extends ConsumerState<App> {
           bottom: false,
           child: Scaffold(
             body:
-                isTablet
+                isScreenWide
                     ? Row(
                       spacing: 5,
                       children: [
@@ -182,12 +182,25 @@ class _AppState extends ConsumerState<App> {
                             });
                           },
                         ),
-                        Expanded(child: widget.child),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            child: widget.child,
+                          ),
+                        ),
                       ],
                     )
                     : Column(
                       children: [
-                        Expanded(child: widget.child),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: widget.child,
+                          ),
+                        ),
                         NavigationBar(
                           destinations:
                               destinations.map((element) {

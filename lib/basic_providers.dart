@@ -30,6 +30,13 @@ final realtimeDocProvider = StreamProvider.family<
   return docRef.snapshots();
 });
 
+final staticDocProvider = FutureProvider.family<
+  DocumentSnapshot<Map<String, dynamic>>,
+  DocumentReference<Map<String, dynamic>>
+>((ref, DocumentReference<Map<String, dynamic>> docRef) {
+  return docRef.get();
+});
+
 final realtimeCollectionProvider = StreamProvider.family<
   QuerySnapshot<Map<String, dynamic>>,
   Query<Map<String, dynamic>>

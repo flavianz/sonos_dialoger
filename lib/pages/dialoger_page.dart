@@ -27,7 +27,18 @@ class DialogerPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text("Dialoger")),
+      appBar: AppBar(
+        title: Text("Dialoger"),
+        actions: [
+          FilledButton.icon(
+            onPressed: () {
+              context.push("/admin/dialoger/new");
+            },
+            label: Text("Neu"),
+            icon: Icon(Icons.add),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Divider(color: Theme.of(context).primaryColor),

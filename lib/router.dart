@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/pages/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/dialoger_page.dart';
+import 'package:sonos_dialoger/utils.dart';
 
 import 'app.dart';
 
@@ -26,6 +27,15 @@ final router = GoRouter(
           builder: (context, state) {
             final dialogerId = state.pathParameters['dialogerId']!;
             return DialogerEditPage(userId: dialogerId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/dialoger/new',
+          builder: (context, state) {
+            return DialogerEditPage(
+              userId: generateFirestoreKey(),
+              creating: true,
+            );
           },
         ),
       ],

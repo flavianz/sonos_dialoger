@@ -30,25 +30,26 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final doc = ref.watch(
-      staticDocProvider(
-        FirebaseFirestore.instance.collection("users").doc(widget.userId),
-      ),
-    );
+    Map<String, dynamic> data = {};
+    if (!widget.creating) {
+      final doc = ref.watch(
+        staticDocProvider(
+          FirebaseFirestore.instance.collection("users").doc(widget.userId),
+        ),
+      );
 
-    if (doc.isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
-
-    if (doc.hasError) {
-      if (kDebugMode) {
-        print(doc.error.toString());
+      if (doc.isLoading) {
+        return Center(child: CircularProgressIndicator());
       }
-      return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
+
+      if (doc.hasError) {
+        if (kDebugMode) {
+          print(doc.error.toString());
+        }
+        return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
+      }
+      data = doc.value!.data() ?? {};
     }
-
-    final data = doc.value!.data()!;
-
     if (!areInputsInitialized) {
       setState(() {
         firstName = data["first"] ?? "";
@@ -71,7 +72,7 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
           .collection("users")
           .doc(widget.userId);
       if (widget.creating) {
-        await docRef.set(inputs);
+        await docRef.set({...inputs, "linked": false});
         if (context.mounted) {
           ScaffoldMessenger.of(
             context,
@@ -96,7 +97,11 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
-        title: Text("${data["first"]} ${data["last"]} bearbeiten"),
+        title: Text(
+          widget.creating
+              ? "DialogerIn erstellen"
+              : "${data["first"]} ${data["last"]} bearbeiten",
+        ),
       ),
       body: Column(
         children: [

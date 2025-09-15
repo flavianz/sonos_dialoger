@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/pages/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/dialoger_page.dart';
+import 'package:sonos_dialoger/pages/payments_page.dart';
 import 'package:sonos_dialoger/utils.dart';
 
 import 'app.dart';
@@ -37,6 +38,10 @@ final router = GoRouter(
               creating: true,
             );
           },
+        ),
+        GoRoute(
+          path: '/admin/payments',
+          builder: (context, state) => PaymentsPage(),
         ),
       ],
     ),

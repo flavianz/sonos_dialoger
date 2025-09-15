@@ -15,5 +15,35 @@ service cloud.firestore {
             allow read: if resource == null || request.auth.uid == userId || isAdmin(request.auth);
             allow write: if isAdmin(request.auth) && containsAllAndOnlyRequiredFields(request.resource.data);
         }
+        match /payments/{paymentId} {
+            function isValidOncePayment(request) {
+                let data = request.resource.data;
+                return data.keys().hasOnly(["amount", "dialoger", "method", "timestamp", "type", "first", "last"])
+                    && data.keys().hasAll(["method"])
+                    && data.type == "once" && data.method in ["twint-fast", "twint-slow", "sumup"]
+                    && data.first is string && data.last is string;
+            }
+
+            function isValidRepeatingPayment(request) {
+                let data = request.resource.data;
+                return data.keys.hasOnly(["amount", "dialoger", "method", "timestamp", "type", "interval", "first", "last", "has_first_payment"])
+                    && data.keys.hasAll(["interval", "first", "last", "has_first_payment"])
+                    && data.interval in ["monthly", "quarterly", "semester", "yearly"]
+                    && data.has_first_payment is bool && data.first is string && data.last is string
+                    && ((data.has_first_payment == true && data.method in ["twint-fast", "twint-slow", "sumup"])
+                        || (data.has_first_payment == false && data.method == null)) && data.type == "repeating";
+            }
+
+            function isValidPayment(request) {
+                let data = request.resource.data;
+                let meetsBasicPattern = data.keys().hasAll(["amount", "dialoger", "timestamp", "type",])
+                    && data.amount is number && data.dialoger is string && data.timestamp is timestamp
+                    && data.type in ["repeating", "once"];
+                return meetsBasicPattern && (isValidOncePayment(request) || isValidRepeatingPayment(request));
+            }
+
+            allow create: if request.auth.token.role in ["dialog", "coach", "admin"] && isValidPayment(request);
+            allow read: if request.auth.token.role == "admin" || (request.auth.token.role in ["coach", "dialog"] && resource.data.dialoger == request.auth.uid);
+        }
     }
 }

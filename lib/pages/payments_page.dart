@@ -2,40 +2,49 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/basic_providers.dart';
 
-final dialogerProvider = realtimeCollectionProvider(
+import '../basic_providers.dart';
+
+final paymentsProvider = realtimeCollectionProvider(
   FirebaseFirestore.instance
-      .collection("users")
-      .where("role", isNotEqualTo: "admin")
-      .orderBy("role")
-      .orderBy("first"),
+      .collection("payments")
+      .where(
+        "timestamp",
+        isGreaterThan: Timestamp.fromDate(
+          DateTime(
+            DateTime.now().year,
+            DateTime.now().month,
+            DateTime.now().day,
+          ),
+        ),
+      )
+      .orderBy("timestamp"),
 );
 
-class DialogerPage extends ConsumerWidget {
-  const DialogerPage({super.key});
+class PaymentsPage extends ConsumerWidget {
+  const PaymentsPage({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final dialogerDocs = ref.watch(dialogerProvider);
+    final paymentDocs = ref.watch(paymentsProvider);
 
-    if (dialogerDocs.isLoading) {
+    if (paymentDocs.isLoading) {
       return Center(child: CircularProgressIndicator());
     }
 
-    if (dialogerDocs.hasError) {
-      print(dialogerDocs.error);
+    if (paymentDocs.hasError) {
+      print(paymentDocs.error);
       return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
     }
 
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
-        title: Text("Dialoger"),
+        title: Text("Leistungen"),
         actions: [
           FilledButton.icon(
             onPressed: () {
-              context.push("/admin/dialoger/new");
+              context.push("/admin/payment/new");
             },
             label: Text("Neu"),
             icon: Icon(Icons.add),
@@ -48,7 +57,7 @@ class DialogerPage extends ConsumerWidget {
           Expanded(
             child: ListView(
               children:
-                  dialogerDocs.value!.docs.map((doc) {
+                  paymentDocs.value!.docs.map((doc) {
                     final data = doc.data();
                     return Column(
                       children: [
@@ -60,19 +69,17 @@ class DialogerPage extends ConsumerWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    "${data["first"]} ${data["last"]}",
+                                    "${data["first"] ?? ""} ${data["last"] ?? ""}",
                                   ),
                                 ),
                                 Expanded(
-                                  child: Text(
-                                    data["role"] == "coach"
-                                        ? "Coach"
-                                        : "DialogerIn",
-                                  ),
+                                  child: Text(data["amount"].toString() ?? ""),
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    context.push("/admin/dialog/${doc.id}");
+                                    context.push(
+                                      "/admin/dialog/${doc.id ?? ""}",
+                                    );
                                   },
                                   icon: Icon(Icons.edit),
                                   tooltip: "Bearbeiten",

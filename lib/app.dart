@@ -91,14 +91,14 @@ class _AppState extends ConsumerState<App> {
     if (role == "admin") {
       destinations = [
         {
-          "icon": Icon(Icons.diversity_3),
-          "label": "Dialoger",
-          "url": "/admin/dialoger",
+          "icon": Icon(Icons.attach_money),
+          "label": "Leistungen",
+          "url": "/admin/payments",
         },
         {
           "icon": Icon(Icons.diversity_3),
-          "label": "Teams",
-          "url": "/admin/teams",
+          "label": "Dialoger",
+          "url": "/admin/dialoger",
         },
         {
           "icon": Icon(Icons.settings),

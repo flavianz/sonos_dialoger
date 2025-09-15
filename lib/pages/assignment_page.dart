@@ -76,29 +76,36 @@ class _AssignmentPageState extends ConsumerState<AssignmentPage> {
                           );
 
                           if (result.data["result"] == true) {
-                            setState(() {
-                              isLoading = false;
-                              error = null;
-                            });
-                            await ref
+                            if (context.mounted) {
+                              setState(() {
+                                isLoading = false;
+                                error = null;
+                              });
+                            }
+                            print("trying to reload tokens");
+                            ref
                                 .read(userProvider)
                                 .value
                                 ?.getIdToken(true)
                                 .then((r) => print("reloaded id token"));
                           } else {
-                            setState(() {
-                              isLoading = false;
-                              error =
-                                  "Dein Zugriffs-Code ist nicht gültig. Eventuell wurde er geändert";
-                            });
+                            if (context.mounted) {
+                              setState(() {
+                                isLoading = false;
+                                error =
+                                    "Dein Zugriffs-Code ist nicht gültig. Eventuell wurde er geändert";
+                              });
+                            }
                           }
                         } catch (e) {
-                          setState(() {
-                            isLoading = false;
-                            print(e);
-                            error =
-                                "Ein unbekannter Fehler ist aufgetreten. Probiere es später erneut";
-                          });
+                          if (context.mounted) {
+                            setState(() {
+                              isLoading = false;
+                              print(e);
+                              error =
+                                  "Ein unbekannter Fehler ist aufgetreten. Probiere es später erneut";
+                            });
+                          }
                         }
                       },
                       child:

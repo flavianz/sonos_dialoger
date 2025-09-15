@@ -128,9 +128,9 @@ class _AppState extends ConsumerState<App> {
       // role = dialog
       destinations = [
         {
-          "icon": Icon(Icons.add),
-          "label": "Mitglieder",
-          "url": "/admin/members",
+          "icon": Icon(Icons.attach_money),
+          "label": "Deine Leistungen",
+          "url": "/dialoger/payments",
         },
         {
           "icon": Icon(Icons.diversity_3),

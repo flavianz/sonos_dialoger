@@ -12,7 +12,8 @@ service cloud.firestore {
                     && data.first is string && data.last is string && data.linked is bool
                     && data["role"] in ["admin", "coach", "dialog"];
             }
-            allow read: if resource == null || request.auth.uid == userId || isAdmin(request.auth);
+            allow get: if resource == null || request.auth.uid == userId || isAdmin(request.auth);
+            allow list: if isAdmin(request.auth);
             allow write: if isAdmin(request.auth) && containsAllAndOnlyRequiredFields(request.resource.data);
         }
         match /payments/{paymentId} {

@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/pages/assignment_page.dart';
 
 final userProvider = StreamProvider<User?>(
-  (ref) => FirebaseAuth.instance.authStateChanges(),
+      (ref) => FirebaseAuth.instance.authStateChanges(),
 );
 
 final userDataProvider = StreamProvider<DocumentSnapshot<Map<String, dynamic>>>(
-  (ref) {
+      (ref) {
     final userStream = ref.watch(userProvider);
 
     var user = userStream.value;
@@ -109,9 +109,9 @@ class _AppState extends ConsumerState<App> {
     } else if (role == "coach") {
       destinations = [
         {
-          "icon": Icon(Icons.add),
-          "label": "Mitglieder",
-          "url": "/admin/members",
+          "icon": Icon(Icons.attach_money),
+          "label": "Deine Leistungen",
+          "url": "/dialoger/payments",
         },
         {
           "icon": Icon(Icons.diversity_3),
@@ -145,81 +145,86 @@ class _AppState extends ConsumerState<App> {
       ];
     }
 
-    final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
+    final isScreenWide = MediaQuery
+        .of(context)
+        .size
+        .aspectRatio > 1;
 
     return Stack(
       children: [
-        Container(color: Theme.of(context).scaffoldBackgroundColor),
+        Container(color: Theme
+            .of(context)
+            .scaffoldBackgroundColor),
         SafeArea(
           bottom: false,
           child: Scaffold(
             body:
-                isScreenWide
-                    ? Row(
-                      spacing: 5,
-                      children: [
-                        NavigationRail(
-                          destinations:
-                              destinations.map((element) {
-                                return NavigationRailDestination(
-                                  icon: element["icon"],
-                                  label: Text(element["label"]),
-                                );
-                              }).toList(),
-                          selectedIndex: selectedIndex,
-                          elevation: 5,
-                          extended: true,
-                          trailing: FilledButton(
-                            onPressed: () {
-                              FirebaseAuth.instance.signOut();
-                            },
-                            child: Text("Sign Out"),
-                          ),
-                          onDestinationSelected: (i) {
-                            setState(() {
-                              selectedIndex = i;
-                              context.go(destinations[i]["url"]);
-                            });
-                          },
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            child: widget.child,
-                          ),
-                        ),
-                      ],
-                    )
-                    : Column(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.all(12),
-                            child: widget.child,
-                          ),
-                        ),
-                        NavigationBar(
-                          destinations:
-                              destinations.map((element) {
-                                return NavigationDestination(
-                                  icon: element["icon"],
-                                  label: element["label"],
-                                );
-                              }).toList(),
-                          selectedIndex: selectedIndex,
-                          onDestinationSelected: (i) {
-                            setState(() {
-                              selectedIndex = i;
-                              context.go(destinations[i]["url"]);
-                            });
-                          },
-                          elevation: 5,
-                        ),
-                      ],
+            isScreenWide
+                ? Row(
+              spacing: 5,
+              children: [
+                NavigationRail(
+                  destinations:
+                  destinations.map((element) {
+                    return NavigationRailDestination(
+                      icon: element["icon"],
+                      label: Text(element["label"]),
+                    );
+                  }).toList(),
+                  selectedIndex: selectedIndex,
+                  elevation: 5,
+                  extended: true,
+                  trailing: FilledButton(
+                    onPressed: () {
+                      FirebaseAuth.instance.signOut();
+                    },
+                    child: Text("Sign Out"),
+                  ),
+                  onDestinationSelected: (i) {
+                    setState(() {
+                      selectedIndex = i;
+                      context.go(destinations[i]["url"]);
+                    });
+                  },
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
                     ),
+                    child: widget.child,
+                  ),
+                ),
+              ],
+            )
+                : Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: widget.child,
+                  ),
+                ),
+                NavigationBar(
+                  destinations:
+                  destinations.map((element) {
+                    return NavigationDestination(
+                      icon: element["icon"],
+                      label: element["label"],
+                    );
+                  }).toList(),
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (i) {
+                    setState(() {
+                      selectedIndex = i;
+                      context.go(destinations[i]["url"]);
+                    });
+                  },
+                  elevation: 5,
+                ),
+              ],
+            ),
           ),
         ),
       ],

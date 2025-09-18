@@ -1,10 +1,11 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/pages/admin/dialoger_edit_page.dart';
+import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
+import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
-import 'package:sonos_dialoger/pages/dialoger_edit_page.dart';
-import 'package:sonos_dialoger/pages/dialoger_page.dart';
-import 'package:sonos_dialoger/pages/payments_page.dart';
+import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
 import 'package:sonos_dialoger/utils.dart';
 
 import 'app.dart';
@@ -47,6 +48,10 @@ final router = GoRouter(
         GoRoute(
           path: '/dialoger/payments',
           builder: (context, state) => DialogerPaymentsPage(),
+        ),
+        GoRoute(
+          path: '/dialoger/payment/register',
+          builder: (context, state) => RegisterPaymentPage(),
         ),
       ],
     ),

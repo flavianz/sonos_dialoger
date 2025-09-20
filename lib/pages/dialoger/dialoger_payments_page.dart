@@ -101,6 +101,7 @@ class DialogerPaymentsPage extends ConsumerWidget {
                     } else {
                       dialogerShare = (isCoach ? 0.6 : 0.5) * amount;
                     }
+                    dialogerShare = ((dialogerShare * 100).round() / 100);
                     late Widget isPaidWidget;
                     if (data["type"] == "once" ||
                         data["has_first_payment"] == true ||

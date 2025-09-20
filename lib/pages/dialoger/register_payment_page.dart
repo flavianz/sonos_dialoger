@@ -1,14 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sonos_dialoger/app.dart';
 
-class RegisterPaymentPage extends StatefulWidget {
+class RegisterPaymentPage extends ConsumerStatefulWidget {
   const RegisterPaymentPage({super.key});
 
   @override
-  State<RegisterPaymentPage> createState() => _RegisterPaymentPageState();
+  ConsumerState<RegisterPaymentPage> createState() =>
+      _RegisterPaymentPageState();
 }
 
-class _RegisterPaymentPageState extends State<RegisterPaymentPage> {
+class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
   String? type;
   String? interval;
   bool hasFirstPayment = false;
@@ -30,6 +34,14 @@ class _RegisterPaymentPageState extends State<RegisterPaymentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isInfoComplete =
+        amountController.text.isNotEmpty &&
+        (type == "once"
+            ? paymentMethod != null
+            : firstController.text.isNotEmpty &&
+                lastController.text.isNotEmpty &&
+                interval != null &&
+                (!hasFirstPayment || paymentMethod != null));
     return Column(
       children: [
         Expanded(
@@ -145,6 +157,7 @@ class _RegisterPaymentPageState extends State<RegisterPaymentPage> {
                   ),
                   SizedBox(height: 15),
                   TextFormField(
+                    onChanged: (_) => setState(() {}),
                     controller: amountController,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     textAlign: TextAlign.center,
@@ -173,6 +186,7 @@ class _RegisterPaymentPageState extends State<RegisterPaymentPage> {
                     children: [
                       Expanded(
                         child: TextFormField(
+                          onChanged: (_) => setState(() {}),
                           style: TextStyle(fontSize: 19),
                           controller: firstController,
                           decoration: InputDecoration(
@@ -188,6 +202,7 @@ class _RegisterPaymentPageState extends State<RegisterPaymentPage> {
                       ),
                       Expanded(
                         child: TextFormField(
+                          onChanged: (_) => setState(() {}),
                           style: TextStyle(fontSize: 19),
                           controller: lastController,
                           decoration: InputDecoration(
@@ -273,16 +288,62 @@ class _RegisterPaymentPageState extends State<RegisterPaymentPage> {
               child: SizedBox(
                 height: 100,
                 child: FilledButton(
-                  onPressed: () {},
+                  onPressed:
+                      isInfoComplete
+                          ? () async {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            if (type == "once") {
+                              await FirebaseFirestore.instance
+                                  .collection("payments")
+                                  .add({
+                                    "type": "once",
+                                    "amount": double.parse(
+                                      amountController.text,
+                                    ),
+                                    "first": firstController.text,
+                                    "last": lastController.text,
+                                    "method": paymentMethod,
+                                    "dialoger":
+                                        ref.watch(userProvider).value?.uid ??
+                                        "",
+                                    "timestamp": Timestamp.fromDate(
+                                      DateTime.now(),
+                                    ),
+                                  });
+                            } else {
+                              final data = {
+                                "type": "repeating",
+                                "amount": double.parse(amountController.text),
+                                "first": firstController.text,
+                                "last": lastController.text,
+                                "has_first_payment": hasFirstPayment,
+                                "dialoger":
+                                    ref.watch(userProvider).value?.uid ?? "",
+                                "timestamp": Timestamp.fromDate(DateTime.now()),
+                                "interval": interval,
+                              };
+                              if (hasFirstPayment && paymentMethod != null) {
+                                data["method"] = paymentMethod!;
+                              }
+                              await FirebaseFirestore.instance
+                                  .collection("payments")
+                                  .add(data);
+                            }
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Leistung erfasst!")),
+                              );
+                            }
+                            setState(() {
+                              isLoading = false;
+                            });
+                          }
+                          : null,
                   child:
                       isLoading
-                          ? SizedBox(
-                            height: 50,
-                            width: 50,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          )
+                          ? CircularProgressIndicator(color: Colors.white)
                           : Text("Erfassen"),
                 ),
               ),

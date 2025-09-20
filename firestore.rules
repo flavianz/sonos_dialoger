@@ -27,12 +27,12 @@ service cloud.firestore {
 
             function isValidRepeatingPayment(request) {
                 let data = request.resource.data;
-                return data.keys.hasOnly(["amount", "dialoger", "method", "timestamp", "type", "interval", "first", "last", "has_first_payment"])
-                    && data.keys.hasAll(["interval", "first", "last", "has_first_payment"])
+                return data.keys().hasOnly(["amount", "dialoger", "method", "timestamp", "type", "interval", "first", "last", "has_first_payment"])
+                    && data.keys().hasAll(["interval", "first", "last", "has_first_payment"])
                     && data.interval in ["monthly", "quarterly", "semester", "yearly"]
                     && data.has_first_payment is bool && data.first is string && data.last is string
                     && ((data.has_first_payment == true && data.method in ["twint-fast", "twint-slow", "sumup"])
-                        || (data.has_first_payment == false && data.method == null)) && data.type == "repeating";
+                        || (data.has_first_payment == false)) && data.type == "repeating";
             }
 
             function isValidPayment(request) {

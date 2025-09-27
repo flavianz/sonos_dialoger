@@ -286,7 +286,7 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                                       IconButton(
                                         onPressed: () {
                                           context.push(
-                                            "/admin/dialog/${doc.id}",
+                                            "/dialoger/payment/${doc.id}/edit",
                                           );
                                         },
                                         icon: Icon(Icons.edit),
@@ -322,19 +322,9 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                                                             .delete();
                                                         if (context.mounted) {
                                                           context.pop();
-                                                          ScaffoldMessenger.of(
+                                                          showSnackBar(
                                                             context,
-                                                          ).showSnackBar(
-                                                            SnackBar(
-                                                              content: Text(
-                                                                "Leistung gelöscht!",
-                                                              ),
-                                                              behavior:
-                                                                  SnackBarBehavior
-                                                                      .floating,
-                                                              showCloseIcon:
-                                                                  true,
-                                                            ),
+                                                            "Leistung gelöscht!",
                                                           );
                                                         }
                                                       },

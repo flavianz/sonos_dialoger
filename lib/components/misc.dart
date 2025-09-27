@@ -14,3 +14,15 @@ Widget getPill(String s, Color c, bool lightText) {
     ),
   );
 }
+
+void showSnackBar(BuildContext context, String message) {
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        showCloseIcon: true,
+      ),
+    );
+  }
+}

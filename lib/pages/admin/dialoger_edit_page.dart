@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/basic_providers.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
+import 'package:sonos_dialoger/components/misc.dart';
 
 class DialogerEditPage extends ConsumerStatefulWidget {
   final String userId;
@@ -74,22 +75,12 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
       if (widget.creating) {
         await docRef.set({...inputs, "linked": false});
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("DialogerIn erstellt"),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          showSnackBar(context, "DialogerIn erstellt");
         }
       } else {
         await docRef.update(changes);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Änderungen gespeichert!"),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          showSnackBar(context, "Änderungen gespeichert!");
         }
       }
       if (context.mounted) {

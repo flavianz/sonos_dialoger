@@ -2,10 +2,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 
+import '../../components/misc.dart';
+
+final paymentProvider = FutureProvider.family(
+  (ref, String id) =>
+      FirebaseFirestore.instance.collection("payments").doc(id).get(),
+);
+
 class RegisterPaymentPage extends ConsumerStatefulWidget {
-  const RegisterPaymentPage({super.key});
+  final bool editing;
+  final String? id;
+
+  const RegisterPaymentPage({super.key, this.id, this.editing = false});
 
   @override
   ConsumerState<RegisterPaymentPage> createState() =>
@@ -19,6 +30,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
   String? paymentMethod;
 
   bool isLoading = false;
+  bool isInit = false;
 
   final amountController = TextEditingController();
   final firstController = TextEditingController();
@@ -34,6 +46,35 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.editing && !isInit) {
+      if (widget.id == null) {
+        throw ErrorDescription("No id provided for payment edit page");
+      }
+      final paymentDoc = ref.watch(paymentProvider(widget.id!));
+      if (paymentDoc.isLoading) {
+        return Center(child: CircularProgressIndicator());
+      }
+      if (paymentDoc.hasError) {
+        return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
+      }
+      final data = paymentDoc.value!.data() ?? {};
+      print(data);
+      type = data["type"];
+      amountController.text = data["amount"].toString();
+      firstController.text = data["first"] ?? "";
+      lastController.text = data["last"] ?? "";
+      if (type == "once") {
+        paymentMethod = data["method"];
+      } else {
+        interval = data["interval"];
+        hasFirstPayment = data["has_first_payment"];
+        if (hasFirstPayment) {
+          paymentMethod = data["method"];
+        }
+      }
+
+      isInit = true;
+    }
     final isInfoComplete =
         amountController.text.isNotEmpty &&
         (type == "once"
@@ -270,17 +311,21 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
               height: 100,
               child: OutlinedButton(
                 onPressed: () {
-                  setState(() {
-                    type = null;
-                    interval = null;
-                    amountController.text = "";
-                    firstController.text = "";
-                    lastController.text = "";
-                    hasFirstPayment = false;
-                    paymentMethod = null;
-                  });
+                  if (widget.editing) {
+                    context.pop();
+                  } else {
+                    setState(() {
+                      type = null;
+                      interval = null;
+                      amountController.text = "";
+                      firstController.text = "";
+                      lastController.text = "";
+                      hasFirstPayment = false;
+                      paymentMethod = null;
+                    });
+                  }
                 },
-                child: Text("Zurücksetzen"),
+                child: Text(widget.editing ? "Abbrechen" : "Zurücksetzen"),
               ),
             ),
             Expanded(
@@ -294,23 +339,26 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                               isLoading = true;
                             });
                             if (type == "once") {
-                              await FirebaseFirestore.instance
-                                  .collection("payments")
-                                  .add({
-                                    "type": "once",
-                                    "amount": double.parse(
-                                      amountController.text,
-                                    ),
-                                    "first": firstController.text,
-                                    "last": lastController.text,
-                                    "method": paymentMethod,
-                                    "dialoger":
-                                        ref.watch(userProvider).value?.uid ??
-                                        "",
-                                    "timestamp": Timestamp.fromDate(
-                                      DateTime.now(),
-                                    ),
-                                  });
+                              final data = {
+                                "type": "once",
+                                "amount": double.parse(amountController.text),
+                                "first": firstController.text,
+                                "last": lastController.text,
+                                "method": paymentMethod,
+                                "dialoger":
+                                    ref.watch(userProvider).value?.uid ?? "",
+                                "timestamp": Timestamp.fromDate(DateTime.now()),
+                              };
+                              if (widget.editing) {
+                                await FirebaseFirestore.instance
+                                    .collection("payments")
+                                    .doc(widget.id!)
+                                    .set(data);
+                              } else {
+                                await FirebaseFirestore.instance
+                                    .collection("payments")
+                                    .add(data);
+                              }
                             } else {
                               final data = {
                                 "type": "repeating",
@@ -326,27 +374,37 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                               if (hasFirstPayment && paymentMethod != null) {
                                 data["method"] = paymentMethod!;
                               }
-                              await FirebaseFirestore.instance
-                                  .collection("payments")
-                                  .add(data);
-                            }
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Leistung erfasst!"),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
+                              if (widget.editing) {
+                                await FirebaseFirestore.instance
+                                    .collection("payments")
+                                    .doc(widget.id!)
+                                    .set(data);
+                              } else {
+                                await FirebaseFirestore.instance
+                                    .collection("payments")
+                                    .add(data);
+                              }
                             }
                             setState(() {
                               isLoading = false;
                             });
+                            if (context.mounted) {
+                              showSnackBar(
+                                context,
+                                widget.editing
+                                    ? "Änderungen gespeichert!"
+                                    : "Leistung erfasst!",
+                              );
+                              if (widget.editing) {
+                                context.pop();
+                              }
+                            }
                           }
                           : null,
                   child:
                       isLoading
                           ? CircularProgressIndicator(color: Colors.white)
-                          : Text("Erfassen"),
+                          : Text(widget.editing ? "Speichern" : "Erfassen"),
                 ),
               ),
             ),

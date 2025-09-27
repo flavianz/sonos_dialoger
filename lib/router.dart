@@ -50,8 +50,15 @@ final router = GoRouter(
           builder: (context, state) => DialogerPaymentsPage(),
         ),
         GoRoute(
-          path: '/dialoger/payment/register',
+          path: '/dialoger/payments/register',
           builder: (context, state) => RegisterPaymentPage(),
+        ),
+        GoRoute(
+          path: '/dialoger/payment/:paymentId/edit',
+          builder: (context, state) {
+            final paymentId = state.pathParameters['paymentId']!;
+            return RegisterPaymentPage(editing: true, id: paymentId);
+          },
         ),
       ],
     ),

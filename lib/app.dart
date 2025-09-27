@@ -147,82 +147,68 @@ class _AppState extends ConsumerState<App> {
 
     final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
 
-    return Stack(
-      children: [
-        Container(color: Theme.of(context).scaffoldBackgroundColor),
-        SafeArea(
-          bottom: false,
-          child: Scaffold(
-            body:
-                isScreenWide
-                    ? Row(
-                      spacing: 5,
-                      children: [
-                        NavigationRail(
-                          destinations:
-                              destinations.map((element) {
-                                return NavigationRailDestination(
-                                  icon: element["icon"],
-                                  label: Text(element["label"]),
-                                );
-                              }).toList(),
-                          selectedIndex: selectedIndex,
-                          elevation: 5,
-                          extended: true,
-                          trailing: FilledButton(
-                            onPressed: () {
-                              FirebaseAuth.instance.signOut();
-                            },
-                            child: Text("Sign Out"),
-                          ),
-                          onDestinationSelected: (i) {
-                            setState(() {
-                              selectedIndex = i;
-                              context.go(destinations[i]["url"]);
-                            });
-                          },
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            child: widget.child,
-                          ),
-                        ),
-                      ],
-                    )
-                    : Column(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.all(12),
-                            child: widget.child,
-                          ),
-                        ),
-                        NavigationBar(
-                          destinations:
-                              destinations.map((element) {
-                                return NavigationDestination(
-                                  icon: element["icon"],
-                                  label: element["label"],
-                                );
-                              }).toList(),
-                          selectedIndex: selectedIndex,
-                          onDestinationSelected: (i) {
-                            setState(() {
-                              selectedIndex = i;
-                              context.go(destinations[i]["url"]);
-                            });
-                          },
-                          elevation: 5,
-                        ),
-                      ],
+    return Scaffold(
+      body:
+          isScreenWide
+              ? Row(
+                spacing: 5,
+                children: [
+                  NavigationRail(
+                    destinations:
+                        destinations.map((element) {
+                          return NavigationRailDestination(
+                            icon: element["icon"],
+                            label: Text(element["label"]),
+                          );
+                        }).toList(),
+                    selectedIndex: selectedIndex,
+                    extended: true,
+                    trailing: FilledButton(
+                      onPressed: () {
+                        FirebaseAuth.instance.signOut();
+                      },
+                      child: Text("Sign Out"),
                     ),
-          ),
-        ),
-      ],
+                    onDestinationSelected: (i) {
+                      setState(() {
+                        selectedIndex = i;
+                        context.go(destinations[i]["url"]);
+                      });
+                    },
+                  ),
+                  VerticalDivider(),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: widget.child,
+                    ),
+                  ),
+                ],
+              )
+              : Padding(padding: EdgeInsets.all(12), child: widget.child),
+      bottomNavigationBar:
+          isScreenWide
+              ? null
+              : NavigationBar(
+                destinations:
+                    destinations.map((element) {
+                      return NavigationDestination(
+                        icon: element["icon"],
+                        label: element["label"],
+                      );
+                    }).toList(),
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (i) {
+                  setState(() {
+                    selectedIndex = i;
+                    context.go(destinations[i]["url"]);
+                  });
+                },
+                elevation: 5,
+              ),
     );
   }
 }

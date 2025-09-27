@@ -16,7 +16,7 @@ final rangeProvider = StateProvider((_) {
       tomorrow.year,
       tomorrow.month,
       tomorrow.day,
-    ).subtract(Duration(microseconds: 1)),
+    ).subtract(Duration(milliseconds: 1)),
   );
 });
 
@@ -124,7 +124,7 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
-        title: Text("Leistungen"),
+        title: const Text("Leistungen"),
         actions: [
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: 200),
@@ -177,12 +177,25 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                 SizedBox(height: 24),
                 Row(
                   children: [
-                    Expanded(flex: 3, child: Text("Datum")),
+                    Expanded(flex: 2, child: Text("Datum")),
                     Expanded(flex: 2, child: Text("Betrag")),
                     Expanded(flex: 2, child: Text("Dein Anteil")),
-                    SizedBox(width: 10),
-                    Expanded(flex: 2, child: Text("Status")),
-                    SizedBox(width: 75),
+                    Expanded(flex: 3, child: Text("Status")),
+
+                    IconButton(
+                      onPressed: null,
+                      icon: Icon(
+                        Icons.add,
+                        color: Theme.of(context).canvasColor,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: null,
+                      icon: Icon(
+                        Icons.add,
+                        color: Theme.of(context).canvasColor,
+                      ),
+                    ),
                   ],
                 ),
                 Divider(color: Theme.of(context).primaryColor),
@@ -211,7 +224,7 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                             datePrefix = "Gestern";
                           } else {
                             datePrefix =
-                                "${date.day.toString().padLeft(2, '0')}. ${date.month.toString().padLeft(2, '0')}.";
+                                "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.";
                           }
                           final isCoach =
                               ref
@@ -219,8 +232,8 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                                   .value
                                   ?.data()?["role"] ==
                               "coach";
-                          final double amount = data["amount"] as double;
-                          late double dialogerShare;
+                          final num amount = data["amount"] as num;
+                          late num dialogerShare;
                           if (data["type"] == "once") {
                             dialogerShare = (isCoach ? 0.35 : 0.333) * amount;
                           } else {
@@ -233,20 +246,20 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                               data["has_been_paid"] == "paid") {
                             isPaidWidget = getPill(
                               "Bezahlt",
-                              Colors.green,
+                              Theme.of(context).primaryColor,
                               true,
                             );
                           } else if (data["has_been_paid"] == "pending") {
                             isPaidWidget = getPill(
                               "Ausstehend",
-                              Colors.amber,
-                              true,
+                              Theme.of(context).primaryColorLight,
+                              false,
                             );
                           } else if (data["has_been_paid"] == "cancelled") {
                             isPaidWidget = getPill(
                               "Zurückgenommen",
-                              Colors.red,
-                              true,
+                              Theme.of(context).cardColor,
+                              false,
                             );
                           } else {
                             isPaidWidget = getPill(
@@ -264,24 +277,27 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                                   child: Row(
                                     children: [
                                       Expanded(
-                                        flex: 3,
+                                        flex: 2,
                                         child: Text(
-                                          "$datePrefix, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}",
+                                          datePrefix,
+                                          style: TextStyle(fontSize: 15),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                          "${data["amount"].toStringAsFixed(2)} CHF",
+                                          "${data["amount"].toStringAsFixed(2)}",
+                                          style: TextStyle(fontSize: 15),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                          "${dialogerShare.toStringAsFixed(2)} CHF",
+                                          dialogerShare.toStringAsFixed(2),
+                                          style: TextStyle(fontSize: 15),
                                         ),
                                       ),
-                                      Expanded(flex: 2, child: isPaidWidget),
+                                      Expanded(flex: 3, child: isPaidWidget),
                                       SizedBox(width: 5),
                                       IconButton(
                                         onPressed: () {

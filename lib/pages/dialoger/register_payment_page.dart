@@ -58,7 +58,6 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
         return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
       }
       final data = paymentDoc.value!.data() ?? {};
-      print(data);
       type = data["type"];
       amountController.text = data["amount"].toString();
       firstController.text = data["first"] ?? "";
@@ -341,7 +340,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                             if (type == "once") {
                               final data = {
                                 "type": "once",
-                                "amount": double.parse(amountController.text),
+                                "amount": num.parse(amountController.text),
                                 "first": firstController.text,
                                 "last": lastController.text,
                                 "method": paymentMethod,
@@ -362,7 +361,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                             } else {
                               final data = {
                                 "type": "repeating",
-                                "amount": double.parse(amountController.text),
+                                "amount": num.parse(amountController.text),
                                 "first": firstController.text,
                                 "last": lastController.text,
                                 "has_first_payment": hasFirstPayment,

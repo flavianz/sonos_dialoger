@@ -332,7 +332,10 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                             }
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Leistung erfasst!")),
+                                SnackBar(
+                                  content: Text("Leistung erfasst!"),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
                               );
                             }
                             setState(() {

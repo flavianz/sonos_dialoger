@@ -293,7 +293,57 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                                         tooltip: "Bearbeiten",
                                       ),
                                       IconButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder:
+                                                (context) => AlertDialog(
+                                                  title: Text(
+                                                    "Leistung löschen?",
+                                                  ),
+                                                  content: Text(
+                                                    "Dieser Schritt kann nicht rückgängig gemacht werden",
+                                                  ),
+                                                  actions: [
+                                                    OutlinedButton(
+                                                      onPressed: () {
+                                                        context.pop();
+                                                      },
+                                                      child: Text("Abbrechen"),
+                                                    ),
+                                                    FilledButton(
+                                                      onPressed: () async {
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                              "payments",
+                                                            )
+                                                            .doc(doc.id)
+                                                            .delete();
+                                                        if (context.mounted) {
+                                                          context.pop();
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                "Leistung gelöscht!",
+                                                              ),
+                                                              behavior:
+                                                                  SnackBarBehavior
+                                                                      .floating,
+                                                              showCloseIcon:
+                                                                  true,
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                      child: Text("Löschen"),
+                                                    ),
+                                                  ],
+                                                ),
+                                          );
+                                        },
                                         icon: Icon(Icons.delete),
                                         tooltip: "Löschen",
                                       ),

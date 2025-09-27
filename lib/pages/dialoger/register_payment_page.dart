@@ -174,7 +174,6 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                       ),
                     ),
                     inputFormatters: <TextInputFormatter>[
-                      // for version 2 and greater youcan also use this
                       FilteringTextInputFormatter.allow(
                         RegExp(r'^\d+\.?\d{0,2}'),
                       ),

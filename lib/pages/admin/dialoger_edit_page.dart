@@ -74,16 +74,22 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
       if (widget.creating) {
         await docRef.set({...inputs, "linked": false});
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("DialogerIn erstellt")));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("DialogerIn erstellt"),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       } else {
         await docRef.update(changes);
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Änderungen gespeichert!")));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Änderungen gespeichert!"),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       }
       if (context.mounted) {

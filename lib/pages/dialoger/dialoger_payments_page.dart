@@ -160,7 +160,9 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                   if (range != null) {
                     ref.read(rangeProvider.notifier).state = DateTimeRange(
                       start: range.start,
-                      end: range.end.add(Duration(days: 1)),
+                      end: range.end
+                          .add(Duration(days: 1))
+                          .subtract(Duration(milliseconds: 1)),
                     );
                   }
                 }
@@ -243,19 +245,19 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
                           late Widget isPaidWidget;
                           if (data["type"] == "once" ||
                               data["has_first_payment"] == true ||
-                              data["has_been_paid"] == "paid") {
+                              data["payment_status"] == "paid") {
                             isPaidWidget = getPill(
                               "Bezahlt",
                               Theme.of(context).primaryColor,
                               true,
                             );
-                          } else if (data["has_been_paid"] == "pending") {
+                          } else if (data["payment_status"] == "pending") {
                             isPaidWidget = getPill(
                               "Ausstehend",
                               Theme.of(context).primaryColorLight,
                               false,
                             );
-                          } else if (data["has_been_paid"] == "cancelled") {
+                          } else if (data["payment_status"] == "cancelled") {
                             isPaidWidget = getPill(
                               "Zurückgenommen",
                               Theme.of(context).cardColor,

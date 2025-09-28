@@ -82,6 +82,18 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                 lastController.text.isNotEmpty &&
                 interval != null &&
                 (!hasFirstPayment || paymentMethod != null));
+    void resetInputs() {
+      setState(() {
+        type = null;
+        interval = null;
+        amountController.text = "";
+        firstController.text = "";
+        lastController.text = "";
+        hasFirstPayment = false;
+        paymentMethod = null;
+      });
+    }
+
     return Column(
       children: [
         Expanded(
@@ -313,15 +325,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                   if (widget.editing) {
                     context.pop();
                   } else {
-                    setState(() {
-                      type = null;
-                      interval = null;
-                      amountController.text = "";
-                      firstController.text = "";
-                      lastController.text = "";
-                      hasFirstPayment = false;
-                      paymentMethod = null;
-                    });
+                    resetInputs();
                   }
                 },
                 child: Text(widget.editing ? "Abbrechen" : "Zurücksetzen"),
@@ -372,6 +376,9 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                               };
                               if (hasFirstPayment && paymentMethod != null) {
                                 data["method"] = paymentMethod!;
+                                data["payment_status"] = "paid";
+                              } else {
+                                data["payment_status"] = "pending";
                               }
                               if (widget.editing) {
                                 await FirebaseFirestore.instance
@@ -397,6 +404,9 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                               if (widget.editing) {
                                 context.pop();
                               }
+                            }
+                            if (!widget.editing) {
+                              resetInputs();
                             }
                           }
                           : null,

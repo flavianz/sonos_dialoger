@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../components/misc.dart';
+
 final timespanProvider = StateProvider<String>((_) => "today");
 final rangeProvider = StateProvider((_) {
   final yesterday = DateTime.now().subtract(Duration(days: 7));
@@ -170,6 +172,54 @@ class PaymentsPage extends ConsumerWidget {
               children:
                   paymentDocs.value!.docs.map((doc) {
                     final data = doc.data();
+                    final date =
+                        ((data["timestamp"] ?? Timestamp.now()) as Timestamp)
+                            .toDate();
+                    late String datePrefix;
+                    final today = DateTime.now();
+                    final yesterday = DateTime.fromMicrosecondsSinceEpoch(
+                      DateTime.now().millisecondsSinceEpoch - 1000 * 3600 * 24,
+                    );
+                    if (date.year == today.year &&
+                        date.month == today.month &&
+                        date.day == today.day) {
+                      datePrefix = "Heute";
+                    } else if (date.year == yesterday.year &&
+                        date.month == yesterday.month &&
+                        date.day == yesterday.day) {
+                      datePrefix = "Gestern";
+                    } else {
+                      datePrefix =
+                          "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.";
+                    }
+                    late Widget isPaidWidget;
+                    if (data["type"] == "once" ||
+                        data["has_first_payment"] == true ||
+                        data["payment_status"] == "paid") {
+                      isPaidWidget = getPill(
+                        "Bezahlt",
+                        Theme.of(context).primaryColor,
+                        true,
+                      );
+                    } else if (data["payment_status"] == "pending") {
+                      isPaidWidget = getPill(
+                        "Ausstehend",
+                        Theme.of(context).primaryColorLight,
+                        false,
+                      );
+                    } else if (data["payment_status"] == "cancelled") {
+                      isPaidWidget = getPill(
+                        "Zurückgenommen",
+                        Theme.of(context).cardColor,
+                        false,
+                      );
+                    } else {
+                      isPaidWidget = getPill(
+                        "Keine Information",
+                        Colors.grey,
+                        true,
+                      );
+                    }
                     return Column(
                       children: [
                         GestureDetector(
@@ -178,15 +228,11 @@ class PaymentsPage extends ConsumerWidget {
                             cursor: SystemMouseCursors.click,
                             child: Row(
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    "${data["first"] ?? ""} ${data["last"] ?? ""}",
-                                  ),
-                                ),
+                                Expanded(child: Text(datePrefix)),
                                 Expanded(
                                   child: Text(data["amount"].toString()),
                                 ),
-                                Expanded(child: Text(data["amount"])),
+                                Expanded(child: isPaidWidget),
                                 IconButton(
                                   onPressed: () {
                                     context.push("/admin/dialog/${doc.id}");

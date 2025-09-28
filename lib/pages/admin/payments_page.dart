@@ -230,7 +230,9 @@ class PaymentsPage extends ConsumerWidget {
                               children: [
                                 Expanded(child: Text(datePrefix)),
                                 Expanded(
-                                  child: Text(data["amount"].toString()),
+                                  child: Text(
+                                    "${data["amount"].toString()} CHF",
+                                  ),
                                 ),
                                 Expanded(child: isPaidWidget),
                                 IconButton(

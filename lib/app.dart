@@ -117,6 +117,7 @@ class _AppState extends ConsumerState<App> {
           "icon": Icon(Icons.add),
           "label": "Erfassen",
           "url": "/dialoger/payment/register",
+          "barOnly": true,
         },
         {
           "icon": Icon(Icons.settings),
@@ -136,6 +137,7 @@ class _AppState extends ConsumerState<App> {
           "icon": Icon(Icons.add),
           "label": "Erfassen",
           "url": "/dialoger/payments/register",
+          "barOnly": true,
         },
         {
           "icon": Icon(Icons.settings),
@@ -154,13 +156,27 @@ class _AppState extends ConsumerState<App> {
                 spacing: 5,
                 children: [
                   NavigationRail(
+                    leading:
+                        role == "coach" || role == "dialog"
+                            ? FloatingActionButton.extended(
+                              onPressed: () {
+                                context.go("/dialoger/payments/register");
+                              },
+                              icon: Icon(Icons.add),
+                              elevation: 0,
+                              label: Text("Erfassen"),
+                            )
+                            : null,
                     destinations:
-                        destinations.map((element) {
-                          return NavigationRailDestination(
-                            icon: element["icon"],
-                            label: Text(element["label"]),
-                          );
-                        }).toList(),
+                        destinations
+                            .where((route) => route["barOnly"] != true)
+                            .map((element) {
+                              return NavigationRailDestination(
+                                icon: element["icon"],
+                                label: Text(element["label"]),
+                              );
+                            })
+                            .toList(),
                     selectedIndex: selectedIndex,
                     extended: true,
                     trailing: FilledButton(

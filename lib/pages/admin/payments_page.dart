@@ -3,23 +3,97 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../basic_providers.dart';
+final timespanProvider = StateProvider<String>((_) => "today");
+final rangeProvider = StateProvider((_) {
+  final yesterday = DateTime.now().subtract(Duration(days: 7));
+  final tomorrow = DateTime.now().add(Duration(days: 1));
+  return DateTimeRange(
+    start: DateTime(yesterday.year, yesterday.month, yesterday.day),
+    end: DateTime(
+      tomorrow.year,
+      tomorrow.month,
+      tomorrow.day,
+    ).subtract(Duration(milliseconds: 1)),
+  );
+});
 
-final paymentsProvider = realtimeCollectionProvider(
-  FirebaseFirestore.instance
+final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
+  ref,
+) {
+  return FirebaseFirestore.instance
       .collection("payments")
-      .where(
-        "timestamp",
-        isGreaterThan: Timestamp.fromDate(
-          DateTime(
-            DateTime.now().year,
-            DateTime.now().month,
-            DateTime.now().day,
+      .where(switch (ref.watch(timespanProvider)) {
+        "custom" => Filter.and(
+          Filter(
+            "timestamp",
+            isGreaterThanOrEqualTo: Timestamp.fromDate(
+              ref.watch(rangeProvider).start,
+            ),
+          ),
+          Filter(
+            "timestamp",
+            isLessThanOrEqualTo: Timestamp.fromDate(
+              ref.watch(rangeProvider).end,
+            ),
           ),
         ),
-      )
-      .orderBy("timestamp"),
-);
+        "all" => Filter(
+          "timestamp",
+          isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(0),
+        ),
+        "month" => Filter(
+          "timestamp",
+          isGreaterThanOrEqualTo: Timestamp.fromDate(
+            DateTime(DateTime.now().year, DateTime.now().month, 0),
+          ),
+        ),
+        "week" => Filter(
+          "timestamp",
+          isGreaterThanOrEqualTo: Timestamp.fromDate(
+            DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+            ).subtract(
+              Duration(days: DateTime.now().weekday - DateTime.monday),
+            ),
+          ),
+        ),
+        "yesterday" => () {
+          final yesterday = DateTime.now().subtract(Duration(days: 1));
+          return Filter.and(
+            Filter(
+              "timestamp",
+              isGreaterThanOrEqualTo: Timestamp.fromDate(
+                DateTime(yesterday.year, yesterday.month, yesterday.day),
+              ),
+            ),
+            Filter(
+              "timestamp",
+              isLessThan: Timestamp.fromDate(
+                DateTime(
+                  DateTime.now().year,
+                  DateTime.now().month,
+                  DateTime.now().day,
+                ),
+              ),
+            ),
+          );
+        }(),
+        "today" || _ => Filter(
+          "timestamp",
+          isGreaterThanOrEqualTo: Timestamp.fromDate(
+            DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+            ),
+          ),
+        ),
+      })
+      .orderBy("timestamp", descending: true)
+      .snapshots();
+});
 
 class PaymentsPage extends ConsumerWidget {
   const PaymentsPage({super.key});
@@ -42,12 +116,49 @@ class PaymentsPage extends ConsumerWidget {
         forceMaterialTransparency: true,
         title: Text("Leistungen"),
         actions: [
-          FilledButton.icon(
-            onPressed: () {
-              context.push("/admin/payment/new");
-            },
-            label: Text("Neu"),
-            icon: Icon(Icons.add),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 200),
+            child: DropdownButtonFormField(
+              value: ref.watch(timespanProvider),
+              decoration: InputDecoration(
+                hintText: "Zeitraum",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              items: [
+                DropdownMenuItem(value: "today", child: Text("Heute")),
+                DropdownMenuItem(value: "yesterday", child: Text("Gestern")),
+                DropdownMenuItem(value: "week", child: Text("Diese Woche")),
+                DropdownMenuItem(value: "month", child: Text("Dieser Monat")),
+                DropdownMenuItem(value: "all", child: Text("Alle")),
+                DropdownMenuItem(
+                  value: "custom",
+                  child: Text("Benutzerdefiniert"),
+                ),
+              ],
+              onChanged: (newValue) async {
+                if (newValue == "custom") {
+                  final now = DateTime.now();
+                  final DateTimeRange? range = await showDateRangePicker(
+                    initialDateRange: ref.read(rangeProvider),
+                    locale: Locale("de"),
+                    context: context,
+                    firstDate: DateTime(0),
+                    lastDate: DateTime(now.year, now.month, now.day),
+                  );
+                  if (range != null) {
+                    ref.read(rangeProvider.notifier).state = DateTimeRange(
+                      start: range.start,
+                      end: range.end
+                          .add(Duration(days: 1))
+                          .subtract(Duration(milliseconds: 1)),
+                    );
+                  }
+                }
+                ref.read(timespanProvider.notifier).state = newValue ?? "today";
+              },
+            ),
           ),
         ],
       ),
@@ -73,13 +184,12 @@ class PaymentsPage extends ConsumerWidget {
                                   ),
                                 ),
                                 Expanded(
-                                  child: Text(data["amount"].toString() ?? ""),
+                                  child: Text(data["amount"].toString()),
                                 ),
+                                Expanded(child: Text(data["amount"])),
                                 IconButton(
                                   onPressed: () {
-                                    context.push(
-                                      "/admin/dialog/${doc.id ?? ""}",
-                                    );
+                                    context.push("/admin/dialog/${doc.id}");
                                   },
                                   icon: Icon(Icons.edit),
                                   tooltip: "Bearbeiten",

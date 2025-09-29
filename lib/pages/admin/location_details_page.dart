@@ -96,6 +96,40 @@ class LocationDetailsPage extends ConsumerWidget {
 
   const LocationDetailsPage({super.key, required this.locationId});
 
+  final betweenSpace = 0;
+
+  BarChartGroupData generateGroupData(
+    int x,
+    double once,
+    double repeatingWithFirstPayment,
+    double repeatingWithoutFirstPayment,
+  ) {
+    return BarChartGroupData(
+      x: x,
+      groupVertically: true,
+      barRods: [
+        BarChartRodData(fromY: 0, toY: once, color: Colors.red, width: 15),
+        BarChartRodData(
+          fromY: once + betweenSpace,
+          toY: once + betweenSpace + repeatingWithFirstPayment,
+          color: Colors.amberAccent,
+          width: 15,
+        ),
+        BarChartRodData(
+          fromY: once + betweenSpace + repeatingWithFirstPayment + betweenSpace,
+          toY:
+              once +
+              betweenSpace +
+              repeatingWithFirstPayment +
+              betweenSpace +
+              repeatingWithoutFirstPayment,
+          color: Colors.green,
+          width: 15,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context, ref) {
     final locationDoc = ref.watch(locationProvider(locationId));
@@ -117,7 +151,25 @@ class LocationDetailsPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(locationData["name"] ?? "")),
       body: locationPaymentDocs.when(
-        data: (data) => BarChart(BarChartData()),
+        data:
+            (data) => BarChart(
+              BarChartData(
+                barGroups: [
+                  generateGroupData(0, 2, 3, 2),
+                  generateGroupData(1, 2, 5, 1.7),
+                  generateGroupData(2, 1.3, 3.1, 2.8),
+                  generateGroupData(3, 3.1, 4, 3.1),
+                  generateGroupData(4, 0.8, 3.3, 3.4),
+                  generateGroupData(5, 2, 5.6, 1.8),
+                  generateGroupData(6, 1.3, 3.2, 2),
+                  generateGroupData(7, 2.3, 3.2, 3),
+                  generateGroupData(8, 2, 4.8, 2.5),
+                  generateGroupData(9, 1.2, 3.2, 2.5),
+                  generateGroupData(10, 1, 4.8, 3),
+                  generateGroupData(11, 2, 4.4, 2.8),
+                ],
+              ),
+            ),
         error: (object, stackTrace) {
           print(object);
           print(stackTrace);

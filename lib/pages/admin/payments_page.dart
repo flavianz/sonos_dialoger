@@ -4,20 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../components/misc.dart';
-
-final timespanProvider = StateProvider<String>((_) => "today");
-final rangeProvider = StateProvider((_) {
-  final yesterday = DateTime.now().subtract(Duration(days: 7));
-  final tomorrow = DateTime.now().add(Duration(days: 1));
-  return DateTimeRange(
-    start: DateTime(yesterday.year, yesterday.month, yesterday.day),
-    end: DateTime(
-      tomorrow.year,
-      tomorrow.month,
-      tomorrow.day,
-    ).subtract(Duration(milliseconds: 1)),
-  );
-});
+import '../../providers.dart';
 
 final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
   ref,
@@ -228,10 +215,16 @@ class PaymentsPage extends ConsumerWidget {
                             cursor: SystemMouseCursors.click,
                             child: Row(
                               children: [
-                                Expanded(child: Text(datePrefix)),
+                                Expanded(
+                                  child: Text(
+                                    datePrefix,
+                                    style: TextStyle(fontSize: 15),
+                                  ),
+                                ),
                                 Expanded(
                                   child: Text(
                                     "${data["amount"].toString()} CHF",
+                                    style: TextStyle(fontSize: 15),
                                   ),
                                 ),
                                 Expanded(child: isPaidWidget),

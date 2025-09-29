@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
+import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
+import 'package:sonos_dialoger/pages/admin/locations_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
@@ -46,6 +48,10 @@ final router = GoRouter(
           builder: (context, state) => PaymentsPage(),
         ),
         GoRoute(
+          path: '/admin/locations',
+          builder: (context, state) => LocationsPage(),
+        ),
+        GoRoute(
           path: '/dialoger/payments',
           builder: (context, state) => DialogerPaymentsPage(),
         ),
@@ -58,6 +64,13 @@ final router = GoRouter(
           builder: (context, state) {
             final paymentId = state.pathParameters['paymentId']!;
             return RegisterPaymentPage(editing: true, id: paymentId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/location/:locationId',
+          builder: (context, state) {
+            final locationId = state.pathParameters['locationId']!;
+            return LocationDetailsPage(locationId: locationId);
           },
         ),
       ],

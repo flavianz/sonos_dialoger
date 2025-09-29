@@ -101,6 +101,11 @@ class _AppState extends ConsumerState<App> {
           "url": "/admin/dialoger",
         },
         {
+          "icon": Icon(Icons.place),
+          "label": "Standplätze",
+          "url": "/admin/locations",
+        },
+        {
           "icon": Icon(Icons.settings),
           "label": "Einstellungen",
           "url": "/admin/settings",

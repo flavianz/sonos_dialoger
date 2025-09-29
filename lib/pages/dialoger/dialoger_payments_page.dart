@@ -5,20 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 
 import '../../app.dart';
-
-final timespanProvider = StateProvider<String>((_) => "today");
-final rangeProvider = StateProvider((_) {
-  final yesterday = DateTime.now().subtract(Duration(days: 7));
-  final tomorrow = DateTime.now().add(Duration(days: 1));
-  return DateTimeRange(
-    start: DateTime(yesterday.year, yesterday.month, yesterday.day),
-    end: DateTime(
-      tomorrow.year,
-      tomorrow.month,
-      tomorrow.day,
-    ).subtract(Duration(milliseconds: 1)),
-  );
-});
+import '../../providers.dart';
 
 final dialogerPaymentsProvider =
     StreamProvider<QuerySnapshot<Map<String, dynamic>>>((ref) {

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sonos_dialoger/components/input_box.dart';
 
 import '../../providers.dart';
 
@@ -96,33 +97,32 @@ class LocationDetailsPage extends ConsumerWidget {
 
   const LocationDetailsPage({super.key, required this.locationId});
 
-  final betweenSpace = 0;
-
   BarChartGroupData generateGroupData(
-    int x,
+    int millis,
     double once,
     double repeatingWithFirstPayment,
     double repeatingWithoutFirstPayment,
   ) {
     return BarChartGroupData(
-      x: x,
+      x: millis,
       groupVertically: true,
+
       barRods: [
-        BarChartRodData(fromY: 0, toY: once, color: Colors.red, width: 15),
         BarChartRodData(
-          fromY: once + betweenSpace,
-          toY: once + betweenSpace + repeatingWithFirstPayment,
+          fromY: 0,
+          toY: once.toDouble(),
+          color: Colors.red,
+          width: 15,
+        ),
+        BarChartRodData(
+          fromY: once,
+          toY: once + repeatingWithFirstPayment,
           color: Colors.amberAccent,
           width: 15,
         ),
         BarChartRodData(
-          fromY: once + betweenSpace + repeatingWithFirstPayment + betweenSpace,
-          toY:
-              once +
-              betweenSpace +
-              repeatingWithFirstPayment +
-              betweenSpace +
-              repeatingWithoutFirstPayment,
+          fromY: once + repeatingWithFirstPayment,
+          toY: once + repeatingWithFirstPayment + repeatingWithoutFirstPayment,
           color: Colors.green,
           width: 15,
         ),
@@ -148,28 +148,98 @@ class LocationDetailsPage extends ConsumerWidget {
     }
     final locationData = locationDoc.value!.data() ?? {};
     final locationPaymentDocs = ref.watch(locationPaymentsProvider(locationId));
+
     return Scaffold(
-      appBar: AppBar(title: Text(locationData["name"] ?? "")),
+      appBar: AppBar(
+        title: Text(locationData["name"] ?? ""),
+        actions: [DateRangeDropdown()],
+      ),
       body: locationPaymentDocs.when(
-        data:
-            (data) => BarChart(
-              BarChartData(
-                barGroups: [
-                  generateGroupData(0, 2, 3, 2),
-                  generateGroupData(1, 2, 5, 1.7),
-                  generateGroupData(2, 1.3, 3.1, 2.8),
-                  generateGroupData(3, 3.1, 4, 3.1),
-                  generateGroupData(4, 0.8, 3.3, 3.4),
-                  generateGroupData(5, 2, 5.6, 1.8),
-                  generateGroupData(6, 1.3, 3.2, 2),
-                  generateGroupData(7, 2.3, 3.2, 3),
-                  generateGroupData(8, 2, 4.8, 2.5),
-                  generateGroupData(9, 1.2, 3.2, 2.5),
-                  generateGroupData(10, 1, 4.8, 3),
-                  generateGroupData(11, 2, 4.4, 2.8),
-                ],
+        data: (paymentsData) {
+          final Map<int, List<Map>> dateSortedData = {};
+          final dateRange = ref.watch(rangeProvider);
+          DateTime date = dateRange.start;
+          while (!date.isAfter(dateRange.end)) {
+            dateSortedData[date.millisecondsSinceEpoch] = [];
+            date = date.add(Duration(days: 1));
+          }
+          for (final paymentDoc in paymentsData.docs) {
+            final date =
+                ((paymentDoc.data()["timestamp"] ?? Timestamp.now())
+                        as Timestamp)
+                    .toDate();
+            final dateMillis =
+                DateTime(
+                  date.year,
+                  date.month,
+                  date.day,
+                ).millisecondsSinceEpoch;
+            if (dateSortedData[dateMillis] == null) {
+              dateSortedData[dateMillis] = [];
+            }
+            dateSortedData[dateMillis]?.add(paymentDoc.data());
+          }
+          final dates =
+              dateSortedData.entries.toList()
+                ..sort((a, b) => a.key.compareTo(b.key));
+          return BarChart(
+            BarChartData(
+              titlesData: FlTitlesData(
+                leftTitles: const AxisTitles(),
+                rightTitles: const AxisTitles(),
+                topTitles: const AxisTitles(),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (millis, _) {
+                      final date = DateTime.fromMillisecondsSinceEpoch(
+                        millis.toInt(),
+                      );
+                      return Text(
+                        "${date.day.toString().padLeft(2, "0")}.${date.month.toString().padLeft(2, "0")}.",
+                      );
+                    },
+                    reservedSize: 20,
+                  ),
+                ),
               ),
+              barGroups:
+                  dates
+                      .map(
+                        (entry) => generateGroupData(
+                          entry.key,
+                          entry.value
+                              .where((payment) => payment["type"] == "once")
+                              .fold(
+                                0.0,
+                                (total, payment) => total + payment["amount"],
+                              ),
+                          entry.value
+                              .where(
+                                (payment) =>
+                                    payment["type"] == "repeating" &&
+                                    payment["has_first_payment"] == true,
+                              )
+                              .fold(
+                                0.0,
+                                (total, payment) => total + payment["amount"],
+                              ),
+                          entry.value
+                              .where(
+                                (payment) =>
+                                    payment["type"] == "repeating" &&
+                                    payment["has_first_payment"] != true,
+                              )
+                              .fold(
+                                0.0,
+                                (total, payment) => total + payment["amount"],
+                              ),
+                        ),
+                      )
+                      .toList(),
             ),
+          );
+        },
         error: (object, stackTrace) {
           print(object);
           print(stackTrace);

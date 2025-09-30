@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 
 import '../../app.dart';
@@ -27,10 +28,6 @@ final dialogerPaymentsProvider =
                       ref.watch(rangeProvider).end,
                     ),
                   ),
-                ),
-                "all" => Filter(
-                  "timestamp",
-                  isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(0),
                 ),
                 "month" => Filter(
                   "timestamp",
@@ -112,52 +109,7 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
       appBar: AppBar(
         forceMaterialTransparency: true,
         title: const Text("Leistungen"),
-        actions: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 200),
-            child: DropdownButtonFormField(
-              value: ref.watch(timespanProvider),
-              decoration: InputDecoration(
-                hintText: "Zeitraum",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-              items: [
-                DropdownMenuItem(value: "today", child: Text("Heute")),
-                DropdownMenuItem(value: "yesterday", child: Text("Gestern")),
-                DropdownMenuItem(value: "week", child: Text("Diese Woche")),
-                DropdownMenuItem(value: "month", child: Text("Dieser Monat")),
-                DropdownMenuItem(value: "all", child: Text("Alle")),
-                DropdownMenuItem(
-                  value: "custom",
-                  child: Text("Benutzerdefiniert"),
-                ),
-              ],
-              onChanged: (newValue) async {
-                if (newValue == "custom") {
-                  final now = DateTime.now();
-                  final DateTimeRange? range = await showDateRangePicker(
-                    initialDateRange: ref.read(rangeProvider),
-                    locale: Locale("de"),
-                    context: context,
-                    firstDate: DateTime(0),
-                    lastDate: DateTime(now.year, now.month, now.day),
-                  );
-                  if (range != null) {
-                    ref.read(rangeProvider.notifier).state = DateTimeRange(
-                      start: range.start,
-                      end: range.end
-                          .add(Duration(days: 1))
-                          .subtract(Duration(milliseconds: 1)),
-                    );
-                  }
-                }
-                ref.read(timespanProvider.notifier).state = newValue ?? "today";
-              },
-            ),
-          ),
-        ],
+        actions: [DateRangeDropdown()],
       ),
       body: paymentDocs.when(
         data:

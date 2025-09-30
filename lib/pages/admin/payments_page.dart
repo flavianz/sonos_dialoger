@@ -27,10 +27,6 @@ final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
             ),
           ),
         ),
-        "all" => Filter(
-          "timestamp",
-          isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(0),
-        ),
         "month" => Filter(
           "timestamp",
           isGreaterThanOrEqualTo: Timestamp.fromDate(

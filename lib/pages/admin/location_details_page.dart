@@ -33,10 +33,6 @@ final locationPaymentsProvider = StreamProvider.family((
               ),
             ),
           ),
-          "all" => Filter(
-            "timestamp",
-            isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(0),
-          ),
           "month" => Filter(
             "timestamp",
             isGreaterThanOrEqualTo: Timestamp.fromDate(
@@ -99,34 +95,110 @@ class LocationDetailsPage extends ConsumerWidget {
 
   BarChartGroupData generateGroupData(
     int millis,
-    double once,
-    double repeatingWithFirstPayment,
-    double repeatingWithoutFirstPayment,
+    List<Map<dynamic, dynamic>> payments,
   ) {
+    final onceTwint = payments
+        .where(
+          (payment) =>
+              payment["type"] == "once" && payment["method"] == "twint-fast",
+        )
+        .fold(0.0, (total, payment) => total + payment["amount"]);
+    final onceSumup = payments
+        .where(
+          (payment) =>
+              payment["type"] == "once" && payment["method"] == "sumup",
+        )
+        .fold(0.0, (total, payment) => total + payment["amount"]);
+    final repeatingWithFirstPaymentTwint = payments
+        .where(
+          (payment) =>
+              payment["type"] == "repeating" &&
+              payment["has_first_payment"] == true &&
+              payment["method"] == "twint-fast",
+        )
+        .fold(0.0, (total, payment) => total + payment["amount"]);
+    final repeatingWithFirstPaymentSumup = payments
+        .where(
+          (payment) =>
+              payment["type"] == "repeating" &&
+              payment["has_first_payment"] == true &&
+              payment["method"] == "sumup",
+        )
+        .fold(0.0, (total, payment) => total + payment["amount"]);
+    final repeatingWithoutFirstPayment = payments
+        .where(
+          (payment) =>
+              payment["type"] == "repeating" &&
+              payment["has_first_payment"] != true,
+        )
+        .fold(0.0, (total, payment) => total + payment["amount"]);
+    print(
+      "$onceTwint $onceSumup $repeatingWithFirstPaymentTwint $repeatingWithFirstPaymentSumup $repeatingWithoutFirstPayment",
+    );
     return BarChartGroupData(
       x: millis,
       groupVertically: true,
-
       barRods: [
         BarChartRodData(
           fromY: 0,
-          toY: once.toDouble(),
-          color: Colors.red,
+          toY: onceTwint.toDouble(),
+          color: Colors.lightBlue.shade600,
           width: 15,
+          borderRadius: BorderRadius.zero,
         ),
         BarChartRodData(
-          fromY: once,
-          toY: once + repeatingWithFirstPayment,
-          color: Colors.amberAccent,
+          fromY: onceTwint,
+          toY: onceTwint + onceSumup,
+          color: Colors.lightBlue.shade200,
           width: 15,
+          borderRadius: BorderRadius.zero,
         ),
         BarChartRodData(
-          fromY: once + repeatingWithFirstPayment,
-          toY: once + repeatingWithFirstPayment + repeatingWithoutFirstPayment,
-          color: Colors.green,
+          fromY: onceTwint + onceSumup,
+          toY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
+          color: Colors.lightGreen.shade800,
           width: 15,
+          borderRadius: BorderRadius.zero,
+        ),
+        BarChartRodData(
+          fromY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
+          toY:
+              onceTwint +
+              onceSumup +
+              repeatingWithFirstPaymentTwint +
+              repeatingWithFirstPaymentSumup,
+          color: Colors.lightGreen.shade300,
+          width: 15,
+          borderRadius: BorderRadius.zero,
+        ),
+        BarChartRodData(
+          fromY:
+              onceTwint +
+              onceSumup +
+              repeatingWithFirstPaymentTwint +
+              repeatingWithFirstPaymentSumup,
+          toY:
+              onceTwint +
+              onceSumup +
+              repeatingWithFirstPaymentTwint +
+              repeatingWithFirstPaymentSumup +
+              repeatingWithoutFirstPayment,
+          color: Colors.amberAccent.shade200,
+          width: 15,
+          borderRadius: BorderRadius.zero,
         ),
       ],
+    );
+  }
+
+  Widget leftTitles(double value, TitleMeta meta) {
+    if (value == meta.max) {
+      return Container();
+    }
+    const style = TextStyle(fontSize: 10);
+    return SideTitleWidget(
+      meta: meta,
+      child: Text(meta.formattedValue, style: style),
     );
   }
 
@@ -182,62 +254,73 @@ class LocationDetailsPage extends ConsumerWidget {
           final dates =
               dateSortedData.entries.toList()
                 ..sort((a, b) => a.key.compareTo(b.key));
-          return BarChart(
-            BarChartData(
-              titlesData: FlTitlesData(
-                leftTitles: const AxisTitles(),
-                rightTitles: const AxisTitles(),
-                topTitles: const AxisTitles(),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (millis, _) {
-                      final date = DateTime.fromMillisecondsSinceEpoch(
-                        millis.toInt(),
-                      );
-                      return Text(
-                        "${date.day.toString().padLeft(2, "0")}.${date.month.toString().padLeft(2, "0")}.",
-                      );
-                    },
-                    reservedSize: 20,
-                  ),
+          return Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Text("Hello World"),
+                    Expanded(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxHeight: 200),
+                        child: BarChart(
+                          BarChartData(
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  interval: 20,
+                                  showTitles: true,
+                                  reservedSize: 40,
+                                  getTitlesWidget: leftTitles,
+                                ),
+                              ),
+                              rightTitles: const AxisTitles(),
+                              topTitles: const AxisTitles(),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (millis, _) {
+                                    final date =
+                                        DateTime.fromMillisecondsSinceEpoch(
+                                          millis.toInt(),
+                                        );
+                                    return Text(
+                                      "${date.day.toString().padLeft(2, "0")}.${date.month.toString().padLeft(2, "0")}.",
+                                      style: TextStyle(fontSize: 13),
+                                    );
+                                  },
+                                  reservedSize: 20,
+                                ),
+                              ),
+                            ),
+                            barGroups:
+                                dates
+                                    .map(
+                                      (entry) => generateGroupData(
+                                        entry.key,
+                                        entry.value,
+                                      ),
+                                    )
+                                    .toList(),
+                            gridData: FlGridData(
+                              horizontalInterval: 20,
+                              show: true,
+                              getDrawingHorizontalLine:
+                                  (value) => FlLine(
+                                    color: Colors.grey.shade200,
+                                    strokeWidth: 1,
+                                  ),
+                              drawVerticalLine: false,
+                            ),
+                            borderData: FlBorderData(show: false),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              barGroups:
-                  dates
-                      .map(
-                        (entry) => generateGroupData(
-                          entry.key,
-                          entry.value
-                              .where((payment) => payment["type"] == "once")
-                              .fold(
-                                0.0,
-                                (total, payment) => total + payment["amount"],
-                              ),
-                          entry.value
-                              .where(
-                                (payment) =>
-                                    payment["type"] == "repeating" &&
-                                    payment["has_first_payment"] == true,
-                              )
-                              .fold(
-                                0.0,
-                                (total, payment) => total + payment["amount"],
-                              ),
-                          entry.value
-                              .where(
-                                (payment) =>
-                                    payment["type"] == "repeating" &&
-                                    payment["has_first_payment"] != true,
-                              )
-                              .fold(
-                                0.0,
-                                (total, payment) => total + payment["amount"],
-                              ),
-                        ),
-                      )
-                      .toList(),
-            ),
+            ],
           );
         },
         error: (object, stackTrace) {

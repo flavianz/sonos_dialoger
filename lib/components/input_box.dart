@@ -64,7 +64,6 @@ class DateRangeDropdown extends ConsumerWidget {
           DropdownMenuItem(value: "yesterday", child: Text("Gestern")),
           DropdownMenuItem(value: "week", child: Text("Diese Woche")),
           DropdownMenuItem(value: "month", child: Text("Dieser Monat")),
-          DropdownMenuItem(value: "all", child: Text("Alle")),
           DropdownMenuItem(value: "custom", child: Text("Benutzerdefiniert")),
         ],
         onChanged: (newValue) async {

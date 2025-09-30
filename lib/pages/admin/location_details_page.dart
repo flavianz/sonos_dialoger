@@ -132,9 +132,6 @@ class LocationDetailsPage extends ConsumerWidget {
               payment["has_first_payment"] != true,
         )
         .fold(0.0, (total, payment) => total + payment["amount"]);
-    print(
-      "$onceTwint $onceSumup $repeatingWithFirstPaymentTwint $repeatingWithFirstPaymentSumup $repeatingWithoutFirstPayment",
-    );
     return BarChartGroupData(
       x: millis,
       groupVertically: true,
@@ -255,64 +252,246 @@ class LocationDetailsPage extends ConsumerWidget {
               dateSortedData.entries.toList()
                 ..sort((a, b) => a.key.compareTo(b.key));
           return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Expanded(
                 child: Row(
                   children: [
-                    Text("Hello World"),
+                    Card.outlined(
+                      elevation: 2,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 18,
+                        ),
+                        constraints: BoxConstraints(maxHeight: 300),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Einnahmen diese Woche",
+                              style: TextStyle(fontSize: 13),
+                            ),
+                            Text(
+                              "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"]).toString()} CHF",
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              "+ 13% über dem Durchschnitt",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     Expanded(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxHeight: 200),
-                        child: BarChart(
-                          BarChartData(
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  interval: 20,
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget: leftTitles,
-                                ),
+                      child: Card.outlined(
+                        elevation: 2,
+                        child: Container(
+                          padding: EdgeInsets.all(18),
+                          constraints: BoxConstraints(maxHeight: 300),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Diese Woche",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              rightTitles: const AxisTitles(),
-                              topTitles: const AxisTitles(),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (millis, _) {
-                                    final date =
-                                        DateTime.fromMillisecondsSinceEpoch(
-                                          millis.toInt(),
-                                        );
-                                    return Text(
-                                      "${date.day.toString().padLeft(2, "0")}.${date.month.toString().padLeft(2, "0")}.",
-                                      style: TextStyle(fontSize: 13),
-                                    );
-                                  },
-                                  reservedSize: 20,
-                                ),
-                              ),
-                            ),
-                            barGroups:
-                                dates
-                                    .map(
-                                      (entry) => generateGroupData(
-                                        entry.key,
-                                        entry.value,
+                              SizedBox(height: 5),
+                              Expanded(
+                                child: BarChart(
+                                  BarChartData(
+                                    titlesData: FlTitlesData(
+                                      leftTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          interval: 20,
+                                          showTitles: true,
+                                          reservedSize: 40,
+                                          getTitlesWidget: leftTitles,
+                                        ),
                                       ),
-                                    )
-                                    .toList(),
-                            gridData: FlGridData(
-                              horizontalInterval: 20,
-                              show: true,
-                              getDrawingHorizontalLine:
-                                  (value) => FlLine(
-                                    color: Colors.grey.shade200,
-                                    strokeWidth: 1,
+                                      rightTitles: const AxisTitles(),
+                                      topTitles: const AxisTitles(),
+                                      bottomTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          getTitlesWidget: (millis, _) {
+                                            final date =
+                                                DateTime.fromMillisecondsSinceEpoch(
+                                                  millis.toInt(),
+                                                );
+                                            return Text(
+                                              "${date.day.toString().padLeft(2, "0")}.${date.month.toString().padLeft(2, "0")}.",
+                                              style: TextStyle(fontSize: 13),
+                                            );
+                                          },
+                                          reservedSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                    barGroups:
+                                        dates
+                                            .map(
+                                              (entry) => generateGroupData(
+                                                entry.key,
+                                                entry.value,
+                                              ),
+                                            )
+                                            .toList(),
+                                    gridData: FlGridData(
+                                      horizontalInterval: 20,
+                                      show: true,
+                                      getDrawingHorizontalLine:
+                                          (value) => FlLine(
+                                            color: Colors.grey.shade200,
+                                            strokeWidth: 1,
+                                          ),
+                                      drawVerticalLine: false,
+                                    ),
+                                    borderData: FlBorderData(show: false),
                                   ),
-                              drawVerticalLine: false,
-                            ),
-                            borderData: FlBorderData(show: false),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Row(
+                                      spacing: 3,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              50,
+                                            ),
+                                            color: Colors.amberAccent,
+                                          ),
+                                          height: 12,
+                                          width: 12,
+                                        ),
+                                        Tooltip(
+                                          message: "LSV ohne Erstzahlung",
+                                          child: Text(
+                                            "LSV",
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: [
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightGreen.shade300,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "LSV mit Erstzahlung via SumUp",
+                                              child: Text(
+                                                "LSV mit SumUp",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightGreen.shade800,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "LSV mit Erstzahlung via Twint",
+                                              child: Text(
+                                                "LSV mit Twint",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: [
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightBlue.shade200,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "Einmalige Zahlung via SumUp",
+                                              child: Text(
+                                                "Einmalig mit SumUp",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightBlue.shade700,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "Einmalige Zahlung via Twint",
+                                              child: Text(
+                                                "Einmalig mit Twint",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

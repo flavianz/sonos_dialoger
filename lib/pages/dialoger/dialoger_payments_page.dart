@@ -29,13 +29,13 @@ final dialogerPaymentsProvider =
                     ),
                   ),
                 ),
-                Timespan.thisMonth => Filter(
+                Timespan.month => Filter(
                   "timestamp",
                   isGreaterThanOrEqualTo: Timestamp.fromDate(
                     DateTime(DateTime.now().year, DateTime.now().month, 0),
                   ),
                 ),
-                Timespan.thisWeek => Filter(
+                Timespan.week => Filter(
                   "timestamp",
                   isGreaterThanOrEqualTo: Timestamp.fromDate(
                     DateTime(

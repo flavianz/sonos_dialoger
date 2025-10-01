@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum Timespan { today, yesterday, thisWeek, thisMonth, custom }
+enum Timespan { today, yesterday, week, month, custom }
 
 final timespanProvider = StateProvider<Timespan>((_) => Timespan.today);
 final rangeProvider = StateProvider((_) {

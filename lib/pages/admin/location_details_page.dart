@@ -35,13 +35,13 @@ final locationPaymentsProvider = StreamProvider.family((
               ),
             ),
           ),
-          Timespan.thisMonth => Filter(
+          Timespan.month => Filter(
             "timestamp",
             isGreaterThanOrEqualTo: Timestamp.fromDate(
               DateTime(DateTime.now().year, DateTime.now().month, 1),
             ),
           ),
-          Timespan.thisWeek => Filter(
+          Timespan.week => Filter(
             "timestamp",
             isGreaterThanOrEqualTo: Timestamp.fromDate(
               DateTime(
@@ -259,7 +259,7 @@ class LocationDetailsPage extends ConsumerWidget {
                         .map((payment) => payment.$2)
                         .toList();
               }
-            } else if (timespan == Timespan.thisWeek) {
+            } else if (timespan == Timespan.week) {
               final weekdayPrefixedPayments =
                   paymentsData.docs
                       .map(
@@ -279,7 +279,7 @@ class LocationDetailsPage extends ConsumerWidget {
                         .map((payment) => payment.$2)
                         .toList();
               }
-            } else if (timespan == Timespan.thisMonth) {
+            } else if (timespan == Timespan.month) {
               final dayPrefixedPayments =
                   paymentsData.docs
                       .map(
@@ -303,43 +303,75 @@ class LocationDetailsPage extends ConsumerWidget {
               }
             } else if (timespan == Timespan.custom) {
               final dateRange = ref.watch(rangeProvider);
-              final int diff =
-                  ((dateRange.end.millisecondsSinceEpoch -
-                              dateRange.start.millisecondsSinceEpoch) /
-                          10)
-                      .ceil();
+              final duration = dateRange.end.difference(dateRange.start).inDays;
 
               final millisPrefixedPayments =
                   paymentsData.docs.map((doc) {
-                    final millis =
+                    final date =
                         ((doc.data()["timestamp"] ?? Timestamp.now())
                                 as Timestamp)
-                            .toDate()
-                            .millisecondsSinceEpoch;
-                    return (millis - millis % diff, doc.data());
+                            .toDate();
+                    if (duration < 30) {
+                      return (
+                        DateTime(
+                          date.year,
+                          date.month,
+                          date.day,
+                        ).millisecondsSinceEpoch,
+                        doc.data(),
+                      );
+                    } else if (duration < 140) {
+                      return (
+                        DateTime(
+                          date.year,
+                          date.month,
+                          date.day - date.weekday + 1,
+                        ).millisecondsSinceEpoch,
+                        doc.data(),
+                      );
+                    } else {
+                      return (
+                        DateTime(date.year, date.month).millisecondsSinceEpoch,
+                        doc.data(),
+                      );
+                    }
                   }).toList();
-              print(millisPrefixedPayments);
-              for (
-                int i = dateRange.start.millisecondsSinceEpoch;
-                i <= dateRange.end.millisecondsSinceEpoch;
-                i += diff
-              ) {
-                dateSortedData[i] =
+              DateTime startDate =
+                  duration < 30
+                      ? DateTime(
+                        dateRange.start.year,
+                        dateRange.start.month,
+                        dateRange.start.day,
+                      )
+                      : (duration < 140
+                          ? DateTime(
+                            dateRange.start.year,
+                            dateRange.start.month,
+                            dateRange.start.day - dateRange.start.weekday + 1,
+                          )
+                          : DateTime(
+                            dateRange.start.year,
+                            dateRange.start.month,
+                          ));
+              while (startDate.isBefore(dateRange.end)) {
+                dateSortedData[startDate.millisecondsSinceEpoch] =
                     millisPrefixedPayments
-                        .where((payment) => payment.$1 == i)
+                        .where(
+                          (payment) =>
+                              payment.$1 == startDate.millisecondsSinceEpoch,
+                        )
                         .map((payment) => payment.$2)
                         .toList();
+                if (duration < 140) {
+                  startDate = startDate.add(
+                    Duration(days: duration < 30 ? 1 : 7),
+                  );
+                } else {
+                  startDate = DateTime(startDate.year, startDate.month + 1);
+                }
               }
             }
             if (dateSortedData.isNotEmpty) {
-              print(
-                dateSortedData.values.map(
-                  (list) => list.fold(
-                    0.0,
-                    (total, element) => total + element["amount"],
-                  ),
-                ),
-              );
               maxVal = max(
                 dateSortedData.values
                     .map(
@@ -405,10 +437,16 @@ class LocationDetailsPage extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "Diese Woche",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
+                              Text(switch (ref.watch(timespanProvider)) {
+                                Timespan.today => "Heute",
+                                Timespan.yesterday => "Gestern",
+                                Timespan.week => "Diese Woche",
+                                Timespan.month => "Dieser Monat",
+                                Timespan.custom => () {
+                                  final dateRange = ref.watch(rangeProvider);
+                                  return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
+                                }(),
+                              }, style: TextStyle(fontWeight: FontWeight.bold)),
                               SizedBox(height: 5),
                               Expanded(
                                 child:
@@ -441,11 +479,6 @@ class LocationDetailsPage extends ConsumerWidget {
                                                     titleData,
                                                     _,
                                                   ) {
-                                                    final date =
-                                                        DateTime.fromMillisecondsSinceEpoch(
-                                                          titleData.toInt(),
-                                                        );
-
                                                     return switch (ref.watch(
                                                       timespanProvider,
                                                     )) {
@@ -459,7 +492,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                                           fontSize: 13,
                                                         ),
                                                       ),
-                                                      Timespan.thisWeek => Text(
+                                                      Timespan.week => Text(
                                                         switch (titleData) {
                                                           2 => "Di",
                                                           3 => "Mi",
@@ -470,7 +503,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                                           1 || _ => "Mo",
                                                         },
                                                       ),
-                                                      Timespan.thisMonth =>
+                                                      Timespan.month =>
                                                         titleData %
                                                                     (DateTime.now().day /
                                                                             8)
@@ -483,12 +516,46 @@ class LocationDetailsPage extends ConsumerWidget {
                                                               ),
                                                             )
                                                             : SizedBox.shrink(),
-                                                      Timespan.custom => Text(
-                                                        "${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).day}.",
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                        ),
-                                                      ),
+                                                      Timespan.custom => () {
+                                                        final dateRange = ref
+                                                            .watch(
+                                                              rangeProvider,
+                                                            );
+                                                        final duration =
+                                                            dateRange.end
+                                                                .difference(
+                                                                  dateRange
+                                                                      .start,
+                                                                )
+                                                                .inDays;
+                                                        return Text(
+                                                          duration <= 30
+                                                              ? "${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).day}."
+                                                              : (duration < 140
+                                                                  ? "KW ${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).weekOfYear}"
+                                                                  : switch (DateTime.fromMillisecondsSinceEpoch(
+                                                                    titleData
+                                                                        .ceil(),
+                                                                  ).month) {
+                                                                    2 => "Feb",
+                                                                    3 => "Mär",
+                                                                    4 => "Apr",
+                                                                    5 => "Mai",
+                                                                    6 => "Jun",
+                                                                    7 => "Jul",
+                                                                    8 => "Aug",
+                                                                    9 => "Sep",
+                                                                    10 => "Okt",
+                                                                    11 => "Nov",
+                                                                    12 => "Dez",
+                                                                    1 ||
+                                                                    _ => "Jan",
+                                                                  }),
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                          ),
+                                                        );
+                                                      }(),
                                                     };
                                                   },
                                                   reservedSize: 20,
@@ -693,5 +760,14 @@ class LocationDetailsPage extends ConsumerWidget {
         loading: () => Center(child: CircularProgressIndicator()),
       ),
     );
+  }
+}
+
+extension DateTimeExtension on DateTime {
+  int get weekOfYear {
+    final startOfYear = DateTime(year, 1, 1);
+    final weekNumber =
+        ((difference(startOfYear).inDays + startOfYear.weekday) / 7).ceil();
+    return weekNumber;
   }
 }

@@ -62,21 +62,47 @@ class DateRangeDropdown extends ConsumerWidget {
         items: [
           DropdownMenuItem(value: Timespan.today, child: Text("Heute")),
           DropdownMenuItem(value: Timespan.yesterday, child: Text("Gestern")),
-          DropdownMenuItem(
-            value: Timespan.thisWeek,
-            child: Text("Diese Woche"),
-          ),
-          DropdownMenuItem(
-            value: Timespan.thisMonth,
-            child: Text("Dieser Monat"),
-          ),
+          DropdownMenuItem(value: Timespan.week, child: Text("Diese Woche")),
+          DropdownMenuItem(value: Timespan.month, child: Text("Dieser Monat")),
           DropdownMenuItem(
             value: Timespan.custom,
             child: Text("Benutzerdefiniert"),
           ),
         ],
         onChanged: (newValue) async {
-          if (newValue == "custom") {
+          if (newValue == Timespan.today || newValue == Timespan.yesterday) {
+            final now =
+                newValue == Timespan.today
+                    ? DateTime.now()
+                    : DateTime.now().subtract(Duration(days: 1));
+            ref.read(rangeProvider.notifier).state = DateTimeRange(
+              start: DateTime(now.year, now.month, now.day),
+              end: DateTime(
+                now.year,
+                now.month,
+                now.day,
+              ).add(Duration(days: 1)).subtract(Duration(milliseconds: 1)),
+            );
+          } else if (newValue == Timespan.week) {
+            final now = DateTime.now();
+            ref.read(rangeProvider.notifier).state = DateTimeRange(
+              start: DateTime(now.year, now.month, now.day - now.weekday + 1),
+              end: DateTime(
+                now.year,
+                now.month,
+                now.day - now.weekday + 8,
+              ).subtract(Duration(milliseconds: 1)),
+            );
+          } else if (newValue == Timespan.month) {
+            final now = DateTime.now();
+            ref.read(rangeProvider.notifier).state = DateTimeRange(
+              start: DateTime(now.year, now.month, 0),
+              end: DateTime(
+                now.year,
+                now.month + 1,
+              ).subtract(Duration(milliseconds: 1)),
+            );
+          } else if (newValue == Timespan.custom) {
             final now = DateTime.now();
             final DateTimeRange? range = await showDateRangePicker(
               initialDateRange: ref.read(rangeProvider),

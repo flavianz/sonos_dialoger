@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +21,7 @@ final locationPaymentsProvider = StreamProvider.family((
       .collection("payments")
       .where(
         Filter.and(switch (ref.watch(timespanProvider)) {
-          "custom" => Filter.and(
+          Timespan.custom => Filter.and(
             Filter(
               "timestamp",
               isGreaterThanOrEqualTo: Timestamp.fromDate(
@@ -33,13 +35,13 @@ final locationPaymentsProvider = StreamProvider.family((
               ),
             ),
           ),
-          "month" => Filter(
+          Timespan.thisMonth => Filter(
             "timestamp",
             isGreaterThanOrEqualTo: Timestamp.fromDate(
-              DateTime(DateTime.now().year, DateTime.now().month, 0),
+              DateTime(DateTime.now().year, DateTime.now().month, 1),
             ),
           ),
-          "week" => Filter(
+          Timespan.thisWeek => Filter(
             "timestamp",
             isGreaterThanOrEqualTo: Timestamp.fromDate(
               DateTime(
@@ -51,7 +53,7 @@ final locationPaymentsProvider = StreamProvider.family((
               ),
             ),
           ),
-          "yesterday" => () {
+          Timespan.yesterday => () {
             final yesterday = DateTime.now().subtract(Duration(days: 1));
             return Filter.and(
               Filter(
@@ -72,7 +74,7 @@ final locationPaymentsProvider = StreamProvider.family((
               ),
             );
           }(),
-          "today" || _ => Filter(
+          Timespan.today => Filter(
             "timestamp",
             isGreaterThanOrEqualTo: Timestamp.fromDate(
               DateTime(
@@ -226,29 +228,133 @@ class LocationDetailsPage extends ConsumerWidget {
       body: locationPaymentDocs.when(
         data: (paymentsData) {
           final Map<int, List<Map>> dateSortedData = {};
-          final dateRange = ref.watch(rangeProvider);
-          DateTime date = dateRange.start;
-          while (!date.isAfter(dateRange.end)) {
-            dateSortedData[date.millisecondsSinceEpoch] = [];
-            date = date.add(Duration(days: 1));
-          }
-          for (final paymentDoc in paymentsData.docs) {
-            final date =
-                ((paymentDoc.data()["timestamp"] ?? Timestamp.now())
-                        as Timestamp)
-                    .toDate();
-            final dateMillis =
-                DateTime(
-                  date.year,
-                  date.month,
-                  date.day,
-                ).millisecondsSinceEpoch;
-            if (dateSortedData[dateMillis] == null) {
-              dateSortedData[dateMillis] = [];
+          double maxVal = 1;
+          if (paymentsData.docs.isNotEmpty) {
+            final timespan = ref.watch(timespanProvider);
+            if (timespan == Timespan.today || timespan == Timespan.yesterday) {
+              final hoursPrefixedPayments =
+                  paymentsData.docs
+                      .map(
+                        (doc) => (
+                          ((doc.data()["timestamp"] ?? Timestamp.now())
+                                  as Timestamp)
+                              .toDate()
+                              .hour,
+                          doc.data(),
+                        ),
+                      )
+                      .toList();
+              final int minHour =
+                  hoursPrefixedPayments
+                      .reduce((a, b) => a.$1 <= b.$1 ? a : b)
+                      .$1;
+              final int maxHour =
+                  hoursPrefixedPayments
+                      .reduce((a, b) => a.$1 >= b.$1 ? a : b)
+                      .$1;
+              for (int i = min(minHour, 8); i <= max(maxHour, 19); i++) {
+                dateSortedData[i] =
+                    hoursPrefixedPayments
+                        .where((payment) => payment.$1 == i)
+                        .map((payment) => payment.$2)
+                        .toList();
+              }
+            } else if (timespan == Timespan.thisWeek) {
+              final weekdayPrefixedPayments =
+                  paymentsData.docs
+                      .map(
+                        (doc) => (
+                          ((doc.data()["timestamp"] ?? Timestamp.now())
+                                  as Timestamp)
+                              .toDate()
+                              .weekday,
+                          doc.data(),
+                        ),
+                      )
+                      .toList();
+              for (int i = 1; i <= DateTime.now().weekday; i++) {
+                dateSortedData[i] =
+                    weekdayPrefixedPayments
+                        .where((payment) => payment.$1 == i)
+                        .map((payment) => payment.$2)
+                        .toList();
+              }
+            } else if (timespan == Timespan.thisMonth) {
+              final dayPrefixedPayments =
+                  paymentsData.docs
+                      .map(
+                        (doc) => (
+                          ((doc.data()["timestamp"] ?? Timestamp.now())
+                                  as Timestamp)
+                              .toDate()
+                              .day,
+                          doc.data(),
+                        ),
+                      )
+                      .toList();
+              final int maxDay =
+                  dayPrefixedPayments.reduce((a, b) => a.$1 >= b.$1 ? a : b).$1;
+              for (int i = 1; i <= maxDay; i++) {
+                dateSortedData[i] =
+                    dayPrefixedPayments
+                        .where((payment) => payment.$1 == i)
+                        .map((payment) => payment.$2)
+                        .toList();
+              }
+            } else if (timespan == Timespan.custom) {
+              final dateRange = ref.watch(rangeProvider);
+              final int diff =
+                  ((dateRange.end.millisecondsSinceEpoch -
+                              dateRange.start.millisecondsSinceEpoch) /
+                          10)
+                      .ceil();
+
+              final millisPrefixedPayments =
+                  paymentsData.docs.map((doc) {
+                    final millis =
+                        ((doc.data()["timestamp"] ?? Timestamp.now())
+                                as Timestamp)
+                            .toDate()
+                            .millisecondsSinceEpoch;
+                    return (millis - millis % diff, doc.data());
+                  }).toList();
+              print(millisPrefixedPayments);
+              for (
+                int i = dateRange.start.millisecondsSinceEpoch;
+                i <= dateRange.end.millisecondsSinceEpoch;
+                i += diff
+              ) {
+                dateSortedData[i] =
+                    millisPrefixedPayments
+                        .where((payment) => payment.$1 == i)
+                        .map((payment) => payment.$2)
+                        .toList();
+              }
             }
-            dateSortedData[dateMillis]?.add(paymentDoc.data());
+            if (dateSortedData.isNotEmpty) {
+              print(
+                dateSortedData.values.map(
+                  (list) => list.fold(
+                    0.0,
+                    (total, element) => total + element["amount"],
+                  ),
+                ),
+              );
+              maxVal = max(
+                dateSortedData.values
+                    .map(
+                      (list) => list.fold(
+                        0.0,
+                        (total, element) => total + element["amount"],
+                      ),
+                    )
+                    .reduce(max),
+                1,
+              );
+              print(maxVal);
+            }
           }
-          final dates =
+          final sortedDates =
               dateSortedData.entries.toList()
                 ..sort((a, b) => a.key.compareTo(b.key));
           return Column(
@@ -305,192 +411,269 @@ class LocationDetailsPage extends ConsumerWidget {
                               ),
                               SizedBox(height: 5),
                               Expanded(
-                                child: BarChart(
-                                  BarChartData(
-                                    titlesData: FlTitlesData(
-                                      leftTitles: AxisTitles(
-                                        sideTitles: SideTitles(
-                                          interval: 20,
-                                          showTitles: true,
-                                          reservedSize: 40,
-                                          getTitlesWidget: leftTitles,
-                                        ),
-                                      ),
-                                      rightTitles: const AxisTitles(),
-                                      topTitles: const AxisTitles(),
-                                      bottomTitles: AxisTitles(
-                                        sideTitles: SideTitles(
-                                          showTitles: true,
-                                          getTitlesWidget: (millis, _) {
-                                            final date =
-                                                DateTime.fromMillisecondsSinceEpoch(
-                                                  millis.toInt(),
-                                                );
-                                            return Text(
-                                              "${date.day.toString().padLeft(2, "0")}.${date.month.toString().padLeft(2, "0")}.",
-                                              style: TextStyle(fontSize: 13),
-                                            );
-                                          },
-                                          reservedSize: 20,
-                                        ),
-                                      ),
-                                    ),
-                                    barGroups:
-                                        dates
-                                            .map(
-                                              (entry) => generateGroupData(
-                                                entry.key,
-                                                entry.value,
+                                child:
+                                    paymentsData.docs.isEmpty
+                                        ? Center(child: Text("Keine Daten"))
+                                        : BarChart(
+                                          BarChartData(
+                                            titlesData: FlTitlesData(
+                                              leftTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  interval: max(
+                                                    ((maxVal / 6) -
+                                                                ((maxVal / 6) %
+                                                                    10))
+                                                            .toDouble() *
+                                                        2,
+                                                    1,
+                                                  ),
+                                                  showTitles: true,
+                                                  reservedSize: 40,
+                                                  getTitlesWidget: leftTitles,
+                                                ),
                                               ),
-                                            )
-                                            .toList(),
-                                    gridData: FlGridData(
-                                      horizontalInterval: 20,
-                                      show: true,
-                                      getDrawingHorizontalLine:
-                                          (value) => FlLine(
-                                            color: Colors.grey.shade200,
-                                            strokeWidth: 1,
+                                              rightTitles: const AxisTitles(),
+                                              topTitles: const AxisTitles(),
+                                              bottomTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: true,
+                                                  getTitlesWidget: (
+                                                    titleData,
+                                                    _,
+                                                  ) {
+                                                    final date =
+                                                        DateTime.fromMillisecondsSinceEpoch(
+                                                          titleData.toInt(),
+                                                        );
+
+                                                    return switch (ref.watch(
+                                                      timespanProvider,
+                                                    )) {
+                                                      Timespan.today ||
+                                                      Timespan
+                                                          .yesterday => Text(
+                                                        titleData
+                                                            .toString()
+                                                            .padLeft(2, "0"),
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                      Timespan.thisWeek => Text(
+                                                        switch (titleData) {
+                                                          2 => "Di",
+                                                          3 => "Mi",
+                                                          4 => "Do",
+                                                          5 => "Fr",
+                                                          6 => "Sa",
+                                                          7 => "So",
+                                                          1 || _ => "Mo",
+                                                        },
+                                                      ),
+                                                      Timespan.thisMonth =>
+                                                        titleData %
+                                                                    (DateTime.now().day /
+                                                                            8)
+                                                                        .ceil() ==
+                                                                0
+                                                            ? Text(
+                                                              "${titleData.toString().padLeft(2, "0")}.",
+                                                              style: TextStyle(
+                                                                fontSize: 13,
+                                                              ),
+                                                            )
+                                                            : SizedBox.shrink(),
+                                                      Timespan.custom => Text(
+                                                        "${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).day}.",
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    };
+                                                  },
+                                                  reservedSize: 20,
+                                                ),
+                                              ),
+                                            ),
+                                            barGroups:
+                                                sortedDates
+                                                    .map(
+                                                      (entry) =>
+                                                          generateGroupData(
+                                                            entry.key,
+                                                            entry.value,
+                                                          ),
+                                                    )
+                                                    .toList(),
+                                            gridData: FlGridData(
+                                              horizontalInterval: max(
+                                                ((maxVal / 6) -
+                                                        ((maxVal / 6) % 10))
+                                                    .toDouble(),
+                                                1,
+                                              ),
+                                              show: true,
+                                              getDrawingHorizontalLine:
+                                                  (value) => FlLine(
+                                                    color: Colors.grey.shade200,
+                                                    strokeWidth: 1,
+                                                  ),
+                                              drawVerticalLine: false,
+                                            ),
+                                            borderData: FlBorderData(
+                                              show: false,
+                                            ),
                                           ),
-                                      drawVerticalLine: false,
-                                    ),
-                                    borderData: FlBorderData(show: false),
-                                  ),
-                                ),
+                                        ),
                               ),
                               SizedBox(height: 10),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    Row(
-                                      spacing: 3,
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              50,
+                              paymentsData.docs.isNotEmpty
+                                  ? Row(
+                                    spacing: 10,
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Row(
+                                        spacing: 3,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                              color: Colors.amberAccent,
                                             ),
-                                            color: Colors.amberAccent,
+                                            height: 12,
+                                            width: 12,
                                           ),
-                                          height: 12,
-                                          width: 12,
-                                        ),
-                                        Tooltip(
-                                          message: "LSV ohne Erstzahlung",
-                                          child: Text(
-                                            "LSV",
-                                            style: TextStyle(fontSize: 13),
+                                          Tooltip(
+                                            message: "LSV ohne Erstzahlung",
+                                            child: Text(
+                                              "LSV",
+                                              style: TextStyle(fontSize: 13),
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      children: [
-                                        Row(
-                                          spacing: 3,
-                                          children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color:
-                                                    Colors.lightGreen.shade300,
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            spacing: 3,
+                                            children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  color:
+                                                      Colors
+                                                          .lightGreen
+                                                          .shade300,
+                                                ),
+                                                height: 12,
+                                                width: 12,
                                               ),
-                                              height: 12,
-                                              width: 12,
-                                            ),
-                                            Tooltip(
-                                              message:
-                                                  "LSV mit Erstzahlung via SumUp",
-                                              child: Text(
-                                                "LSV mit SumUp",
-                                                style: TextStyle(fontSize: 13),
+                                              Tooltip(
+                                                message:
+                                                    "LSV mit Erstzahlung via SumUp",
+                                                child: Text(
+                                                  "LSV mit SumUp",
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          spacing: 3,
-                                          children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color:
-                                                    Colors.lightGreen.shade800,
+                                            ],
+                                          ),
+                                          Row(
+                                            spacing: 3,
+                                            children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  color:
+                                                      Colors
+                                                          .lightGreen
+                                                          .shade800,
+                                                ),
+                                                height: 12,
+                                                width: 12,
                                               ),
-                                              height: 12,
-                                              width: 12,
-                                            ),
-                                            Tooltip(
-                                              message:
-                                                  "LSV mit Erstzahlung via Twint",
-                                              child: Text(
-                                                "LSV mit Twint",
-                                                style: TextStyle(fontSize: 13),
+                                              Tooltip(
+                                                message:
+                                                    "LSV mit Erstzahlung via Twint",
+                                                child: Text(
+                                                  "LSV mit Twint",
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      children: [
-                                        Row(
-                                          spacing: 3,
-                                          children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color:
-                                                    Colors.lightBlue.shade200,
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            spacing: 3,
+                                            children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  color:
+                                                      Colors.lightBlue.shade200,
+                                                ),
+                                                height: 12,
+                                                width: 12,
                                               ),
-                                              height: 12,
-                                              width: 12,
-                                            ),
-                                            Tooltip(
-                                              message:
-                                                  "Einmalige Zahlung via SumUp",
-                                              child: Text(
-                                                "Einmalig mit SumUp",
-                                                style: TextStyle(fontSize: 13),
+                                              Tooltip(
+                                                message:
+                                                    "Einmalige Zahlung via SumUp",
+                                                child: Text(
+                                                  "Einmalig mit SumUp",
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          spacing: 3,
-                                          children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                color:
-                                                    Colors.lightBlue.shade700,
+                                            ],
+                                          ),
+                                          Row(
+                                            spacing: 3,
+                                            children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  color:
+                                                      Colors.lightBlue.shade700,
+                                                ),
+                                                height: 12,
+                                                width: 12,
                                               ),
-                                              height: 12,
-                                              width: 12,
-                                            ),
-                                            Tooltip(
-                                              message:
-                                                  "Einmalige Zahlung via Twint",
-                                              child: Text(
-                                                "Einmalig mit Twint",
-                                                style: TextStyle(fontSize: 13),
+                                              Tooltip(
+                                                message:
+                                                    "Einmalige Zahlung via Twint",
+                                                child: Text(
+                                                  "Einmalig mit Twint",
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                  : SizedBox.shrink(),
                             ],
                           ),
                         ),

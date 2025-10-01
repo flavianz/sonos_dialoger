@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final timespanProvider = StateProvider<String>((_) => "today");
+enum Timespan { today, yesterday, thisWeek, thisMonth, custom }
+
+final timespanProvider = StateProvider<Timespan>((_) => Timespan.today);
 final rangeProvider = StateProvider((_) {
   final yesterday = DateTime.now().subtract(Duration(days: 7));
   final tomorrow = DateTime.now().add(Duration(days: 1));

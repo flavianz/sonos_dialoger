@@ -60,11 +60,20 @@ class DateRangeDropdown extends ConsumerWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
         ),
         items: [
-          DropdownMenuItem(value: "today", child: Text("Heute")),
-          DropdownMenuItem(value: "yesterday", child: Text("Gestern")),
-          DropdownMenuItem(value: "week", child: Text("Diese Woche")),
-          DropdownMenuItem(value: "month", child: Text("Dieser Monat")),
-          DropdownMenuItem(value: "custom", child: Text("Benutzerdefiniert")),
+          DropdownMenuItem(value: Timespan.today, child: Text("Heute")),
+          DropdownMenuItem(value: Timespan.yesterday, child: Text("Gestern")),
+          DropdownMenuItem(
+            value: Timespan.thisWeek,
+            child: Text("Diese Woche"),
+          ),
+          DropdownMenuItem(
+            value: Timespan.thisMonth,
+            child: Text("Dieser Monat"),
+          ),
+          DropdownMenuItem(
+            value: Timespan.custom,
+            child: Text("Benutzerdefiniert"),
+          ),
         ],
         onChanged: (newValue) async {
           if (newValue == "custom") {
@@ -85,7 +94,8 @@ class DateRangeDropdown extends ConsumerWidget {
               );
             }
           }
-          ref.read(timespanProvider.notifier).state = newValue ?? "today";
+          ref.read(timespanProvider.notifier).state =
+              newValue ?? Timespan.today;
         },
       ),
     );

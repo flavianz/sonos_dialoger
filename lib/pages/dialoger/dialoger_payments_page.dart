@@ -15,7 +15,7 @@ final dialogerPaymentsProvider =
           .where(
             Filter.and(
               switch (ref.watch(timespanProvider)) {
-                "custom" => Filter.and(
+                Timespan.custom => Filter.and(
                   Filter(
                     "timestamp",
                     isGreaterThanOrEqualTo: Timestamp.fromDate(
@@ -29,13 +29,13 @@ final dialogerPaymentsProvider =
                     ),
                   ),
                 ),
-                "month" => Filter(
+                Timespan.thisMonth => Filter(
                   "timestamp",
                   isGreaterThanOrEqualTo: Timestamp.fromDate(
                     DateTime(DateTime.now().year, DateTime.now().month, 0),
                   ),
                 ),
-                "week" => Filter(
+                Timespan.thisWeek => Filter(
                   "timestamp",
                   isGreaterThanOrEqualTo: Timestamp.fromDate(
                     DateTime(
@@ -47,7 +47,7 @@ final dialogerPaymentsProvider =
                     ),
                   ),
                 ),
-                "yesterday" => () {
+                Timespan.yesterday => () {
                   final yesterday = DateTime.now().subtract(Duration(days: 1));
                   return Filter.and(
                     Filter(
@@ -72,7 +72,7 @@ final dialogerPaymentsProvider =
                     ),
                   );
                 }(),
-                "today" || _ => Filter(
+                Timespan.today => Filter(
                   "timestamp",
                   isGreaterThanOrEqualTo: Timestamp.fromDate(
                     DateTime(

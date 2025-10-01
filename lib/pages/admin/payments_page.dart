@@ -13,7 +13,7 @@ final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
   return FirebaseFirestore.instance
       .collection("payments")
       .where(switch (ref.watch(timespanProvider)) {
-        "custom" => Filter.and(
+        Timespan.custom => Filter.and(
           Filter(
             "timestamp",
             isGreaterThanOrEqualTo: Timestamp.fromDate(
@@ -27,13 +27,13 @@ final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
             ),
           ),
         ),
-        "month" => Filter(
+        Timespan.thisMonth => Filter(
           "timestamp",
           isGreaterThanOrEqualTo: Timestamp.fromDate(
             DateTime(DateTime.now().year, DateTime.now().month, 0),
           ),
         ),
-        "week" => Filter(
+        Timespan.thisWeek => Filter(
           "timestamp",
           isGreaterThanOrEqualTo: Timestamp.fromDate(
             DateTime(
@@ -45,7 +45,7 @@ final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
             ),
           ),
         ),
-        "yesterday" => () {
+        Timespan.yesterday => () {
           final yesterday = DateTime.now().subtract(Duration(days: 1));
           return Filter.and(
             Filter(
@@ -66,7 +66,7 @@ final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
             ),
           );
         }(),
-        "today" || _ => Filter(
+        Timespan.today || _ => Filter(
           "timestamp",
           isGreaterThanOrEqualTo: Timestamp.fromDate(
             DateTime(

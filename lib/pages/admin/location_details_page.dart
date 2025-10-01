@@ -437,16 +437,155 @@ class LocationDetailsPage extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(switch (ref.watch(timespanProvider)) {
-                                Timespan.today => "Heute",
-                                Timespan.yesterday => "Gestern",
-                                Timespan.week => "Diese Woche",
-                                Timespan.month => "Dieser Monat",
-                                Timespan.custom => () {
-                                  final dateRange = ref.watch(rangeProvider);
-                                  return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
-                                }(),
-                              }, style: TextStyle(fontWeight: FontWeight.bold)),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      final currentRange = ref.read(
+                                        rangeProvider,
+                                      );
+                                      final timespan = ref.read(
+                                        timespanProvider,
+                                      );
+                                      if (timespan == Timespan.today ||
+                                          timespan == Timespan.yesterday ||
+                                          timespan == Timespan.week) {
+                                        ref
+                                            .read(rangeProvider.notifier)
+                                            .state = DateTimeRange(
+                                          start: currentRange.start.subtract(
+                                            Duration(
+                                              days:
+                                                  timespan == Timespan.week
+                                                      ? 7
+                                                      : 1,
+                                            ),
+                                          ),
+                                          end: currentRange.end.subtract(
+                                            Duration(
+                                              days:
+                                                  timespan == Timespan.week
+                                                      ? 7
+                                                      : 1,
+                                            ),
+                                          ),
+                                        );
+                                        ref
+                                            .read(timespanProvider.notifier)
+                                            .state = Timespan.custom;
+                                      } else if (timespan == Timespan.month) {
+                                        ref
+                                            .read(rangeProvider.notifier)
+                                            .state = DateTimeRange(
+                                          start: DateTime(
+                                            currentRange.start.year,
+                                            currentRange.start.month - 1,
+                                          ),
+                                          end: DateTime(
+                                            currentRange.end.year,
+                                            currentRange.end.month - 1,
+                                          ),
+                                        );
+                                        ref
+                                            .read(timespanProvider.notifier)
+                                            .state = Timespan.custom;
+                                      } else if (timespan == Timespan.custom) {
+                                        final diff = currentRange.end
+                                            .difference(currentRange.start);
+                                        ref
+                                            .read(rangeProvider.notifier)
+                                            .state = DateTimeRange(
+                                          start: currentRange.start.subtract(
+                                            diff,
+                                          ),
+                                          end: currentRange.end.subtract(diff),
+                                        );
+                                      }
+                                    },
+                                    icon: Icon(Icons.arrow_left),
+                                  ),
+                                  Text(
+                                    switch (ref.watch(timespanProvider)) {
+                                      Timespan.today => "Heute",
+                                      Timespan.yesterday => "Gestern",
+                                      Timespan.week => "Diese Woche",
+                                      Timespan.month => "Dieser Monat",
+                                      Timespan.custom => () {
+                                        final dateRange = ref.watch(
+                                          rangeProvider,
+                                        );
+                                        return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
+                                      }(),
+                                    },
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      final currentRange = ref.read(
+                                        rangeProvider,
+                                      );
+                                      final timespan = ref.read(
+                                        timespanProvider,
+                                      );
+                                      if (timespan == Timespan.today ||
+                                          timespan == Timespan.yesterday ||
+                                          timespan == Timespan.week) {
+                                        ref
+                                            .read(rangeProvider.notifier)
+                                            .state = DateTimeRange(
+                                          start: currentRange.start.add(
+                                            Duration(
+                                              days:
+                                                  timespan == Timespan.week
+                                                      ? 7
+                                                      : 1,
+                                            ),
+                                          ),
+                                          end: currentRange.end.add(
+                                            Duration(
+                                              days:
+                                                  timespan == Timespan.week
+                                                      ? 7
+                                                      : 1,
+                                            ),
+                                          ),
+                                        );
+                                        ref
+                                            .read(timespanProvider.notifier)
+                                            .state = Timespan.custom;
+                                      } else if (timespan == Timespan.month) {
+                                        ref
+                                            .read(rangeProvider.notifier)
+                                            .state = DateTimeRange(
+                                          start: DateTime(
+                                            currentRange.start.year,
+                                            currentRange.start.month + 1,
+                                          ),
+                                          end: DateTime(
+                                            currentRange.end.year,
+                                            currentRange.end.month + 1,
+                                          ),
+                                        );
+                                        ref
+                                            .read(timespanProvider.notifier)
+                                            .state = Timespan.custom;
+                                      } else if (timespan == Timespan.custom) {
+                                        final diff = currentRange.end
+                                            .difference(currentRange.start);
+                                        ref
+                                            .read(rangeProvider.notifier)
+                                            .state = DateTimeRange(
+                                          start: currentRange.start.add(diff),
+                                          end: currentRange.end.add(diff),
+                                        );
+                                      }
+                                    },
+                                    icon: Icon(Icons.arrow_right),
+                                  ),
+                                ],
+                              ),
                               SizedBox(height: 5),
                               Expanded(
                                 child:

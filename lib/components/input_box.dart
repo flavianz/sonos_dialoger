@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -87,25 +89,41 @@ class DateRangeDropdown extends ConsumerWidget {
             final now = DateTime.now();
             ref.read(rangeProvider.notifier).state = DateTimeRange(
               start: DateTime(now.year, now.month, now.day - now.weekday + 1),
-              end: DateTime(
-                now.year,
-                now.month,
-                now.day - now.weekday + 8,
-              ).subtract(Duration(milliseconds: 1)),
+              end: DateTime(now.year, now.month, now.day - now.weekday + 8),
             );
           } else if (newValue == Timespan.month) {
             final now = DateTime.now();
             ref.read(rangeProvider.notifier).state = DateTimeRange(
-              start: DateTime(now.year, now.month, 0),
-              end: DateTime(
-                now.year,
-                now.month + 1,
-              ).subtract(Duration(milliseconds: 1)),
+              start: DateTime(now.year, now.month),
+              end: DateTime(now.year, now.month + 1),
             );
           } else if (newValue == Timespan.custom) {
             final now = DateTime.now();
+            final initialRange = ref.read(rangeProvider);
+            print(initialRange.start.toString());
+            print(
+              DateTime.fromMillisecondsSinceEpoch(
+                min(
+                  now.millisecondsSinceEpoch,
+                  initialRange.end.millisecondsSinceEpoch,
+                ),
+              ).toString(),
+            );
             final DateTimeRange? range = await showDateRangePicker(
-              initialDateRange: ref.read(rangeProvider),
+              initialDateRange: DateTimeRange(
+                start: DateTime.fromMillisecondsSinceEpoch(
+                  min(
+                    now.millisecondsSinceEpoch,
+                    initialRange.start.millisecondsSinceEpoch,
+                  ),
+                ),
+                end: DateTime.fromMillisecondsSinceEpoch(
+                  min(
+                    now.millisecondsSinceEpoch,
+                    initialRange.end.millisecondsSinceEpoch,
+                  ),
+                ),
+              ),
               locale: Locale("de"),
               context: context,
               firstDate: DateTime(0),

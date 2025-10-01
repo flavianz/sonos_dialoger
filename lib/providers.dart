@@ -5,7 +5,7 @@ enum Timespan { today, yesterday, week, month, custom }
 
 final timespanProvider = StateProvider<Timespan>((_) => Timespan.today);
 final rangeProvider = StateProvider((_) {
-  final yesterday = DateTime.now().subtract(Duration(days: 7));
+  final yesterday = DateTime.now().subtract(Duration(days: 1));
   final tomorrow = DateTime.now().add(Duration(days: 1));
   return DateTimeRange(
     start: DateTime(yesterday.year, yesterday.month, yesterday.day),

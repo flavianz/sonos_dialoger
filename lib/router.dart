@@ -1,6 +1,6 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/pages/admin/admin_shift_schedule_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
 import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
@@ -8,6 +8,7 @@ import 'package:sonos_dialoger/pages/admin/locations_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
+import 'package:sonos_dialoger/pages/home_page.dart';
 import 'package:sonos_dialoger/utils.dart';
 
 import 'app.dart';
@@ -19,10 +20,7 @@ final router = GoRouter(
         return App(child: child);
       },
       routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => Center(child: Text("home")),
-        ),
+        GoRoute(path: '/', builder: (context, state) => HomePage()),
         GoRoute(
           path: '/admin/dialoger',
           builder: (context, state) => DialogerPage(),
@@ -50,6 +48,10 @@ final router = GoRouter(
         GoRoute(
           path: '/admin/locations',
           builder: (context, state) => LocationsPage(),
+        ),
+        GoRoute(
+          path: '/admin/shift-schedules',
+          builder: (context, state) => AdminShiftSchedulePage(),
         ),
         GoRoute(
           path: '/dialoger/payments',

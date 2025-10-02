@@ -94,7 +94,7 @@ class _AppState extends ConsumerState<App> {
     if (role == "admin") {
       destinations = [
         {
-          "icon": Icon(Icons.attach_money),
+          "icon": Icon(Icons.request_page),
           "label": "Leistungen",
           "url": "/admin/payments",
         },
@@ -102,6 +102,11 @@ class _AppState extends ConsumerState<App> {
           "icon": Icon(Icons.diversity_3),
           "label": "Dialoger",
           "url": "/admin/dialoger",
+        },
+        {
+          "icon": Icon(Icons.assignment),
+          "label": "Einteilung",
+          "url": "/admin/shift-schedules",
         },
         {
           "icon": Icon(Icons.place),
@@ -117,7 +122,7 @@ class _AppState extends ConsumerState<App> {
     } else if (role == "coach") {
       destinations = [
         {
-          "icon": Icon(Icons.attach_money),
+          "icon": Icon(Icons.request_page),
           "label": "Deine Leistungen",
           "url": "/dialoger/payments",
         },
@@ -137,7 +142,7 @@ class _AppState extends ConsumerState<App> {
       // role = dialog
       destinations = [
         {
-          "icon": Icon(Icons.attach_money),
+          "icon": Icon(Icons.request_page),
           "label": "Deine Leistungen",
           "url": "/dialoger/payments",
         },

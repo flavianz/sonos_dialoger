@@ -383,7 +383,6 @@ class LocationDetailsPage extends ConsumerWidget {
                     .reduce(max),
                 1,
               );
-              print(maxVal);
             }
           }
           final sortedDates =
@@ -407,7 +406,16 @@ class LocationDetailsPage extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Einnahmen diese Woche",
+                              "Einnahmen ${switch (ref.watch(timespanProvider)) {
+                                Timespan.today => "heute",
+                                Timespan.yesterday => "gestern",
+                                Timespan.week => "diese Woche",
+                                Timespan.month => "diesen Monat",
+                                Timespan.custom => () {
+                                  final dateRange = ref.watch(rangeProvider);
+                                  return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
+                                }(),
+                              }}",
                               style: TextStyle(fontSize: 13),
                             ),
                             Text(
@@ -418,10 +426,23 @@ class LocationDetailsPage extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              "+ 13% über dem Durchschnitt",
+                              "+ -- % über dem Durchschnitt",
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.green,
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              "Nach DialogerInnen-Anteil",
+                              style: TextStyle(fontSize: 13),
+                            ),
+                            Text(
+                              "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"] * (1 - (element.data()["dialoger_share"] ?? 0))).toStringAsFixed(2)} CHF",
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800,
                               ),
                             ),
                           ],

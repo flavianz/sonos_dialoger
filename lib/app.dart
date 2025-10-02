@@ -12,6 +12,9 @@ final userProvider = StreamProvider<User?>(
 final userDataProvider = StreamProvider<DocumentSnapshot<Map<String, dynamic>>>(
   (ref) {
     final userStream = ref.watch(userProvider);
+    if (userStream.value != null) {
+      userStream.value!.getIdToken(true);
+    }
 
     var user = userStream.value;
 

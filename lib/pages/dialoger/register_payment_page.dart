@@ -275,7 +275,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                     children: [
                       Text("Hat Erstzahlung"),
                       Switch(
-                        value: hasFirstPayment,
+                        value: type == "once" || hasFirstPayment,
                         onChanged:
                             type == "repeating"
                                 ? (value) =>
@@ -341,16 +341,27 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                             setState(() {
                               isLoading = true;
                             });
+                            final commonData = {
+                              "type": type,
+                              "amount": num.parse(amountController.text),
+                              "first": firstController.text,
+                              "last": lastController.text,
+                              "dialoger":
+                                  ref.watch(userProvider).value?.uid ?? "",
+                              "timestamp": Timestamp.fromDate(DateTime.now()),
+                              "location": "XX02iPTWTYwDy9xRn7Hh",
+                            };
+                            final isCoach =
+                                ref
+                                    .watch(userDataProvider)
+                                    .value
+                                    ?.data()?["role"] ==
+                                "coach";
                             if (type == "once") {
                               final data = {
-                                "type": "once",
-                                "amount": num.parse(amountController.text),
-                                "first": firstController.text,
-                                "last": lastController.text,
+                                ...commonData,
                                 "method": paymentMethod,
-                                "dialoger":
-                                    ref.watch(userProvider).value?.uid ?? "",
-                                "timestamp": Timestamp.fromDate(DateTime.now()),
+                                "dialoger_share": isCoach ? 0.35 : 0.3333,
                               };
                               if (widget.editing) {
                                 await FirebaseFirestore.instance
@@ -364,15 +375,10 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                               }
                             } else {
                               final data = {
-                                "type": "repeating",
-                                "amount": num.parse(amountController.text),
-                                "first": firstController.text,
-                                "last": lastController.text,
+                                ...commonData,
                                 "has_first_payment": hasFirstPayment,
-                                "dialoger":
-                                    ref.watch(userProvider).value?.uid ?? "",
-                                "timestamp": Timestamp.fromDate(DateTime.now()),
                                 "interval": interval,
+                                "dialoger_share": isCoach ? 0.6 : 0.5,
                               };
                               if (hasFirstPayment && paymentMethod != null) {
                                 data["method"] = paymentMethod!;

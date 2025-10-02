@@ -4,8 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
 
+import '../../components/misc.dart';
 import '../../providers.dart';
 
 final locationProvider = FutureProvider.family(
@@ -222,6 +224,7 @@ class LocationDetailsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: Text(locationData["name"] ?? ""),
         actions: [DateRangeDropdown()],
       ),
@@ -388,525 +391,635 @@ class LocationDetailsPage extends ConsumerWidget {
           final sortedDates =
               dateSortedData.entries.toList()
                 ..sort((a, b) => a.key.compareTo(b.key));
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+          return ListView(
             children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Card.outlined(
+              Row(
+                children: [
+                  Card.outlined(
+                    elevation: 2,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 18,
+                      ),
+                      constraints: BoxConstraints(maxHeight: 300),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Einnahmen ${switch (ref.watch(timespanProvider)) {
+                              Timespan.today => "heute",
+                              Timespan.yesterday => "gestern",
+                              Timespan.week => "diese Woche",
+                              Timespan.month => "diesen Monat",
+                              Timespan.custom => () {
+                                final dateRange = ref.watch(rangeProvider);
+                                return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
+                              }(),
+                            }}",
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          Text(
+                            "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"]).toString()} CHF",
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            "+ -- % über dem Durchschnitt",
+                            style: TextStyle(fontSize: 13, color: Colors.green),
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            "Nach DialogerInnen-Anteil",
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          Text(
+                            "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"] * (1 - (element.data()["dialoger_share"] ?? 0))).toStringAsFixed(2)} CHF",
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Card.outlined(
                       elevation: 2,
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 18,
-                        ),
+                        padding: EdgeInsets.all(18),
                         constraints: BoxConstraints(maxHeight: 300),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Einnahmen ${switch (ref.watch(timespanProvider)) {
-                                Timespan.today => "heute",
-                                Timespan.yesterday => "gestern",
-                                Timespan.week => "diese Woche",
-                                Timespan.month => "diesen Monat",
-                                Timespan.custom => () {
-                                  final dateRange = ref.watch(rangeProvider);
-                                  return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
-                                }(),
-                              }}",
-                              style: TextStyle(fontSize: 13),
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    final currentRange = ref.read(
+                                      rangeProvider,
+                                    );
+                                    final timespan = ref.read(timespanProvider);
+                                    if (timespan == Timespan.today ||
+                                        timespan == Timespan.yesterday ||
+                                        timespan == Timespan.week) {
+                                      ref
+                                          .read(rangeProvider.notifier)
+                                          .state = DateTimeRange(
+                                        start: currentRange.start.subtract(
+                                          Duration(
+                                            days:
+                                                timespan == Timespan.week
+                                                    ? 7
+                                                    : 1,
+                                          ),
+                                        ),
+                                        end: currentRange.end.subtract(
+                                          Duration(
+                                            days:
+                                                timespan == Timespan.week
+                                                    ? 7
+                                                    : 1,
+                                          ),
+                                        ),
+                                      );
+                                      ref
+                                          .read(timespanProvider.notifier)
+                                          .state = Timespan.custom;
+                                    } else if (timespan == Timespan.month) {
+                                      ref
+                                          .read(rangeProvider.notifier)
+                                          .state = DateTimeRange(
+                                        start: DateTime(
+                                          currentRange.start.year,
+                                          currentRange.start.month - 1,
+                                        ),
+                                        end: DateTime(
+                                          currentRange.end.year,
+                                          currentRange.end.month - 1,
+                                        ),
+                                      );
+                                      ref
+                                          .read(timespanProvider.notifier)
+                                          .state = Timespan.custom;
+                                    } else if (timespan == Timespan.custom) {
+                                      final diff = currentRange.end.difference(
+                                        currentRange.start,
+                                      );
+                                      ref
+                                          .read(rangeProvider.notifier)
+                                          .state = DateTimeRange(
+                                        start: currentRange.start.subtract(
+                                          diff,
+                                        ),
+                                        end: currentRange.end.subtract(diff),
+                                      );
+                                    }
+                                  },
+                                  icon: Icon(Icons.arrow_left),
+                                ),
+                                Text(switch (ref.watch(timespanProvider)) {
+                                  Timespan.today => "Heute",
+                                  Timespan.yesterday => "Gestern",
+                                  Timespan.week => "Diese Woche",
+                                  Timespan.month => "Dieser Monat",
+                                  Timespan.custom => () {
+                                    final dateRange = ref.watch(rangeProvider);
+                                    return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
+                                  }(),
+                                }, style: TextStyle(fontWeight: FontWeight.bold)),
+                                IconButton(
+                                  onPressed: () {
+                                    final currentRange = ref.read(
+                                      rangeProvider,
+                                    );
+                                    final timespan = ref.read(timespanProvider);
+                                    if (timespan == Timespan.today ||
+                                        timespan == Timespan.yesterday ||
+                                        timespan == Timespan.week) {
+                                      ref
+                                          .read(rangeProvider.notifier)
+                                          .state = DateTimeRange(
+                                        start: currentRange.start.add(
+                                          Duration(
+                                            days:
+                                                timespan == Timespan.week
+                                                    ? 7
+                                                    : 1,
+                                          ),
+                                        ),
+                                        end: currentRange.end.add(
+                                          Duration(
+                                            days:
+                                                timespan == Timespan.week
+                                                    ? 7
+                                                    : 1,
+                                          ),
+                                        ),
+                                      );
+                                      ref
+                                          .read(timespanProvider.notifier)
+                                          .state = Timespan.custom;
+                                    } else if (timespan == Timespan.month) {
+                                      ref
+                                          .read(rangeProvider.notifier)
+                                          .state = DateTimeRange(
+                                        start: DateTime(
+                                          currentRange.start.year,
+                                          currentRange.start.month + 1,
+                                        ),
+                                        end: DateTime(
+                                          currentRange.end.year,
+                                          currentRange.end.month + 1,
+                                        ),
+                                      );
+                                      ref
+                                          .read(timespanProvider.notifier)
+                                          .state = Timespan.custom;
+                                    } else if (timespan == Timespan.custom) {
+                                      final diff = currentRange.end.difference(
+                                        currentRange.start,
+                                      );
+                                      ref
+                                          .read(rangeProvider.notifier)
+                                          .state = DateTimeRange(
+                                        start: currentRange.start.add(diff),
+                                        end: currentRange.end.add(diff),
+                                      );
+                                    }
+                                  },
+                                  icon: Icon(Icons.arrow_right),
+                                ),
+                              ],
                             ),
-                            Text(
-                              "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"]).toString()} CHF",
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            SizedBox(height: 5),
+                            Expanded(
+                              child:
+                                  paymentsData.docs.isEmpty
+                                      ? Center(child: Text("Keine Daten"))
+                                      : BarChart(
+                                        BarChartData(
+                                          titlesData: FlTitlesData(
+                                            leftTitles: AxisTitles(
+                                              sideTitles: SideTitles(
+                                                interval: max(
+                                                  ((maxVal / 6) -
+                                                              ((maxVal / 6) %
+                                                                  10))
+                                                          .toDouble() *
+                                                      2,
+                                                  1,
+                                                ),
+                                                showTitles: true,
+                                                reservedSize: 40,
+                                                getTitlesWidget: leftTitles,
+                                              ),
+                                            ),
+                                            rightTitles: const AxisTitles(),
+                                            topTitles: const AxisTitles(),
+                                            bottomTitles: AxisTitles(
+                                              sideTitles: SideTitles(
+                                                showTitles: true,
+                                                getTitlesWidget: (
+                                                  titleData,
+                                                  _,
+                                                ) {
+                                                  return switch (ref.watch(
+                                                    timespanProvider,
+                                                  )) {
+                                                    Timespan.today ||
+                                                    Timespan.yesterday => Text(
+                                                      titleData
+                                                          .toString()
+                                                          .padLeft(2, "0"),
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                      ),
+                                                    ),
+                                                    Timespan.week => Text(
+                                                      switch (titleData) {
+                                                        2 => "Di",
+                                                        3 => "Mi",
+                                                        4 => "Do",
+                                                        5 => "Fr",
+                                                        6 => "Sa",
+                                                        7 => "So",
+                                                        1 || _ => "Mo",
+                                                      },
+                                                    ),
+                                                    Timespan.month =>
+                                                      titleData %
+                                                                  (DateTime.now()
+                                                                              .day /
+                                                                          8)
+                                                                      .ceil() ==
+                                                              0
+                                                          ? Text(
+                                                            "${titleData.toString().padLeft(2, "0")}.",
+                                                            style: TextStyle(
+                                                              fontSize: 13,
+                                                            ),
+                                                          )
+                                                          : SizedBox.shrink(),
+                                                    Timespan.custom => () {
+                                                      final dateRange = ref
+                                                          .watch(rangeProvider);
+                                                      final duration =
+                                                          dateRange.end
+                                                              .difference(
+                                                                dateRange.start,
+                                                              )
+                                                              .inDays;
+                                                      return Text(
+                                                        duration <= 30
+                                                            ? "${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).day}."
+                                                            : (duration < 140
+                                                                ? "KW ${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).weekOfYear}"
+                                                                : switch (DateTime.fromMillisecondsSinceEpoch(
+                                                                  titleData
+                                                                      .ceil(),
+                                                                ).month) {
+                                                                  2 => "Feb",
+                                                                  3 => "Mär",
+                                                                  4 => "Apr",
+                                                                  5 => "Mai",
+                                                                  6 => "Jun",
+                                                                  7 => "Jul",
+                                                                  8 => "Aug",
+                                                                  9 => "Sep",
+                                                                  10 => "Okt",
+                                                                  11 => "Nov",
+                                                                  12 => "Dez",
+                                                                  1 ||
+                                                                  _ => "Jan",
+                                                                }),
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                        ),
+                                                      );
+                                                    }(),
+                                                  };
+                                                },
+                                                reservedSize: 20,
+                                              ),
+                                            ),
+                                          ),
+                                          barGroups:
+                                              sortedDates
+                                                  .map(
+                                                    (entry) =>
+                                                        generateGroupData(
+                                                          entry.key,
+                                                          entry.value,
+                                                        ),
+                                                  )
+                                                  .toList(),
+                                          gridData: FlGridData(
+                                            horizontalInterval: max(
+                                              ((maxVal / 6) -
+                                                      ((maxVal / 6) % 10))
+                                                  .toDouble(),
+                                              1,
+                                            ),
+                                            show: true,
+                                            getDrawingHorizontalLine:
+                                                (value) => FlLine(
+                                                  color: Colors.grey.shade200,
+                                                  strokeWidth: 1,
+                                                ),
+                                            drawVerticalLine: false,
+                                          ),
+                                          borderData: FlBorderData(show: false),
+                                        ),
+                                      ),
                             ),
-                            Text(
-                              "+ -- % über dem Durchschnitt",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.green,
-                              ),
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              "Nach DialogerInnen-Anteil",
-                              style: TextStyle(fontSize: 13),
-                            ),
-                            Text(
-                              "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"] * (1 - (element.data()["dialoger_share"] ?? 0))).toStringAsFixed(2)} CHF",
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade800,
-                              ),
-                            ),
+                            SizedBox(height: 10),
+                            paymentsData.docs.isNotEmpty
+                                ? Row(
+                                  spacing: 10,
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Row(
+                                      spacing: 3,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              50,
+                                            ),
+                                            color: Colors.amberAccent,
+                                          ),
+                                          height: 12,
+                                          width: 12,
+                                        ),
+                                        Tooltip(
+                                          message: "LSV ohne Erstzahlung",
+                                          child: Text(
+                                            "LSV",
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightGreen.shade300,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "LSV mit Erstzahlung via SumUp",
+                                              child: Text(
+                                                "LSV mit SumUp",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightGreen.shade800,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "LSV mit Erstzahlung via Twint",
+                                              child: Text(
+                                                "LSV mit Twint",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightBlue.shade200,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "Einmalige Zahlung via SumUp",
+                                              child: Text(
+                                                "Einmalig mit SumUp",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          spacing: 3,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                                color:
+                                                    Colors.lightBlue.shade700,
+                                              ),
+                                              height: 12,
+                                              width: 12,
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  "Einmalige Zahlung via Twint",
+                                              child: Text(
+                                                "Einmalig mit Twint",
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                                : SizedBox.shrink(),
                           ],
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Card.outlined(
-                        elevation: 2,
-                        child: Container(
-                          padding: EdgeInsets.all(18),
-                          constraints: BoxConstraints(maxHeight: 300),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      final currentRange = ref.read(
-                                        rangeProvider,
-                                      );
-                                      final timespan = ref.read(
-                                        timespanProvider,
-                                      );
-                                      if (timespan == Timespan.today ||
-                                          timespan == Timespan.yesterday ||
-                                          timespan == Timespan.week) {
-                                        ref
-                                            .read(rangeProvider.notifier)
-                                            .state = DateTimeRange(
-                                          start: currentRange.start.subtract(
-                                            Duration(
-                                              days:
-                                                  timespan == Timespan.week
-                                                      ? 7
-                                                      : 1,
-                                            ),
-                                          ),
-                                          end: currentRange.end.subtract(
-                                            Duration(
-                                              days:
-                                                  timespan == Timespan.week
-                                                      ? 7
-                                                      : 1,
-                                            ),
-                                          ),
-                                        );
-                                        ref
-                                            .read(timespanProvider.notifier)
-                                            .state = Timespan.custom;
-                                      } else if (timespan == Timespan.month) {
-                                        ref
-                                            .read(rangeProvider.notifier)
-                                            .state = DateTimeRange(
-                                          start: DateTime(
-                                            currentRange.start.year,
-                                            currentRange.start.month - 1,
-                                          ),
-                                          end: DateTime(
-                                            currentRange.end.year,
-                                            currentRange.end.month - 1,
-                                          ),
-                                        );
-                                        ref
-                                            .read(timespanProvider.notifier)
-                                            .state = Timespan.custom;
-                                      } else if (timespan == Timespan.custom) {
-                                        final diff = currentRange.end
-                                            .difference(currentRange.start);
-                                        ref
-                                            .read(rangeProvider.notifier)
-                                            .state = DateTimeRange(
-                                          start: currentRange.start.subtract(
-                                            diff,
-                                          ),
-                                          end: currentRange.end.subtract(diff),
-                                        );
-                                      }
-                                    },
-                                    icon: Icon(Icons.arrow_left),
-                                  ),
-                                  Text(
-                                    switch (ref.watch(timespanProvider)) {
-                                      Timespan.today => "Heute",
-                                      Timespan.yesterday => "Gestern",
-                                      Timespan.week => "Diese Woche",
-                                      Timespan.month => "Dieser Monat",
-                                      Timespan.custom => () {
-                                        final dateRange = ref.watch(
-                                          rangeProvider,
-                                        );
-                                        return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
-                                      }(),
-                                    },
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                  ),
+                ],
+              ),
+              Divider(height: 30, color: Theme.of(context).primaryColor),
+              Expanded(
+                child: Column(
+                  children:
+                      paymentsData.docs.map((paymentDoc) {
+                        final data = paymentDoc.data();
+                        final date =
+                            ((data["timestamp"] ?? Timestamp.now())
+                                    as Timestamp)
+                                .toDate();
+                        late String datePrefix;
+                        final today = DateTime.now();
+                        final yesterday = DateTime.fromMicrosecondsSinceEpoch(
+                          DateTime.now().millisecondsSinceEpoch -
+                              1000 * 3600 * 24,
+                        );
+                        if (date.year == today.year &&
+                            date.month == today.month &&
+                            date.day == today.day) {
+                          datePrefix = "Heute";
+                        } else if (date.year == yesterday.year &&
+                            date.month == yesterday.month &&
+                            date.day == yesterday.day) {
+                          datePrefix = "Gestern";
+                        } else {
+                          datePrefix =
+                              "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.";
+                        }
+                        late Widget isPaidWidget;
+                        if (data["type"] == "once" ||
+                            data["has_first_payment"] == true ||
+                            data["payment_status"] == "paid") {
+                          isPaidWidget = getPill(
+                            "Bezahlt",
+                            Theme.of(context).primaryColor,
+                            true,
+                          );
+                        } else if (data["payment_status"] == "pending") {
+                          isPaidWidget = getPill(
+                            "Ausstehend",
+                            Theme.of(context).primaryColorLight,
+                            false,
+                          );
+                        } else if (data["payment_status"] == "cancelled") {
+                          isPaidWidget = getPill(
+                            "Zurückgenommen",
+                            Theme.of(context).cardColor,
+                            false,
+                          );
+                        } else {
+                          isPaidWidget = getPill(
+                            "Keine Information",
+                            Colors.grey,
+                            true,
+                          );
+                        }
+                        return Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {},
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        datePrefix,
+                                        style: TextStyle(fontSize: 15),
+                                      ),
                                     ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      final currentRange = ref.read(
-                                        rangeProvider,
-                                      );
-                                      final timespan = ref.read(
-                                        timespanProvider,
-                                      );
-                                      if (timespan == Timespan.today ||
-                                          timespan == Timespan.yesterday ||
-                                          timespan == Timespan.week) {
-                                        ref
-                                            .read(rangeProvider.notifier)
-                                            .state = DateTimeRange(
-                                          start: currentRange.start.add(
-                                            Duration(
-                                              days:
-                                                  timespan == Timespan.week
-                                                      ? 7
-                                                      : 1,
-                                            ),
-                                          ),
-                                          end: currentRange.end.add(
-                                            Duration(
-                                              days:
-                                                  timespan == Timespan.week
-                                                      ? 7
-                                                      : 1,
-                                            ),
-                                          ),
+                                    Expanded(
+                                      child: Text(
+                                        "${data["amount"].toString()} CHF",
+                                        style: TextStyle(fontSize: 15),
+                                      ),
+                                    ),
+                                    Expanded(child: isPaidWidget),
+                                    IconButton(
+                                      onPressed: () {
+                                        context.push(
+                                          "/dialoger/payment/${paymentDoc.id}/edit",
                                         );
-                                        ref
-                                            .read(timespanProvider.notifier)
-                                            .state = Timespan.custom;
-                                      } else if (timespan == Timespan.month) {
-                                        ref
-                                            .read(rangeProvider.notifier)
-                                            .state = DateTimeRange(
-                                          start: DateTime(
-                                            currentRange.start.year,
-                                            currentRange.start.month + 1,
-                                          ),
-                                          end: DateTime(
-                                            currentRange.end.year,
-                                            currentRange.end.month + 1,
-                                          ),
-                                        );
-                                        ref
-                                            .read(timespanProvider.notifier)
-                                            .state = Timespan.custom;
-                                      } else if (timespan == Timespan.custom) {
-                                        final diff = currentRange.end
-                                            .difference(currentRange.start);
-                                        ref
-                                            .read(rangeProvider.notifier)
-                                            .state = DateTimeRange(
-                                          start: currentRange.start.add(diff),
-                                          end: currentRange.end.add(diff),
-                                        );
-                                      }
-                                    },
-                                    icon: Icon(Icons.arrow_right),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 5),
-                              Expanded(
-                                child:
-                                    paymentsData.docs.isEmpty
-                                        ? Center(child: Text("Keine Daten"))
-                                        : BarChart(
-                                          BarChartData(
-                                            titlesData: FlTitlesData(
-                                              leftTitles: AxisTitles(
-                                                sideTitles: SideTitles(
-                                                  interval: max(
-                                                    ((maxVal / 6) -
-                                                                ((maxVal / 6) %
-                                                                    10))
-                                                            .toDouble() *
-                                                        2,
-                                                    1,
-                                                  ),
-                                                  showTitles: true,
-                                                  reservedSize: 40,
-                                                  getTitlesWidget: leftTitles,
+                                      },
+                                      icon: Icon(Icons.edit),
+                                      tooltip: "Bearbeiten",
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder:
+                                              (context) => AlertDialog(
+                                                title: Text(
+                                                  "Leistung löschen?",
                                                 ),
-                                              ),
-                                              rightTitles: const AxisTitles(),
-                                              topTitles: const AxisTitles(),
-                                              bottomTitles: AxisTitles(
-                                                sideTitles: SideTitles(
-                                                  showTitles: true,
-                                                  getTitlesWidget: (
-                                                    titleData,
-                                                    _,
-                                                  ) {
-                                                    return switch (ref.watch(
-                                                      timespanProvider,
-                                                    )) {
-                                                      Timespan.today ||
-                                                      Timespan
-                                                          .yesterday => Text(
-                                                        titleData
-                                                            .toString()
-                                                            .padLeft(2, "0"),
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                        ),
-                                                      ),
-                                                      Timespan.week => Text(
-                                                        switch (titleData) {
-                                                          2 => "Di",
-                                                          3 => "Mi",
-                                                          4 => "Do",
-                                                          5 => "Fr",
-                                                          6 => "Sa",
-                                                          7 => "So",
-                                                          1 || _ => "Mo",
-                                                        },
-                                                      ),
-                                                      Timespan.month =>
-                                                        titleData %
-                                                                    (DateTime.now().day /
-                                                                            8)
-                                                                        .ceil() ==
-                                                                0
-                                                            ? Text(
-                                                              "${titleData.toString().padLeft(2, "0")}.",
-                                                              style: TextStyle(
-                                                                fontSize: 13,
-                                                              ),
-                                                            )
-                                                            : SizedBox.shrink(),
-                                                      Timespan.custom => () {
-                                                        final dateRange = ref
-                                                            .watch(
-                                                              rangeProvider,
-                                                            );
-                                                        final duration =
-                                                            dateRange.end
-                                                                .difference(
-                                                                  dateRange
-                                                                      .start,
-                                                                )
-                                                                .inDays;
-                                                        return Text(
-                                                          duration <= 30
-                                                              ? "${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).day}."
-                                                              : (duration < 140
-                                                                  ? "KW ${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).weekOfYear}"
-                                                                  : switch (DateTime.fromMillisecondsSinceEpoch(
-                                                                    titleData
-                                                                        .ceil(),
-                                                                  ).month) {
-                                                                    2 => "Feb",
-                                                                    3 => "Mär",
-                                                                    4 => "Apr",
-                                                                    5 => "Mai",
-                                                                    6 => "Jun",
-                                                                    7 => "Jul",
-                                                                    8 => "Aug",
-                                                                    9 => "Sep",
-                                                                    10 => "Okt",
-                                                                    11 => "Nov",
-                                                                    12 => "Dez",
-                                                                    1 ||
-                                                                    _ => "Jan",
-                                                                  }),
-                                                          style: TextStyle(
-                                                            fontSize: 13,
-                                                          ),
+                                                content: Text(
+                                                  "Dieser Schritt kann nicht rückgängig gemacht werden",
+                                                ),
+                                                actions: [
+                                                  OutlinedButton(
+                                                    onPressed: () {
+                                                      context.pop();
+                                                    },
+                                                    child: Text("Abbrechen"),
+                                                  ),
+                                                  FilledButton(
+                                                    onPressed: () async {
+                                                      await FirebaseFirestore
+                                                          .instance
+                                                          .collection(
+                                                            "payments",
+                                                          )
+                                                          .doc(paymentDoc.id)
+                                                          .delete();
+                                                      if (context.mounted) {
+                                                        context.pop();
+                                                        showSnackBar(
+                                                          context,
+                                                          "Leistung gelöscht!",
                                                         );
-                                                      }(),
-                                                    };
-                                                  },
-                                                  reservedSize: 20,
-                                                ),
-                                              ),
-                                            ),
-                                            barGroups:
-                                                sortedDates
-                                                    .map(
-                                                      (entry) =>
-                                                          generateGroupData(
-                                                            entry.key,
-                                                            entry.value,
-                                                          ),
-                                                    )
-                                                    .toList(),
-                                            gridData: FlGridData(
-                                              horizontalInterval: max(
-                                                ((maxVal / 6) -
-                                                        ((maxVal / 6) % 10))
-                                                    .toDouble(),
-                                                1,
-                                              ),
-                                              show: true,
-                                              getDrawingHorizontalLine:
-                                                  (value) => FlLine(
-                                                    color: Colors.grey.shade200,
-                                                    strokeWidth: 1,
+                                                      }
+                                                    },
+                                                    child: Text("Löschen"),
                                                   ),
-                                              drawVerticalLine: false,
-                                            ),
-                                            borderData: FlBorderData(
-                                              show: false,
-                                            ),
-                                          ),
-                                        ),
+                                                ],
+                                              ),
+                                        );
+                                      },
+                                      icon: Icon(Icons.delete),
+                                      tooltip: "Löschen",
+                                    ),
+                                  ],
+                                ),
                               ),
-                              SizedBox(height: 10),
-                              paymentsData.docs.isNotEmpty
-                                  ? Row(
-                                    spacing: 10,
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Row(
-                                        spacing: 3,
-                                        children: [
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                              color: Colors.amberAccent,
-                                            ),
-                                            height: 12,
-                                            width: 12,
-                                          ),
-                                          Tooltip(
-                                            message: "LSV ohne Erstzahlung",
-                                            child: Text(
-                                              "LSV",
-                                              style: TextStyle(fontSize: 13),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            spacing: 3,
-                                            children: [
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(50),
-                                                  color:
-                                                      Colors
-                                                          .lightGreen
-                                                          .shade300,
-                                                ),
-                                                height: 12,
-                                                width: 12,
-                                              ),
-                                              Tooltip(
-                                                message:
-                                                    "LSV mit Erstzahlung via SumUp",
-                                                child: Text(
-                                                  "LSV mit SumUp",
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            spacing: 3,
-                                            children: [
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(50),
-                                                  color:
-                                                      Colors
-                                                          .lightGreen
-                                                          .shade800,
-                                                ),
-                                                height: 12,
-                                                width: 12,
-                                              ),
-                                              Tooltip(
-                                                message:
-                                                    "LSV mit Erstzahlung via Twint",
-                                                child: Text(
-                                                  "LSV mit Twint",
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            spacing: 3,
-                                            children: [
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(50),
-                                                  color:
-                                                      Colors.lightBlue.shade200,
-                                                ),
-                                                height: 12,
-                                                width: 12,
-                                              ),
-                                              Tooltip(
-                                                message:
-                                                    "Einmalige Zahlung via SumUp",
-                                                child: Text(
-                                                  "Einmalig mit SumUp",
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            spacing: 3,
-                                            children: [
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(50),
-                                                  color:
-                                                      Colors.lightBlue.shade700,
-                                                ),
-                                                height: 12,
-                                                width: 12,
-                                              ),
-                                              Tooltip(
-                                                message:
-                                                    "Einmalige Zahlung via Twint",
-                                                child: Text(
-                                                  "Einmalig mit Twint",
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  )
-                                  : SizedBox.shrink(),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                            ),
+                            Divider(),
+                          ],
+                        );
+                      }).toList(),
                 ),
               ),
             ],

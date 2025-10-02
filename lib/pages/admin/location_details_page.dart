@@ -882,145 +882,138 @@ class LocationDetailsPage extends ConsumerWidget {
                 ],
               ),
               Divider(height: 30, color: Theme.of(context).primaryColor),
-              Expanded(
-                child: Column(
-                  children:
-                      paymentsData.docs.map((paymentDoc) {
-                        final data = paymentDoc.data();
-                        final date =
-                            ((data["timestamp"] ?? Timestamp.now())
-                                    as Timestamp)
-                                .toDate();
-                        late String datePrefix;
-                        final today = DateTime.now();
-                        final yesterday = DateTime.fromMicrosecondsSinceEpoch(
-                          DateTime.now().millisecondsSinceEpoch -
-                              1000 * 3600 * 24,
+              Column(
+                children:
+                    paymentsData.docs.map((paymentDoc) {
+                      final data = paymentDoc.data();
+                      final date =
+                          ((data["timestamp"] ?? Timestamp.now()) as Timestamp)
+                              .toDate();
+                      late String datePrefix;
+                      final today = DateTime.now();
+                      final yesterday = DateTime.fromMicrosecondsSinceEpoch(
+                        DateTime.now().millisecondsSinceEpoch -
+                            1000 * 3600 * 24,
+                      );
+                      if (date.year == today.year &&
+                          date.month == today.month &&
+                          date.day == today.day) {
+                        datePrefix = "Heute";
+                      } else if (date.year == yesterday.year &&
+                          date.month == yesterday.month &&
+                          date.day == yesterday.day) {
+                        datePrefix = "Gestern";
+                      } else {
+                        datePrefix =
+                            "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.";
+                      }
+                      late Widget isPaidWidget;
+                      if (data["type"] == "once" ||
+                          data["has_first_payment"] == true ||
+                          data["payment_status"] == "paid") {
+                        isPaidWidget = getPill(
+                          "Bezahlt",
+                          Theme.of(context).primaryColor,
+                          true,
                         );
-                        if (date.year == today.year &&
-                            date.month == today.month &&
-                            date.day == today.day) {
-                          datePrefix = "Heute";
-                        } else if (date.year == yesterday.year &&
-                            date.month == yesterday.month &&
-                            date.day == yesterday.day) {
-                          datePrefix = "Gestern";
-                        } else {
-                          datePrefix =
-                              "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.";
-                        }
-                        late Widget isPaidWidget;
-                        if (data["type"] == "once" ||
-                            data["has_first_payment"] == true ||
-                            data["payment_status"] == "paid") {
-                          isPaidWidget = getPill(
-                            "Bezahlt",
-                            Theme.of(context).primaryColor,
-                            true,
-                          );
-                        } else if (data["payment_status"] == "pending") {
-                          isPaidWidget = getPill(
-                            "Ausstehend",
-                            Theme.of(context).primaryColorLight,
-                            false,
-                          );
-                        } else if (data["payment_status"] == "cancelled") {
-                          isPaidWidget = getPill(
-                            "Zurückgenommen",
-                            Theme.of(context).cardColor,
-                            false,
-                          );
-                        } else {
-                          isPaidWidget = getPill(
-                            "Keine Information",
-                            Colors.grey,
-                            true,
-                          );
-                        }
-                        return Column(
-                          children: [
-                            GestureDetector(
-                              onTap: () {},
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        datePrefix,
-                                        style: TextStyle(fontSize: 15),
-                                      ),
+                      } else if (data["payment_status"] == "pending") {
+                        isPaidWidget = getPill(
+                          "Ausstehend",
+                          Theme.of(context).primaryColorLight,
+                          false,
+                        );
+                      } else if (data["payment_status"] == "cancelled") {
+                        isPaidWidget = getPill(
+                          "Zurückgenommen",
+                          Theme.of(context).cardColor,
+                          false,
+                        );
+                      } else {
+                        isPaidWidget = getPill(
+                          "Keine Information",
+                          Colors.grey,
+                          true,
+                        );
+                      }
+                      return Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {},
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      datePrefix,
+                                      style: TextStyle(fontSize: 15),
                                     ),
-                                    Expanded(
-                                      child: Text(
-                                        "${data["amount"].toString()} CHF",
-                                        style: TextStyle(fontSize: 15),
-                                      ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      "${data["amount"].toString()} CHF",
+                                      style: TextStyle(fontSize: 15),
                                     ),
-                                    Expanded(child: isPaidWidget),
-                                    IconButton(
-                                      onPressed: () {
-                                        context.push(
-                                          "/dialoger/payment/${paymentDoc.id}/edit",
-                                        );
-                                      },
-                                      icon: Icon(Icons.edit),
-                                      tooltip: "Bearbeiten",
-                                    ),
-                                    IconButton(
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder:
-                                              (context) => AlertDialog(
-                                                title: Text(
-                                                  "Leistung löschen?",
-                                                ),
-                                                content: Text(
-                                                  "Dieser Schritt kann nicht rückgängig gemacht werden",
-                                                ),
-                                                actions: [
-                                                  OutlinedButton(
-                                                    onPressed: () {
-                                                      context.pop();
-                                                    },
-                                                    child: Text("Abbrechen"),
-                                                  ),
-                                                  FilledButton(
-                                                    onPressed: () async {
-                                                      await FirebaseFirestore
-                                                          .instance
-                                                          .collection(
-                                                            "payments",
-                                                          )
-                                                          .doc(paymentDoc.id)
-                                                          .delete();
-                                                      if (context.mounted) {
-                                                        context.pop();
-                                                        showSnackBar(
-                                                          context,
-                                                          "Leistung gelöscht!",
-                                                        );
-                                                      }
-                                                    },
-                                                    child: Text("Löschen"),
-                                                  ),
-                                                ],
+                                  ),
+                                  Expanded(child: isPaidWidget),
+                                  IconButton(
+                                    onPressed: () {
+                                      context.push(
+                                        "/dialoger/payment/${paymentDoc.id}/edit",
+                                      );
+                                    },
+                                    icon: Icon(Icons.edit),
+                                    tooltip: "Bearbeiten",
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder:
+                                            (context) => AlertDialog(
+                                              title: Text("Leistung löschen?"),
+                                              content: Text(
+                                                "Dieser Schritt kann nicht rückgängig gemacht werden",
                                               ),
-                                        );
-                                      },
-                                      icon: Icon(Icons.delete),
-                                      tooltip: "Löschen",
-                                    ),
-                                  ],
-                                ),
+                                              actions: [
+                                                OutlinedButton(
+                                                  onPressed: () {
+                                                    context.pop();
+                                                  },
+                                                  child: Text("Abbrechen"),
+                                                ),
+                                                FilledButton(
+                                                  onPressed: () async {
+                                                    await FirebaseFirestore
+                                                        .instance
+                                                        .collection("payments")
+                                                        .doc(paymentDoc.id)
+                                                        .delete();
+                                                    if (context.mounted) {
+                                                      context.pop();
+                                                      showSnackBar(
+                                                        context,
+                                                        "Leistung gelöscht!",
+                                                      );
+                                                    }
+                                                  },
+                                                  child: Text("Löschen"),
+                                                ),
+                                              ],
+                                            ),
+                                      );
+                                    },
+                                    icon: Icon(Icons.delete),
+                                    tooltip: "Löschen",
+                                  ),
+                                ],
                               ),
                             ),
-                            Divider(),
-                          ],
-                        );
-                      }).toList(),
-                ),
+                          ),
+                          Divider(),
+                        ],
+                      );
+                    }).toList(),
               ),
             ],
           );

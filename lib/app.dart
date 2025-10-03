@@ -106,7 +106,7 @@ class _AppState extends ConsumerState<App> {
         {
           "icon": Icon(Icons.assignment),
           "label": "Einteilung",
-          "url": "/admin/shift-schedules",
+          "url": "/admin/schedules",
         },
         {
           "icon": Icon(Icons.place),

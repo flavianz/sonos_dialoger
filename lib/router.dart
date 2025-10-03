@@ -1,11 +1,12 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/pages/admin/admin_shift_schedule_page.dart';
+import 'package:sonos_dialoger/pages/admin/admin_schedule_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
 import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
 import 'package:sonos_dialoger/pages/admin/locations_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
+import 'package:sonos_dialoger/pages/admin/schedule_review_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
 import 'package:sonos_dialoger/pages/home_page.dart';
@@ -50,8 +51,8 @@ final router = GoRouter(
           builder: (context, state) => LocationsPage(),
         ),
         GoRoute(
-          path: '/admin/shift-schedules',
-          builder: (context, state) => AdminShiftSchedulePage(),
+          path: '/admin/schedules',
+          builder: (context, state) => AdminSchedulePage(),
         ),
         GoRoute(
           path: '/dialoger/payments',
@@ -73,6 +74,13 @@ final router = GoRouter(
           builder: (context, state) {
             final locationId = state.pathParameters['locationId']!;
             return LocationDetailsPage(locationId: locationId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/schedule-review/:scheduleId',
+          builder: (context, state) {
+            final scheduleId = state.pathParameters['scheduleId']!;
+            return ScheduleReviewPage(scheduleId: scheduleId);
           },
         ),
       ],

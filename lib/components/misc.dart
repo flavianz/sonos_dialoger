@@ -54,7 +54,7 @@ extension DateTimeFormatExtension on DateTime {
   }
 }
 
-DateTime parseDateTime(dynamic value) {
+DateTime parseDateTimeFromTimestamp(dynamic value) {
   return ((value ?? Timestamp.now()) as Timestamp).toDate();
 }
 

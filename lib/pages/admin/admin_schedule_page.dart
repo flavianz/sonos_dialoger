@@ -73,64 +73,54 @@ class AdminSchedulePage extends ConsumerWidget {
                                           "/admin/schedule-review/${scheduleRequestDoc.id}",
                                         );
                                       },
-                                      child: Column(
-                                        children: [
-                                          Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 5,
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 5,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                date.toFormattedDateString(),
+                                              ),
                                             ),
-                                            child: Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    date.toFormattedDateString(),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: ref
-                                                      .watch(
-                                                        realtimeDocProvider(
-                                                          FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                "users",
-                                                              )
-                                                              .doc(
-                                                                scheduleRequestData["creator"],
-                                                              ),
+                                            Expanded(
+                                              child: ref
+                                                  .watch(
+                                                    realtimeDocProvider(
+                                                      FirebaseFirestore.instance
+                                                          .collection("users")
+                                                          .doc(
+                                                            scheduleRequestData["creator"],
+                                                          ),
+                                                    ),
+                                                  )
+                                                  .when(
+                                                    data:
+                                                        (userDoc) => Text(
+                                                          "${userDoc.data()?["first"] ?? ""} ${userDoc.data()?["last"] ?? ""}",
                                                         ),
-                                                      )
-                                                      .when(
-                                                        data:
-                                                            (userDoc) => Text(
-                                                              "${userDoc.data()?["first"] ?? ""} ${userDoc.data()?["last"] ?? ""}",
-                                                            ),
-                                                        error: (
-                                                          error,
-                                                          stackTrace,
-                                                        ) {
-                                                          print(error);
-                                                          print(stackTrace);
-                                                          return Text("");
-                                                        },
-                                                        loading:
-                                                            () => Center(
-                                                              child:
-                                                                  CircularProgressIndicator(),
-                                                            ),
-                                                      ),
-                                                ),
-                                                Expanded(
-                                                  child: Text(
-                                                    creationTimestamp
-                                                        .toFormattedDateTimeString(),
+                                                    error: (error, stackTrace) {
+                                                      print(error);
+                                                      print(stackTrace);
+                                                      return Text("Fehler");
+                                                    },
+                                                    loading:
+                                                        () => Center(
+                                                          child: Text(
+                                                            "Laden...",
+                                                          ),
+                                                        ),
                                                   ),
-                                                ),
-                                              ],
                                             ),
-                                          ),
-                                          Divider(),
-                                        ],
+                                            Expanded(
+                                              child: Text(
+                                                creationTimestamp
+                                                    .toFormattedDateTimeString(),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     );
                                   }).toList(),

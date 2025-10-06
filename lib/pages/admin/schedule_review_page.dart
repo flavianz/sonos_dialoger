@@ -38,7 +38,6 @@ final requestedLocationsProvider =
       if (locationIds.length > 30) {
         throw ErrorDescription("Too many locations provided (>30)");
       }
-      print("ids $locationIds");
 
       return FirebaseFirestore.instance
           .collection("locations")
@@ -47,7 +46,6 @@ final requestedLocationsProvider =
     });
 
 class ScheduleReviewPage extends ConsumerStatefulWidget {
-  // Can now be a StatelessWidget
   final String scheduleId;
 
   const ScheduleReviewPage({super.key, required this.scheduleId});
@@ -90,99 +88,116 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Anfrage ${parseDateTimeFromTimestamp(scheduleData["date"]).toExtendedFormattedDateString()}",
+          "Einteilung ${parseDateTimeFromTimestamp(scheduleData["date"]).toExtendedFormattedDateString()}",
         ),
         forceMaterialTransparency: true,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ref
-                    .watch(
-                      realtimeDocProvider(
-                        FirebaseFirestore.instance
-                            .collection("users")
-                            .doc(scheduleData["creator"]),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ref
+                      .watch(
+                        realtimeDocProvider(
+                          FirebaseFirestore.instance
+                              .collection("users")
+                              .doc(scheduleData["creator"]),
+                        ),
+                      )
+                      .when(
+                        data:
+                            (userDoc) => Text(
+                              "${userDoc.data()?["first"] ?? ""} ${userDoc.data()?["last"] ?? ""}",
+                            ),
+                        error: (error, stackTrace) {
+                          print(error);
+                          print(stackTrace);
+                          return Text("Fehler");
+                        },
+                        loading: () => Center(child: Text("Laden...")),
                       ),
-                    )
-                    .when(
-                      data:
-                          (userDoc) => Text(
-                            "${userDoc.data()?["first"] ?? ""} ${userDoc.data()?["last"] ?? ""}",
-                          ),
-                      error: (error, stackTrace) {
-                        print(error);
-                        print(stackTrace);
-                        return Text("Fehler");
-                      },
-                      loading: () => Center(child: Text("Laden...")),
-                    ),
 
-                Text(
-                  parseDateTimeFromTimestamp(
-                    scheduleData["creation_timestamp"],
-                  ).toFormattedDateTimeString(),
-                ),
-              ],
+                  Text(
+                    parseDateTimeFromTimestamp(
+                      scheduleData["creation_timestamp"],
+                    ).toFormattedDateTimeString(),
+                  ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Angefragte Standplätze",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-          SizedBox(height: 10),
-          Row(children: [Expanded(child: Text("Name"))]),
-          Divider(height: 20, color: Theme.of(context).primaryColor),
-          Expanded(
-            child: ListView.separated(
-              itemCount: mergedLocations.length,
-              itemBuilder: (context, index) {
-                final locationDoc = mergedLocations[index];
-                final locationData = locationDoc.data() ?? {};
-                final bool wasRemoved = removedLocations.contains(
-                  locationDoc.id,
-                );
-                return Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        locationData["name"] ?? "",
-                        style: TextStyle(
-                          decoration:
-                              wasRemoved ? TextDecoration.lineThrough : null,
-                        ),
-                      ),
-                    ),
-                    wasRemoved
-                        ? IconButton(
-                          tooltip: "Standplatz wieder hinzufügen",
-                          icon: Icon(Icons.add_circle_outline),
-                          onPressed:
-                              () => setState(
-                                () => removedLocations.remove(locationDoc.id),
-                              ),
-                        )
-                        : IconButton(
-                          tooltip: "Standplatz entfernen",
-                          icon: Icon(Icons.remove_circle_outline),
-                          onPressed:
-                              () => setState(
-                                () => removedLocations.add(locationDoc.id),
-                              ),
-                        ),
-                  ],
-                );
-              },
-              separatorBuilder: (_, _) => Divider(),
+            SizedBox(height: 20),
+            Text(
+              "Angefragte Standplätze",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
-          ),
-        ],
+            SizedBox(height: 10),
+            Row(children: [Expanded(child: Text("Name"))]),
+            Divider(height: 20, color: Theme.of(context).primaryColor),
+            Column(
+              children:
+                  locations.map((locationDoc) {
+                    final locationData = locationDoc.data();
+                    final bool wasRemoved = removedLocations.contains(
+                      locationDoc.id,
+                    );
+                    return Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "${locationData["name"] ?? ""}, ${locationData["address"]?["town"] ?? ""}",
+                                style: TextStyle(
+                                  decoration:
+                                      wasRemoved
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                ),
+                              ),
+                            ),
+                            wasRemoved
+                                ? IconButton(
+                                  tooltip: "Standplatz wieder hinzufügen",
+                                  icon: Icon(Icons.add_circle_outline),
+                                  onPressed:
+                                      () => setState(
+                                        () => removedLocations.remove(
+                                          locationDoc.id,
+                                        ),
+                                      ),
+                                )
+                                : IconButton(
+                                  tooltip: "Standplatz entfernen",
+                                  icon: Icon(Icons.remove_circle_outline),
+                                  onPressed:
+                                      () => setState(
+                                        () => removedLocations.add(
+                                          locationDoc.id,
+                                        ),
+                                      ),
+                                ),
+                          ],
+                        ),
+                        Divider(),
+                      ],
+                    );
+                  }).toList(),
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: FilledButton.icon(
+                onPressed: () {},
+                label: Text("Standplatz hinzufügen"),
+                icon: Icon(Icons.add),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

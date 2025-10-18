@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sonos_dialoger/components/dialog_bottom_sheet.dart';
 
 import '../../basic_providers.dart';
 import '../../components/misc.dart';
@@ -191,7 +192,14 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
             SizedBox(height: 20),
             Center(
               child: FilledButton.icon(
-                onPressed: () {},
+                onPressed: () async {
+                  final isScreenWide =
+                      MediaQuery.of(context).size.aspectRatio > 1;
+                  final addedLocations = await openDialogOrBottomSheet(
+                    context,
+                    Center(child: Text("hey")),
+                  );
+                },
                 label: Text("Standplatz hinzufügen"),
                 icon: Icon(Icons.add),
               ),

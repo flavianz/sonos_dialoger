@@ -22,23 +22,23 @@ class DialogOrBottomSheetState extends State<DialogOrBottomSheet> {
   }
 }
 
-void openDialogOrBottomSheet(context, Widget child) async {
+Future<T?> openDialogOrBottomSheet<T>(context, Widget child) async {
   final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
   if (isScreenWide) {
-    await showDialog<String>(
+    return showDialog<T>(
       context: context,
       builder:
-          (BuildContext context) =>
-              Dialog(child: DialogOrBottomSheet(widget: child)),
+          (BuildContext context) => Dialog(
+            child: DialogOrBottomSheet(widget: Center(child: Text("asdas"))),
+          ),
     );
   } else {
-    await showModalBottomSheet(
+    return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
-      // Allows modal to expand beyond default limits
       builder:
           (context) => FractionallySizedBox(
-            heightFactor: 0.7, // 90% of screen height
+            heightFactor: 0.7,
             child: DialogOrBottomSheet(widget: child),
           ),
     );

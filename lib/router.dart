@@ -7,7 +7,7 @@ import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
 import 'package:sonos_dialoger/pages/admin/locations_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/admin/schedule_review_page.dart';
-import 'package:sonos_dialoger/pages/coach/coach_schedule_calendar.dart';
+import 'package:sonos_dialoger/pages/coach/coach_schedule_page.dart';
 import 'package:sonos_dialoger/pages/coach/create_schedule_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
@@ -81,7 +81,7 @@ final router = GoRouter(
         ),
         GoRoute(
           path: '/coach/schedules',
-          builder: (context, state) => CoachScheduleCalendar(),
+          builder: (context, state) => CoachSchedulePage(),
         ),
         GoRoute(
           path: '/dialoger/payment/:paymentId/edit',

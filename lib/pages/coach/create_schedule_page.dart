@@ -97,6 +97,7 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
                   "requested_locations":
                       locations.map((doc) => doc.id).toList(),
                   "reviewed": false,
+                  "personnel_assigned": false,
                 });
                 setState(() {
                   isLoading = false;

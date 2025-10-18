@@ -15,7 +15,7 @@ class DialogOrBottomSheetState extends State<DialogOrBottomSheet> {
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: 800),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: widget.widget,
       ),
     );

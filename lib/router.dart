@@ -7,6 +7,8 @@ import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
 import 'package:sonos_dialoger/pages/admin/locations_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/admin/schedule_review_page.dart';
+import 'package:sonos_dialoger/pages/coach/coach_schedule_calendar.dart';
+import 'package:sonos_dialoger/pages/coach/create_schedule_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
 import 'package:sonos_dialoger/pages/home_page.dart';
@@ -61,6 +63,25 @@ final router = GoRouter(
         GoRoute(
           path: '/dialoger/payments/register',
           builder: (context, state) => RegisterPaymentPage(),
+        ),
+        GoRoute(
+          path: '/coach/schedules/new/:year/:month/:day',
+          builder: (context, state) {
+            final year =
+                int.tryParse(state.pathParameters['year'] ?? "") ??
+                DateTime.now().year;
+            final month =
+                int.tryParse(state.pathParameters['month'] ?? "") ??
+                DateTime.now().month;
+            final day =
+                int.tryParse(state.pathParameters['day'] ?? "") ??
+                DateTime.now().day;
+            return CreateSchedulePage(date: DateTime(year, month, day));
+          },
+        ),
+        GoRoute(
+          path: '/coach/schedules',
+          builder: (context, state) => CoachScheduleCalendar(),
         ),
         GoRoute(
           path: '/dialoger/payment/:paymentId/edit',

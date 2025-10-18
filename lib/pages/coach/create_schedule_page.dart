@@ -1,15 +1,121 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/app.dart';
+import 'package:sonos_dialoger/components/misc.dart';
 
-class CreateSchedulePage extends StatefulWidget {
-  const CreateSchedulePage({super.key});
+import '../../components/dialog_bottom_sheet.dart';
+import '../admin/schedule_review_page.dart';
+
+class CreateSchedulePage extends ConsumerStatefulWidget {
+  final DateTime date;
+
+  const CreateSchedulePage({super.key, required this.date});
 
   @override
-  State<CreateSchedulePage> createState() => _CreateSchedulePageState();
+  ConsumerState<CreateSchedulePage> createState() => _CreateSchedulePageState();
 }
 
-class _CreateSchedulePageState extends State<CreateSchedulePage> {
+class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
+  final List<DocumentSnapshot<Map<String, dynamic>>> locations = [];
+
+  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Einteilungsanfrage ${widget.date.toExtendedFormattedDateString()}",
+        ),
+      ),
+
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Divider(color: Theme.of(context).primaryColor, height: 30),
+          Expanded(
+            child: Column(
+              children: [
+                locations.isEmpty
+                    ? Center(
+                      child: SizedBox(
+                        height: 50,
+                        child: Text("Noch keine Standplätze"),
+                      ),
+                    )
+                    : SizedBox.shrink(),
+                ...locations.map((locationDoc) {
+                  late final Map<String, dynamic> locationData =
+                      locationDoc.data() ?? {};
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "${locationData["name"] ?? ""}, ${locationData["address"]?["town"] ?? ""}",
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(),
+                    ],
+                  );
+                }),
+                Center(
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      final newLocations = await openDialogOrBottomSheet(
+                        context,
+                        LocationAdderDialog(alreadyFetchedLocations: locations),
+                      );
+                      setState(() {
+                        locations.addAll(newLocations);
+                      });
+                    },
+                    label: Text("Standplätze hinzufügen"),
+                    icon: Icon(Icons.add),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ConstrainedBox(
+            constraints: BoxConstraints(minHeight: 50),
+            child: FilledButton(
+              onPressed: () async {
+                setState(() {
+                  isLoading = false;
+                });
+                await FirebaseFirestore.instance.collection("schedules").add({
+                  "creation_timestamp": FieldValue.serverTimestamp(),
+                  "creator": ref.watch(userProvider).value!.uid,
+                  "date": Timestamp.fromDate(widget.date),
+                  "requested_locations":
+                      locations.map((doc) => doc.id).toList(),
+                  "reviewed": false,
+                });
+                setState(() {
+                  isLoading = false;
+                });
+                if (context.mounted) {
+                  showSnackBar(context, "Einteilungsanfrage einreichen");
+                  context.pop();
+                }
+              },
+              child:
+                  isLoading
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text("Anfrage einreichen"),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

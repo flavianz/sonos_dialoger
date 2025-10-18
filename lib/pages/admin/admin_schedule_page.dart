@@ -43,7 +43,6 @@ class AdminSchedulePage extends ConsumerWidget {
                             child: Row(
                               children: [
                                 Expanded(child: Text("Datum")),
-                                Expanded(child: Text("Ersteller")),
                                 Expanded(child: Text("Erstellt am")),
                               ],
                             ),
@@ -83,35 +82,6 @@ class AdminSchedulePage extends ConsumerWidget {
                                               child: Text(
                                                 date.toFormattedDateString(),
                                               ),
-                                            ),
-                                            Expanded(
-                                              child: ref
-                                                  .watch(
-                                                    realtimeDocProvider(
-                                                      FirebaseFirestore.instance
-                                                          .collection("users")
-                                                          .doc(
-                                                            scheduleRequestData["creator"],
-                                                          ),
-                                                    ),
-                                                  )
-                                                  .when(
-                                                    data:
-                                                        (userDoc) => Text(
-                                                          "${userDoc.data()?["first"] ?? ""} ${userDoc.data()?["last"] ?? ""}",
-                                                        ),
-                                                    error: (error, stackTrace) {
-                                                      print(error);
-                                                      print(stackTrace);
-                                                      return Text("Fehler");
-                                                    },
-                                                    loading:
-                                                        () => Center(
-                                                          child: Text(
-                                                            "Laden...",
-                                                          ),
-                                                        ),
-                                                  ),
                                             ),
                                             Expanded(
                                               child: Text(

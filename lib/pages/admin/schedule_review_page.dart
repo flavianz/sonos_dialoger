@@ -119,36 +119,8 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
         children: [
           Padding(
             padding: EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ref
-                    .watch(
-                      realtimeDocProvider(
-                        FirebaseFirestore.instance
-                            .collection("users")
-                            .doc(scheduleData["creator"]),
-                      ),
-                    )
-                    .when(
-                      data:
-                          (userDoc) => Text(
-                            "${userDoc.data()?["first"] ?? ""} ${userDoc.data()?["last"] ?? ""}",
-                          ),
-                      error: (error, stackTrace) {
-                        print(error);
-                        print(stackTrace);
-                        return Text("Fehler");
-                      },
-                      loading: () => Center(child: Text("Laden...")),
-                    ),
-
-                Text(
-                  parseDateTimeFromTimestamp(
-                    scheduleData["creation_timestamp"],
-                  ).toFormattedDateTimeString(),
-                ),
-              ],
+            child: Text(
+              "Erstellt am ${parseDateTimeFromTimestamp(scheduleData["creation_timestamp"]).toFormattedDateTimeString()}",
             ),
           ),
           SizedBox(height: 20),
@@ -410,7 +382,7 @@ class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Weitere Standplätze hinzufügen", style: TextStyle(fontSize: 20)),
+        Text("Standplätze hinzufügen", style: TextStyle(fontSize: 20)),
         Divider(color: Theme.of(context).primaryColor, height: 30),
         Expanded(
           child: locations.when(
@@ -431,29 +403,34 @@ class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
                         final locationData = location.data();
                         return Column(
                           children: [
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value:
-                                      selectedDocs
-                                          .where((doc) => doc.id == location.id)
-                                          .isNotEmpty,
-                                  onChanged: (newValue) {
-                                    setState(() {
-                                      if (newValue == true) {
-                                        selectedDocs.add(location);
-                                      } else {
-                                        selectedDocs.removeWhere(
-                                          (doc) => doc.id == location.id,
-                                        );
-                                      }
-                                    });
-                                  },
-                                ),
-                                Text(
-                                  "${locationData["name"]}, ${locationData["address"]?["town"] ?? ""}",
-                                ),
-                              ],
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 2),
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value:
+                                        selectedDocs
+                                            .where(
+                                              (doc) => doc.id == location.id,
+                                            )
+                                            .isNotEmpty,
+                                    onChanged: (newValue) {
+                                      setState(() {
+                                        if (newValue == true) {
+                                          selectedDocs.add(location);
+                                        } else {
+                                          selectedDocs.removeWhere(
+                                            (doc) => doc.id == location.id,
+                                          );
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  Text(
+                                    "${locationData["name"]}, ${locationData["address"]?["town"] ?? ""}",
+                                  ),
+                                ],
+                              ),
                             ),
                             Divider(),
                           ],

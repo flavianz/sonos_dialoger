@@ -46,7 +46,7 @@ extension DateTimeFormatExtension on DateTime {
       11 => "November",
       12 => "Dezember",
       1 || _ => "Januar",
-    }}.";
+    }}";
   }
 
   String toFormattedDateTimeString() {

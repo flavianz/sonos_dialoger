@@ -16,7 +16,7 @@ class DialogOrBottomSheetState extends State<DialogOrBottomSheet> {
       constraints: BoxConstraints(maxWidth: 800),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: widget,
+        child: widget.widget,
       ),
     );
   }
@@ -28,9 +28,8 @@ Future<T?> openDialogOrBottomSheet<T>(context, Widget child) async {
     return showDialog<T>(
       context: context,
       builder:
-          (BuildContext context) => Dialog(
-            child: DialogOrBottomSheet(widget: Center(child: Text("asdas"))),
-          ),
+          (BuildContext context) =>
+              Dialog(child: DialogOrBottomSheet(widget: child)),
     );
   } else {
     return showModalBottomSheet<T>(

@@ -136,6 +136,14 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                   SizedBox(height: 10),
                   Row(children: [Expanded(child: Text("Name"))]),
                   Divider(height: 20, color: Theme.of(context).primaryColor),
+                  requestedLocations.isEmpty
+                      ? SizedBox(
+                        height: 50,
+                        child: Center(
+                          child: Text("Keine angefragten Standplätze"),
+                        ),
+                      )
+                      : SizedBox.shrink(),
                   Column(
                     children:
                         requestedLocations.map((requestedId) {
@@ -205,6 +213,14 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                   SizedBox(height: 10),
                   Row(children: [Expanded(child: Text("Name"))]),
                   Divider(height: 20, color: Theme.of(context).primaryColor),
+                  addedLocations.isEmpty
+                      ? SizedBox(
+                        height: 50,
+                        child: Center(
+                          child: Text("Noch keine hinzugefügten Standplätze"),
+                        ),
+                      )
+                      : SizedBox.shrink(),
                   Column(
                     children:
                         addedLocations.map((requestedId) {

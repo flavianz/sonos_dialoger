@@ -39,11 +39,9 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
             child: Column(
               children: [
                 locations.isEmpty
-                    ? Center(
-                      child: SizedBox(
-                        height: 50,
-                        child: Text("Noch keine Standplätze"),
-                      ),
+                    ? SizedBox(
+                      height: 50,
+                      child: Center(child: Text("Noch keine Standplätze")),
                     )
                     : SizedBox.shrink(),
                 ...locations.map((locationDoc) {

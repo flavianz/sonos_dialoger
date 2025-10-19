@@ -8,6 +8,7 @@ import 'package:sonos_dialoger/pages/admin/locations_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/admin/schedule_review_page.dart';
 import 'package:sonos_dialoger/pages/coach/coach_schedule_page.dart';
+import 'package:sonos_dialoger/pages/coach/coach_schedule_personnel_assignment_page.dart';
 import 'package:sonos_dialoger/pages/coach/create_schedule_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
@@ -102,6 +103,13 @@ final router = GoRouter(
           builder: (context, state) {
             final scheduleId = state.pathParameters['scheduleId']!;
             return ScheduleReviewPage(scheduleId: scheduleId);
+          },
+        ),
+        GoRoute(
+          path: '/coach/schedule/personnel_assignment/:scheduleId',
+          builder: (context, state) {
+            final scheduleId = state.pathParameters['scheduleId']!;
+            return CoachSchedulePersonnelAssignmentPage(scheduleId: scheduleId);
           },
         ),
       ],

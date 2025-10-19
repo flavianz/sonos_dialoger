@@ -10,11 +10,11 @@ final confirmedSchedulesProvider = realtimeCollectionProvider(
   FirebaseFirestore.instance
       .collection("schedules")
       .where(
-        Filter.and(
-          Filter("reviewed", isEqualTo: true),
-          Filter("personnel_assigned", isEqualTo: false),
-        ),
-      )
+    Filter.and(
+      Filter("reviewed", isEqualTo: true),
+      Filter("personnel_assigned", isEqualTo: false),
+    ),
+  )
       .orderBy("date"),
 );
 
@@ -40,78 +40,84 @@ class CoachSchedulePage extends ConsumerWidget {
             ref
                 .watch(confirmedSchedulesProvider)
                 .when(
-                  data:
-                      (scheduleRequestDocs) => Column(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 16, bottom: 4),
-                            child: Row(
-                              children: [
-                                Expanded(child: Text("Datum")),
-                                Expanded(child: Text("Erstellt am")),
-                              ],
-                            ),
-                          ),
-                          Divider(color: Theme.of(context).primaryColor),
-                          Expanded(
-                            child: ListView(
-                              children:
-                                  scheduleRequestDocs.docs.map((
-                                    scheduleRequestDoc,
-                                  ) {
-                                    final scheduleRequestData =
-                                        scheduleRequestDoc.data();
-                                    final date =
-                                        ((scheduleRequestData["date"] ??
-                                                    Timestamp.now())
-                                                as Timestamp)
-                                            .toDate();
-                                    final creationTimestamp =
-                                        ((scheduleRequestData["creation_timestamp"] ??
-                                                    Timestamp.now())
-                                                as Timestamp)
-                                            .toDate();
-                                    return Tappable(
-                                      onTap: () {
-                                        context.push(
-                                          "/admin/schedule-review/${scheduleRequestDoc.id}",
-                                        );
-                                      },
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 5,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                date.toExtendedFormattedDateString(),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                creationTimestamp
-                                                    .toFormattedDateTimeString(),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                            ),
-                          ),
-                        ],
+              data:
+                  (scheduleRequestDocs) =>
+                  Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 16, bottom: 4),
+                        child: Row(
+                          children: [
+                            Expanded(child: Text("Datum")),
+                            Expanded(child: Text("Erstellt am")),
+                          ],
+                        ),
                       ),
-                  error: (object, stackTrace) {
-                    print(object);
-                    print(stackTrace);
-                    return Center(
-                      child: Text("Ups, hier hat etwas nicht geklappt"),
-                    );
-                  },
-                  loading: () => Center(child: CircularProgressIndicator()),
-                ),
+                      Divider(color: Theme
+                          .of(context)
+                          .primaryColor),
+
+                      Expanded(
+                        child: scheduleRequestDocs.docs.isEmpty
+                            ? Center(
+                          child: Text("Keine bestätigten Einteilungen"),)
+                            : ListView(
+                          children:
+                          scheduleRequestDocs.docs.map((scheduleRequestDoc,) {
+                            final scheduleRequestData =
+                            scheduleRequestDoc.data();
+                            final date =
+                            ((scheduleRequestData["date"] ??
+                                Timestamp.now())
+                            as Timestamp)
+                                .toDate();
+                            final creationTimestamp =
+                            ((scheduleRequestData["creation_timestamp"] ??
+                                Timestamp.now())
+                            as Timestamp)
+                                .toDate();
+                            return Tappable(
+                              onTap: () {
+                                context.push(
+                                  "/coach/schedule/personnel_assignment/${scheduleRequestDoc
+                                      .id}",
+                                );
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 5,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        date.toExtendedFormattedDateString(),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        creationTimestamp
+                                            .toFormattedDateTimeString(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+              error: (object, stackTrace) {
+                print(object);
+                print(stackTrace);
+                return Center(
+                  child: Text("Ups, hier hat etwas nicht geklappt"),
+                );
+              },
+              loading: () => Center(child: CircularProgressIndicator()),
+            ),
             Center(),
           ],
         ),

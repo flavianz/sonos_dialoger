@@ -206,7 +206,11 @@ class _AppState extends ConsumerState<App> {
                     onDestinationSelected: (i) {
                       setState(() {
                         selectedIndex = i;
-                        context.go(destinations[i]["url"]);
+                        context.go(
+                          destinations
+                              .where((route) => route["barOnly"] != true)
+                              .toList()[i]["url"],
+                        );
                       });
                     },
                   ),

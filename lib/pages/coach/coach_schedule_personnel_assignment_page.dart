@@ -107,6 +107,7 @@ class _CoachSchedulePersonnelAssignmentPageState
 
             return Scaffold(
               appBar: AppBar(
+                forceMaterialTransparency: true,
                 title: Text(
                   "Einteilung ${date.toExtendedFormattedDateString()}",
                 ),
@@ -291,6 +292,27 @@ class _CoachSchedulePersonnelAssignmentPageState
                                       ),
                                     ),
                                     Divider(),
+                                    dialoguerDocs.docs
+                                            .where(
+                                              (doc) =>
+                                                  alreadyAssignedDialoguers
+                                                      .where(
+                                                        (assignedDoc) =>
+                                                            doc.id ==
+                                                            assignedDoc.id,
+                                                      )
+                                                      .isEmpty,
+                                            )
+                                            .isEmpty
+                                        ? SizedBox(
+                                          height: 50,
+                                          child: Center(
+                                            child: Text(
+                                              "Alle Dialoger*innen eingeteilt",
+                                            ),
+                                          ),
+                                        )
+                                        : SizedBox.shrink(),
                                     Column(
                                       children:
                                           dialoguerDocs.docs

@@ -32,8 +32,8 @@ extension DateTimeFormatExtension on DateTime {
     return "${day.toString().padLeft(2, "0")}.${month.toString().padLeft(2, "0")}.";
   }
 
-  String toExtendedFormattedDateString() {
-    return "$day. ${switch (month) {
+  String getMonthName() {
+    return switch (month) {
       2 => "Februar",
       3 => "März",
       4 => "April",
@@ -46,7 +46,15 @@ extension DateTimeFormatExtension on DateTime {
       11 => "November",
       12 => "Dezember",
       1 || _ => "Januar",
-    }}";
+    };
+  }
+
+  String toExtendedFormattedDateString() {
+    return "$day. ${getMonthName()}";
+  }
+
+  DateTime getWeekStart() {
+    return DateTime(year, month, day).subtract(Duration(days: weekday - 1));
   }
 
   String toFormattedDateTimeString() {

@@ -158,6 +158,11 @@ class _AppState extends ConsumerState<App> {
           "barOnly": true,
         },
         {
+          "icon": Icon(Icons.assignment),
+          "label": "Einteilung",
+          "url": "/dialog/schedules",
+        },
+        {
           "icon": Icon(Icons.settings),
           "label": "Einstellungen",
           "url": "/admin/settings",

@@ -68,6 +68,23 @@ extension DateTimeFormatExtension on DateTime {
   String toFormattedDateTimeString() {
     return "${day.toString().padLeft(2, "0")}.${month.toString().padLeft(2, "0")}., ${hour.toString().padLeft(2, "0")}:${minute.toString().padLeft(2, "0")}";
   }
+
+  bool isSameDate(DateTime other) {
+    return year == other.year && month == other.month && day == other.day;
+  }
+
+  String getWeekdayAbbreviation() {
+    return switch (weekday) {
+      1 => "Mo",
+      2 => "Di",
+      3 => "Mi",
+      4 => "Do",
+      5 => "Fr",
+      6 => "Sa",
+      7 => "So",
+      _ => "Mo",
+    };
+  }
 }
 
 DateTime parseDateTimeFromTimestamp(dynamic value) {

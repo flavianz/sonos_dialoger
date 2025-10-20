@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:async/async.dart';
-import 'package:sonos_dialoger/components/misc.dart';
 
 import 'app.dart';
 
@@ -48,8 +47,7 @@ final queryByIdsProvider = StreamProvider.autoDispose
       final baseQuery = args.queryKey;
       final ids = args.ids;
 
-      if (ids.isEmpty) return const Stream.empty();
-
+      if (ids.isEmpty) return Stream.value([]);
       final chunks = <List<dynamic>>[];
       for (var i = 0; i < ids.length; i += 10) {
         chunks.add(ids.sublist(i, i + 10 > ids.length ? ids.length : i + 10));

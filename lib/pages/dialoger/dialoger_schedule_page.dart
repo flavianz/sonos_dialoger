@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+import 'package:sonos_dialoger/pages/admin/locations_page.dart';
+import 'package:sonos_dialoger/providers.dart';
 
 enum ScheduleTimespan { day, week, month }
 
@@ -12,19 +16,86 @@ final scheduleStartDateProvider = StateProvider<DateTime>((ref) {
   final scheduleTimespan = ref.read(scheduleTimespanProvider);
   final now = DateTime.now();
   if (scheduleTimespan == ScheduleTimespan.day) {
-    return DateTime(now.year, now.month, now.day);
+    return now.getDayStart();
   } else if (scheduleTimespan == ScheduleTimespan.week) {
     return now.getWeekStart();
   } else {
-    return DateTime(now.year, now.month);
+    return now.getMonthStart();
   }
 });
+
+final schedulesProvider = StreamProvider((ref) {
+  final scheduleTimespan = ref.watch(scheduleTimespanProvider);
+  final scheduleStartDate = ref.watch(scheduleStartDateProvider);
+
+  late final DateTime endDate;
+  if (scheduleTimespan == ScheduleTimespan.day) {
+    endDate = scheduleStartDate.add(Duration(days: 1));
+  } else if (scheduleTimespan == ScheduleTimespan.week) {
+    endDate = scheduleStartDate.add(Duration(days: 7));
+  } else {
+    endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
+  }
+
+  return firestore
+      .collection("schedules")
+      .where(
+        Filter.and(
+          Filter(
+            "date",
+            isGreaterThanOrEqualTo: Timestamp.fromDate(scheduleStartDate),
+          ),
+          Filter("date", isLessThan: Timestamp.fromDate(endDate)),
+          Filter("personnel_assigned", isEqualTo: true),
+        ),
+      )
+      .snapshots();
+});
+
+final scheduleLocationsProvider =
+    StreamProvider<List<QueryDocumentSnapshot<Map<String, dynamic>>>?>((ref) {
+      final schedules = ref.watch(schedulesProvider);
+      if (schedules.isLoading) {
+        return Stream.empty();
+      }
+      if (schedules.hasError) {
+        return Stream.error(schedules.error ?? "Unknown error");
+      }
+      final scheduleDocs = schedules.value!.docs;
+      final locationIds = flatten(
+        scheduleDocs.map((doc) {
+          return (doc.data()["personnel"] as Map<String, dynamic>).keys;
+        }),
+      );
+      final locations = ref.watch(
+        queryByIdsProvider(
+          QueryByIdsArgs(
+            queryKey: "locations",
+            ids: locationIds.toSet().toList(),
+          ),
+        ),
+      );
+      if (locations.isLoading) {
+        return Stream.empty();
+      }
+      if (locations.hasError) {
+        return Stream.error(locations.error ?? "Unknown error");
+      }
+
+      return Stream.value(locations.value);
+    });
 
 class DialogerSchedulePage extends ConsumerWidget {
   const DialogerSchedulePage({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
+    final scheduleTimespan = ref.watch(scheduleTimespanProvider);
+    final scheduleStartDate = ref.watch(scheduleStartDateProvider);
+
+    final schedules = ref.watch(schedulesProvider);
+    final locationDocs = ref.watch(scheduleLocationsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Einteilung"),
@@ -40,7 +111,7 @@ class DialogerSchedulePage extends ConsumerWidget {
               items: [
                 DropdownMenuItem(
                   value: ScheduleTimespan.day,
-                  child: Text("Heute"),
+                  child: Text("Tag"),
                 ),
                 DropdownMenuItem(
                   value: ScheduleTimespan.week,
@@ -62,23 +133,186 @@ class DialogerSchedulePage extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          SizedBox(height: 15),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(switch (ref.watch(scheduleTimespanProvider)) {
+              IconButton(
+                onPressed: () {
+                  if (scheduleTimespan == ScheduleTimespan.day) {
+                    ref
+                        .read(scheduleStartDateProvider.notifier)
+                        .state = scheduleStartDate.subtract(Duration(days: 1));
+                  } else if (scheduleTimespan == ScheduleTimespan.week) {
+                    ref
+                        .read(scheduleStartDateProvider.notifier)
+                        .state = scheduleStartDate.subtract(Duration(days: 7));
+                  } else {
+                    ref
+                        .read(scheduleStartDateProvider.notifier)
+                        .state = DateTime(
+                      scheduleStartDate.year,
+                      scheduleStartDate.month - 1,
+                    );
+                  }
+                },
+                icon: Icon(Icons.arrow_left, size: 30),
+              ),
+              Text(switch (scheduleTimespan) {
                 ScheduleTimespan.day =>
-                  ref.watch(scheduleStartDateProvider).getMonthName() +
-                      (ref.watch(scheduleStartDateProvider).year !=
-                              DateTime.now().year
-                          ? (ref.watch(scheduleStartDateProvider).year % 100)
-                              .toString()
-                              .padLeft(2, "0")
+                  scheduleStartDate.toExtendedFormattedDateString() +
+                      (scheduleStartDate.year != DateTime.now().year
+                          ? (" ${scheduleStartDate.year.toString()}")
                           : ""),
                 ScheduleTimespan.week => () {
-                  return "";
+                  return "${scheduleStartDate.getWeekStart().toExtendedFormattedDateString()} - ${scheduleStartDate.getWeekStart().add(Duration(days: 6)).toExtendedFormattedDateString()}${scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : ""}";
                 }(),
-                ScheduleTimespan.month => throw UnimplementedError(),
-              }),
+                ScheduleTimespan.month =>
+                  scheduleStartDate.getMonthName() +
+                      (scheduleStartDate.year != DateTime.now().year
+                          ? (" ${scheduleStartDate.year.toString()}")
+                          : ""),
+              }, style: TextStyle(fontSize: 20)),
+              IconButton(
+                onPressed: () {
+                  if (scheduleTimespan == ScheduleTimespan.day) {
+                    ref
+                        .read(scheduleStartDateProvider.notifier)
+                        .state = scheduleStartDate.add(Duration(days: 1));
+                  } else if (scheduleTimespan == ScheduleTimespan.week) {
+                    ref
+                        .read(scheduleStartDateProvider.notifier)
+                        .state = scheduleStartDate.add(Duration(days: 7));
+                  } else {
+                    ref
+                        .read(scheduleStartDateProvider.notifier)
+                        .state = DateTime(
+                      scheduleStartDate.year,
+                      scheduleStartDate.month + 1,
+                    );
+                  }
+                },
+                icon: Icon(Icons.arrow_right, size: 30),
+              ),
             ],
+          ),
+          Divider(color: Theme.of(context).primaryColor),
+          SizedBox(height: 15),
+          Expanded(
+            child: schedules.when(
+              data: (scheduleDocs) {
+                if (scheduleTimespan == ScheduleTimespan.day) {
+                  if (scheduleDocs.docs.isEmpty) {
+                    return Center(
+                      child: Text("Noch keine Einteilung erstellt"),
+                    );
+                  }
+                  final scheduleData = scheduleDocs.docs[0].data();
+                  final Map<String, dynamic> assignments =
+                      scheduleData["personnel"] ?? {};
+
+                  final userId = ref.watch(userProvider).value?.uid;
+
+                  if (!flatten(assignments.values).contains(userId)) {
+                    return Center(
+                      child: Text("An diesem Tag bist du nicht eingeteilt"),
+                    );
+                  }
+                  if (locationDocs.isLoading) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (locationDocs.hasError) {
+                    print(locationDocs.error);
+                    print(locationDocs.stackTrace);
+                    return Center(
+                      child: Text("Ups, hier hat etwas nicht geklappt"),
+                    );
+                  }
+                  final locations = locationDocs.value!;
+                  final String myLocationId =
+                      assignments.entries
+                          .where(
+                            (entry) => (entry.value as List).contains(userId),
+                          )
+                          .toList()[0]
+                          .key;
+                  final filteredLocations =
+                      locations.where((doc) => doc.id == myLocationId).toList();
+                  if (filteredLocations.isEmpty) {
+                    return Center(
+                      child: Text("Ups, hier hat etwas nicht geklappt"),
+                    );
+                  }
+                  final myLocationDoc = filteredLocations[0];
+                  final myLocationData = myLocationDoc.data();
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${myLocationData["name"]}, ${myLocationData["address"]?["town"]}",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "${myLocationData["address"]?["street"] ?? ""} ${myLocationData["address"]?["house_number"] ?? ""}",
+                        ),
+                        Text(
+                          "${myLocationData["address"]?["postal_code"] ?? ""} ${myLocationData["address"]?["town"] ?? ""}",
+                        ),
+                        SizedBox(height: 30),
+                        Text(
+                          "Eingeteilte Dialoger*innen",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        Divider(color: Theme.of(context).primaryColor),
+                        ref
+                            .watch(
+                              queryByIdsProvider(
+                                QueryByIdsArgs(
+                                  queryKey: "users",
+                                  ids: assignments[myLocationId] as List,
+                                ),
+                              ),
+                            )
+                            .when(
+                              data:
+                                  (userDocs) => Column(
+                                    children:
+                                        userDocs.map((userDoc) {
+                                          final userData = userDoc.data();
+                                          return Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: 3,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  "${userData["first"] ?? ""} ${userData["last"] ?? ""}",
+                                                ),
+                                                Divider(),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                  ),
+                              error: errorHandling,
+                              loading: loadingHandling,
+                            ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return Center();
+                }
+              },
+              error: errorHandling,
+              loading: loadingHandling,
+            ),
           ),
         ],
       ),

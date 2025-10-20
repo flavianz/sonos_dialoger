@@ -57,6 +57,14 @@ extension DateTimeFormatExtension on DateTime {
     return DateTime(year, month, day).subtract(Duration(days: weekday - 1));
   }
 
+  DateTime getDayStart() {
+    return DateTime(year, month, day);
+  }
+
+  DateTime getMonthStart() {
+    return DateTime(year, month);
+  }
+
   String toFormattedDateTimeString() {
     return "${day.toString().padLeft(2, "0")}.${month.toString().padLeft(2, "0")}., ${hour.toString().padLeft(2, "0")}:${minute.toString().padLeft(2, "0")}";
   }
@@ -78,5 +86,25 @@ class Tappable extends StatelessWidget {
       onTap: onTap,
       child: MouseRegion(cursor: SystemMouseCursors.click, child: child),
     );
+  }
+}
+
+Widget errorHandling(object, stackTrace) {
+  print(object);
+  print(stackTrace);
+  return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
+}
+
+Widget loadingHandling() {
+  return Center(child: CircularProgressIndicator());
+}
+
+List<T> flatten<T>(Iterable list) {
+  return [for (var sublist in list) ...sublist];
+}
+
+extension ContainsWhere<T> on Iterable<T> {
+  bool containsWhere(bool Function(T) test) {
+    return where(test).isEmpty;
   }
 }

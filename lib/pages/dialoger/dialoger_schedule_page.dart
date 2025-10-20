@@ -124,6 +124,13 @@ class DialogerSchedulePage extends ConsumerWidget {
               onChanged: (newValue) {
                 if (newValue != null) {
                   ref.read(scheduleTimespanProvider.notifier).state = newValue;
+                  if (newValue == ScheduleTimespan.week) {
+                    ref.read(scheduleStartDateProvider.notifier).state =
+                        scheduleStartDate.getWeekStart();
+                  } else if (newValue == ScheduleTimespan.month) {
+                    ref.read(scheduleStartDateProvider.notifier).state =
+                        scheduleStartDate.getMonthStart();
+                  }
                 }
               },
             ),
@@ -344,92 +351,104 @@ class DialogerSchedulePage extends ConsumerWidget {
                                 }).toList();
 
                             return Card.outlined(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    Column(
-                                      children: [
-                                        Text(
-                                          date.getWeekdayAbbreviation(),
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Text(date.toFormattedDateString()),
-                                      ],
-                                    ),
-                                    SizedBox(
-                                      height: 50,
-                                      child: VerticalDivider(width: 20),
-                                    ),
-                                    () {
-                                      if (dateFilteredScheduleDocs.isEmpty) {
-                                        return Center(
-                                          child: Text(
-                                            "Noch keine Einteilung erstellt",
-                                          ),
-                                        );
-                                      }
-                                      final scheduleData =
-                                          dateFilteredScheduleDocs[0].data();
-                                      final Map<String, dynamic> assignments =
-                                          scheduleData["personnel"] ?? {};
-
-                                      final userId =
-                                          ref.watch(userProvider).value?.uid;
-
-                                      if (!flatten(
-                                        assignments.values,
-                                      ).contains(userId)) {
-                                        return Center(
-                                          child: Text(
-                                            "An diesem Tag bist du nicht eingeteilt",
-                                          ),
-                                        );
-                                      }
-
-                                      final String myLocationId =
-                                          assignments.entries
-                                              .where(
-                                                (entry) => (entry.value as List)
-                                                    .contains(userId),
-                                              )
-                                              .toList()[0]
-                                              .key;
-                                      final filteredLocations =
-                                          locations
-                                              .where(
-                                                (doc) => doc.id == myLocationId,
-                                              )
-                                              .toList();
-                                      if (filteredLocations.isEmpty) {
-                                        return Center(
-                                          child: Text(
-                                            "Ups, hier hat etwas nicht geklappt",
-                                          ),
-                                        );
-                                      }
-                                      final myLocationDoc =
-                                          filteredLocations[0];
-                                      final myLocationData =
-                                          myLocationDoc.data();
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                              child: Tappable(
+                                onTap: () {
+                                  ref
+                                      .read(scheduleTimespanProvider.notifier)
+                                      .state = ScheduleTimespan.day;
+                                  ref
+                                      .read(scheduleStartDateProvider.notifier)
+                                      .state = date.getDayStart();
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Column(
                                         children: [
                                           Text(
-                                            "${myLocationData["name"]}",
-                                            style: TextStyle(fontSize: 20),
+                                            date.getWeekdayAbbreviation(),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-
-                                          Text(
-                                            "${myLocationData["address"]?["street"] ?? ""} ${myLocationData["address"]?["house_number"] ?? ""}, ${myLocationData["address"]?["postal_code"] ?? ""} ${myLocationData["address"]?["town"] ?? ""}",
-                                          ),
+                                          Text(date.toFormattedDateString()),
                                         ],
-                                      );
-                                    }(),
-                                  ],
+                                      ),
+                                      SizedBox(
+                                        height: 50,
+                                        child: VerticalDivider(width: 20),
+                                      ),
+                                      () {
+                                        if (dateFilteredScheduleDocs.isEmpty) {
+                                          return Center(
+                                            child: Text(
+                                              "Noch keine Einteilung erstellt",
+                                            ),
+                                          );
+                                        }
+                                        final scheduleData =
+                                            dateFilteredScheduleDocs[0].data();
+                                        final Map<String, dynamic> assignments =
+                                            scheduleData["personnel"] ?? {};
+
+                                        final userId =
+                                            ref.watch(userProvider).value?.uid;
+
+                                        if (!flatten(
+                                          assignments.values,
+                                        ).contains(userId)) {
+                                          return Center(
+                                            child: Text(
+                                              "An diesem Tag bist du nicht eingeteilt",
+                                            ),
+                                          );
+                                        }
+
+                                        final String myLocationId =
+                                            assignments.entries
+                                                .where(
+                                                  (entry) =>
+                                                      (entry.value as List)
+                                                          .contains(userId),
+                                                )
+                                                .toList()[0]
+                                                .key;
+                                        final filteredLocations =
+                                            locations
+                                                .where(
+                                                  (doc) =>
+                                                      doc.id == myLocationId,
+                                                )
+                                                .toList();
+                                        if (filteredLocations.isEmpty) {
+                                          return Center(
+                                            child: Text(
+                                              "Ups, hier hat etwas nicht geklappt",
+                                            ),
+                                          );
+                                        }
+                                        final myLocationDoc =
+                                            filteredLocations[0];
+                                        final myLocationData =
+                                            myLocationDoc.data();
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "${myLocationData["name"]}",
+                                              style: TextStyle(fontSize: 20),
+                                            ),
+
+                                            Text(
+                                              "${myLocationData["address"]?["street"] ?? ""} ${myLocationData["address"]?["house_number"] ?? ""}, ${myLocationData["address"]?["postal_code"] ?? ""} ${myLocationData["address"]?["town"] ?? ""}",
+                                            ),
+                                          ],
+                                        );
+                                      }(),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );

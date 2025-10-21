@@ -350,6 +350,11 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                         setState(() {
                           isLoading = true;
                         });
+                        final finalLocations = {
+                          ...requestedLocations,
+                          ...addedLocations,
+                        }..removeAll(removedLocations);
+
                         await FirebaseFirestore.instance
                             .collection("schedules")
                             .doc(widget.scheduleId)
@@ -358,6 +363,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                               "removed_locations": removedLocations,
                               "added_locations": addedLocations,
                               "reviewed_at": FieldValue.serverTimestamp(),
+                              "confirmed_locations": finalLocations.toList(),
                             });
                         setState(() {
                           isLoading = false;

@@ -45,15 +45,11 @@ final locationsProvider =
 
       final scheduleData = schedule.value?.data() ?? {};
 
-      List<dynamic> requestedLocations = scheduleData["requested_locations"];
-      List<dynamic> addedLocations = scheduleData["added_locations"];
-      List<dynamic> removedLocations = scheduleData["removed_locations"];
+      List<dynamic> confirmedLocations = scheduleData["confirmed_locations"];
 
-      List<dynamic> finalLocations = [...requestedLocations, ...addedLocations]
-        ..remove(removedLocations);
       return FirebaseFirestore.instance
           .collection("locations")
-          .where(FieldPath.documentId, whereIn: finalLocations)
+          .where(FieldPath.documentId, whereIn: confirmedLocations)
           .snapshots();
     });
 

@@ -49,52 +49,57 @@ class AdminSchedulePage extends ConsumerWidget {
                           ),
                           Divider(color: Theme.of(context).primaryColor),
                           Expanded(
-                            child: ListView(
-                              children:
-                                  scheduleRequestDocs.docs.map((
-                                    scheduleRequestDoc,
-                                  ) {
-                                    final scheduleRequestData =
-                                        scheduleRequestDoc.data();
-                                    final date =
-                                        ((scheduleRequestData["date"] ??
-                                                    Timestamp.now())
-                                                as Timestamp)
-                                            .toDate();
-                                    final creationTimestamp =
-                                        ((scheduleRequestData["creation_timestamp"] ??
-                                                    Timestamp.now())
-                                                as Timestamp)
-                                            .toDate();
-                                    return Tappable(
-                                      onTap: () {
-                                        context.push(
-                                          "/admin/schedule-review/${scheduleRequestDoc.id}",
-                                        );
-                                      },
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 5,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                date.toFormattedDateString(),
+                            child:
+                                scheduleRequestDocs.docs.isEmpty
+                                    ? Center(
+                                      child: Text("Keine Einteilungsanfragen"),
+                                    )
+                                    : ListView(
+                                      children:
+                                          scheduleRequestDocs.docs.map((
+                                            scheduleRequestDoc,
+                                          ) {
+                                            final scheduleRequestData =
+                                                scheduleRequestDoc.data();
+                                            final date =
+                                                ((scheduleRequestData["date"] ??
+                                                            Timestamp.now())
+                                                        as Timestamp)
+                                                    .toDate();
+                                            final creationTimestamp =
+                                                ((scheduleRequestData["creation_timestamp"] ??
+                                                            Timestamp.now())
+                                                        as Timestamp)
+                                                    .toDate();
+                                            return Tappable(
+                                              onTap: () {
+                                                context.push(
+                                                  "/admin/schedule-review/${scheduleRequestDoc.id}",
+                                                );
+                                              },
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 5,
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        date.toFormattedDateString(),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Text(
+                                                        creationTimestamp
+                                                            .toFormattedDateTimeString(),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                creationTimestamp
-                                                    .toFormattedDateTimeString(),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                            ),
+                                            );
+                                          }).toList(),
+                                    ),
                           ),
                         ],
                       ),

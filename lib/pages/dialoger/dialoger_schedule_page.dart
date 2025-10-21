@@ -100,7 +100,7 @@ class DialogerSchedulePage extends ConsumerWidget {
         title: Text("Einteilung"),
         actions: [
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 200),
+            constraints: BoxConstraints(maxWidth: 150),
             child: DropdownButtonFormField(
               initialValue: ref.watch(scheduleTimespanProvider),
               decoration: InputDecoration(

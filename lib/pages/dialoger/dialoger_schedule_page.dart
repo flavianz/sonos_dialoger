@@ -284,7 +284,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                         ),
                         SizedBox(height: 30),
                         Text(
-                          "Eingeteilte Dialoger*innen",
+                          "Mit dir eingeteilte Dialoger*innen",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

@@ -71,32 +71,38 @@ class AdminSchedulePage extends ConsumerWidget {
                                                             Timestamp.now())
                                                         as Timestamp)
                                                     .toDate();
-                                            return Tappable(
-                                              onTap: () {
-                                                context.push(
-                                                  "/admin/schedule-review/${scheduleRequestDoc.id}",
-                                                );
-                                              },
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 5,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        date.toFormattedDateString(),
-                                                      ),
+                                            return Column(
+                                              children: [
+                                                Tappable(
+                                                  onTap: () {
+                                                    context.push(
+                                                      "/admin/schedule-review/${scheduleRequestDoc.id}",
+                                                    );
+                                                  },
+                                                  child: Padding(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 5,
+                                                        ),
+                                                    child: Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            date.toFormattedDateString(),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Text(
+                                                            creationTimestamp
+                                                                .toFormattedDateTimeString(),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                    Expanded(
-                                                      child: Text(
-                                                        creationTimestamp
-                                                            .toFormattedDateTimeString(),
-                                                      ),
-                                                    ),
-                                                  ],
+                                                  ),
                                                 ),
-                                              ),
+                                                Divider(),
+                                              ],
                                             );
                                           }).toList(),
                                     ),

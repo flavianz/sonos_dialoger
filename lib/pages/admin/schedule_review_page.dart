@@ -318,6 +318,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
               ),
             ),
           ),
+          SizedBox(height: 10),
           ConstrainedBox(
             constraints: BoxConstraints(minHeight: 50),
             child:
@@ -364,6 +365,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                               "added_locations": addedLocations,
                               "reviewed_at": FieldValue.serverTimestamp(),
                               "confirmed_locations": finalLocations.toList(),
+                              "personnel_assigned": false,
                             });
                         setState(() {
                           isLoading = false;

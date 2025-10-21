@@ -63,7 +63,7 @@ final scheduleLocationsProvider =
       final scheduleDocs = schedules.value!.docs;
       final locationIds = flatten(
         scheduleDocs.map((doc) {
-          return (doc.data()["personnel"] as Map<String, dynamic>).keys;
+          return doc.data()["confirmed_locations"] ?? [];
         }),
       );
       final locations = ref.watch(

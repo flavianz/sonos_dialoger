@@ -60,7 +60,9 @@ final coachScheduleLocationsProvider =
       final scheduleDocs = schedules.value!.docs;
       final locationIds = flatten(
         scheduleDocs.map((doc) {
-          return (doc.data()["personnel"] as Map<String, dynamic>).keys;
+          return doc.data()["reviewed"] == true
+              ? (doc.data()["confirmed_locations"] ?? [])
+              : (doc.data()["requested_locations"] ?? []);
         }),
       );
       final locations = ref.watch(

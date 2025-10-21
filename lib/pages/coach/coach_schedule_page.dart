@@ -409,8 +409,241 @@ class CoachSchedulePage extends ConsumerWidget {
                                   ),
                                 ],
                               );
+                            } else {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text("Status"),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 5,
+                                          horizontal: 15,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            100,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          spacing: 8,
+                                          children: [
+                                            Icon(Icons.check, size: 17),
+                                            Text(
+                                              "Dialoger*innen eingeteilt",
+                                              style: TextStyle(fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 15),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text("Angefragt am"),
+                                      Text(
+                                        parseDateTimeFromTimestamp(
+                                          coachScheduleData["creation_timestamp"],
+                                        ).toFormattedDateTimeString(),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 20),
+                                  Text(
+                                    "Standplätze",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  Divider(
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  Expanded(
+                                    child: ref
+                                        .watch(coachScheduleLocationsProvider)
+                                        .when(
+                                          data: (locationDocs) {
+                                            final userDocsProvider = ref.watch(
+                                              queryByIdsProvider(
+                                                QueryByIdsArgs(
+                                                  queryKey: "users",
+                                                  ids:
+                                                      flatten(
+                                                        (coachScheduleData["personnel"]
+                                                                as Map)
+                                                            .values,
+                                                      ).toSet().toList(),
+                                                ),
+                                              ),
+                                            );
+                                            if (userDocsProvider.isLoading) {
+                                              return Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            }
+                                            if (userDocsProvider.hasError) {
+                                              print(userDocsProvider.error);
+                                              print(
+                                                userDocsProvider.stackTrace,
+                                              );
+                                              return Center(
+                                                child: Text(
+                                                  "Ups, hier hat etwas nicht geklappt",
+                                                ),
+                                              );
+                                            }
+                                            final userDocs =
+                                                userDocsProvider.value ?? [];
+                                            return SingleChildScrollView(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.stretch,
+                                                children:
+                                                    (coachScheduleData["confirmed_locations"]
+                                                            as List)
+                                                        .map((locationId) {
+                                                          final filteredDocs =
+                                                              locationDocs!
+                                                                  .where(
+                                                                    (doc) =>
+                                                                        doc.id ==
+                                                                        locationId,
+                                                                  )
+                                                                  .toList();
+                                                          if (filteredDocs
+                                                              .isEmpty) {
+                                                            return Card.outlined(
+                                                              child: Padding(
+                                                                padding:
+                                                                    EdgeInsets.all(
+                                                                      16,
+                                                                    ),
+                                                                child: Text(
+                                                                  "Unbekannter Standplatz",
+                                                                ),
+                                                              ),
+                                                            );
+                                                          }
+                                                          final locationDoc =
+                                                              filteredDocs[0];
+                                                          final locationData =
+                                                              locationDoc
+                                                                  .data();
+                                                          return Card.outlined(
+                                                            child: Padding(
+                                                              padding:
+                                                                  EdgeInsets.all(
+                                                                    16,
+                                                                  ),
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .spaceBetween,
+                                                                    children: [
+                                                                      Text(
+                                                                        "${locationData["name"]}, ${locationData["address"]?["town"]}",
+                                                                        style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold,
+                                                                        ),
+                                                                      ),
+                                                                      Text(
+                                                                        (coachScheduleData["personnel"]?[locationId]
+                                                                                    as List? ??
+                                                                                [])
+                                                                            .length
+                                                                            .toString(),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  Divider(),
+                                                                  ...(coachScheduleData["personnel"]?[locationId]
+                                                                              as List? ??
+                                                                          [])
+                                                                      .map((
+                                                                        userId,
+                                                                      ) {
+                                                                        final filteredUserDocs =
+                                                                            userDocs
+                                                                                .where(
+                                                                                  (
+                                                                                    doc,
+                                                                                  ) =>
+                                                                                      doc.id ==
+                                                                                      userId,
+                                                                                )
+                                                                                .toList();
+                                                                        if (filteredUserDocs
+                                                                            .isEmpty) {
+                                                                          return Column(
+                                                                            crossAxisAlignment:
+                                                                                CrossAxisAlignment.start,
+                                                                            children: [
+                                                                              Text(
+                                                                                "Unbekannt",
+                                                                              ),
+                                                                              Divider(),
+                                                                            ],
+                                                                          );
+                                                                        }
+                                                                        final userDoc =
+                                                                            filteredUserDocs[0];
+                                                                        return Column(
+                                                                          crossAxisAlignment:
+                                                                              CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Text(
+                                                                              "${userDoc.data()["first"]} ${userDoc.data()["last"]}",
+                                                                            ),
+                                                                            Divider(),
+                                                                          ],
+                                                                        );
+                                                                      }),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          );
+                                                        })
+                                                        .toList(),
+                                              ),
+                                            );
+                                          },
+                                          error: errorHandling,
+                                          loading: loadingHandling,
+                                        ),
+                                  ),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        context.push(
+                                          "/coach/schedule/personnel_assignment/${coachScheduleDoc.id}",
+                                        );
+                                      },
+                                      child: Text(
+                                        "Jetzt Dialoger*innen einteilen",
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
                             }
-                            return Center();
                           } else {
                             return Center(child: Text("unim"));
                           }

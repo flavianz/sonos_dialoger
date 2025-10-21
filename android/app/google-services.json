@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "378625854578",
+    "project_id": "sonos-dialoger",
+    "storage_bucket": "sonos-dialoger.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:378625854578:android:13469522061972376f06eb",
+        "android_client_info": {
+          "package_name": "ch.flavianz.sonosdialoger.sonos_dialoger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwb-eMdEeN8iS7RJEDT5S3G8j-c0ceRPU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

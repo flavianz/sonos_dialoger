@@ -65,21 +65,17 @@ final coachScheduleLocationsProvider =
               : (doc.data()["requested_locations"] ?? []);
         }),
       );
-      final locations = ref.watch(
-        queryByIdsProvider(
-          QueryByIdsArgs(
-            queryKey: "locations",
-            ids: locationIds.toSet().toList(),
-          ),
+
+      return Stream.fromFuture(
+        ref.read(
+          queryByIdsProvider(
+            QueryByIdsArgs(
+              queryKey: "locations",
+              ids: locationIds.toSet().toList(),
+            ),
+          ).future,
         ),
       );
-      if (locations.isLoading) {
-        return Stream.empty();
-      }
-      if (locations.hasError) {
-        return Stream.error(locations.error ?? "Unknown error");
-      }
-      return Stream.value(locations.value);
     });
 
 class CoachSchedulePage extends ConsumerWidget {
@@ -172,6 +168,248 @@ class CoachSchedulePage extends ConsumerWidget {
                                 ],
                               );
                             }
+                            final coachScheduleDoc = coachSchedulesDocs.docs[0];
+                            final coachScheduleData = coachScheduleDoc.data();
+                            if (coachScheduleData["reviewed"] != true) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text("Status"),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 5,
+                                          horizontal: 15,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.redAccent.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            100,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          spacing: 8,
+                                          children: [
+                                            Icon(Icons.access_time, size: 17),
+                                            Text(
+                                              "Standplätze noch nicht bestätigt",
+                                              style: TextStyle(fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 15),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text("Angefragt am"),
+                                      Text(
+                                        parseDateTimeFromTimestamp(
+                                          coachScheduleData["creation_timestamp"],
+                                        ).toFormattedDateTimeString(),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 20),
+                                  Text(
+                                    "Angefragte Standplätze",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  Divider(
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  ref
+                                      .watch(coachScheduleLocationsProvider)
+                                      .when(
+                                        data: (locationDocs) {
+                                          return SingleChildScrollView(
+                                            child: Column(
+                                              children:
+                                                  (coachScheduleData["requested_locations"]
+                                                          as List)
+                                                      .map((locationId) {
+                                                        final filteredDocs =
+                                                            locationDocs!
+                                                                .where(
+                                                                  (doc) =>
+                                                                      doc.id ==
+                                                                      locationId,
+                                                                )
+                                                                .toList();
+                                                        if (filteredDocs
+                                                            .isEmpty) {
+                                                          return Column(
+                                                            children: [
+                                                              Text(
+                                                                "Unbekannter Standplatz",
+                                                              ),
+                                                            ],
+                                                          );
+                                                        }
+                                                        final locationData =
+                                                            filteredDocs[0]
+                                                                .data();
+                                                        return Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              "${locationData["name"]}, ${locationData["address"]?["town"]}",
+                                                            ),
+                                                            Divider(),
+                                                          ],
+                                                        );
+                                                      })
+                                                      .toList(),
+                                            ),
+                                          );
+                                        },
+                                        error: errorHandling,
+                                        loading: loadingHandling,
+                                      ),
+                                ],
+                              );
+                            } else if (coachScheduleData["reviewed"] == true &&
+                                coachScheduleData["personnel_assigned"] !=
+                                    true) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text("Status"),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 5,
+                                          horizontal: 15,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            100,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          spacing: 8,
+                                          children: [
+                                            Icon(Icons.info_outline, size: 17),
+                                            Text(
+                                              "Standplätze bestätigt",
+                                              style: TextStyle(fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 15),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text("Angefragt am"),
+                                      Text(
+                                        parseDateTimeFromTimestamp(
+                                          coachScheduleData["creation_timestamp"],
+                                        ).toFormattedDateTimeString(),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 20),
+                                  Text(
+                                    "Bestätigte Standplätze",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  Divider(
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  Expanded(
+                                    child: ref
+                                        .watch(coachScheduleLocationsProvider)
+                                        .when(
+                                          data: (locationDocs) {
+                                            return SingleChildScrollView(
+                                              child: Column(
+                                                children:
+                                                    (coachScheduleData["confirmed_locations"]
+                                                            as List)
+                                                        .map((locationId) {
+                                                          final filteredDocs =
+                                                              locationDocs!
+                                                                  .where(
+                                                                    (doc) =>
+                                                                        doc.id ==
+                                                                        locationId,
+                                                                  )
+                                                                  .toList();
+                                                          if (filteredDocs
+                                                              .isEmpty) {
+                                                            return Column(
+                                                              children: [
+                                                                Text(
+                                                                  "Unbekannter Standplatz",
+                                                                ),
+                                                              ],
+                                                            );
+                                                          }
+                                                          final locationData =
+                                                              filteredDocs[0]
+                                                                  .data();
+                                                          return Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Text(
+                                                                "${locationData["name"]}, ${locationData["address"]?["town"]}",
+                                                              ),
+                                                              Divider(),
+                                                            ],
+                                                          );
+                                                        })
+                                                        .toList(),
+                                              ),
+                                            );
+                                          },
+                                          error: errorHandling,
+                                          loading: loadingHandling,
+                                        ),
+                                  ),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        context.push(
+                                          "/coach/schedule/personnel_assignment/${coachScheduleDoc.id}",
+                                        );
+                                      },
+                                      child: Text(
+                                        "Jetzt Dialoger*innen einteilen",
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
                             return Center();
                           } else {
                             return Center(child: Text("unim"));
@@ -181,7 +419,6 @@ class CoachSchedulePage extends ConsumerWidget {
                         loading: loadingHandling,
                       ),
                 ),
-                Text("aws"),
               ],
             ),
             ref

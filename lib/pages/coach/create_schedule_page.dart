@@ -72,9 +72,11 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
                         context,
                         LocationAdderDialog(alreadyFetchedLocations: locations),
                       );
-                      setState(() {
-                        locations.addAll(newLocations);
-                      });
+                      if (newLocations != null) {
+                        setState(() {
+                          locations.addAll(newLocations);
+                        });
+                      }
                     },
                     label: Text("Standplätze hinzufügen"),
                     icon: Icon(Icons.add),

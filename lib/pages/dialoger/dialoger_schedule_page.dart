@@ -140,81 +140,7 @@ class DialogerSchedulePage extends ConsumerWidget {
       body: Column(
         children: [
           SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: () {
-                  if (scheduleTimespan == ScheduleTimespan.day) {
-                    ref
-                        .read(scheduleStartDateProvider.notifier)
-                        .state = scheduleStartDate.subtract(Duration(days: 1));
-                  } else if (scheduleTimespan == ScheduleTimespan.week) {
-                    ref
-                        .read(scheduleStartDateProvider.notifier)
-                        .state = DateTime(
-                      scheduleStartDate.year,
-                      scheduleStartDate.month,
-                      scheduleStartDate.day - 7,
-                    );
-                  } else {
-                    ref
-                        .read(scheduleStartDateProvider.notifier)
-                        .state = DateTime(
-                      scheduleStartDate.year,
-                      scheduleStartDate.month - 1,
-                    );
-                  }
-                },
-                icon: Icon(Icons.arrow_left, size: 30),
-              ),
-              Text(switch (scheduleTimespan) {
-                ScheduleTimespan.day =>
-                  scheduleStartDate.toExtendedFormattedDateString() +
-                      (scheduleStartDate.year != DateTime.now().year
-                          ? (" ${scheduleStartDate.year.toString()}")
-                          : ""),
-                ScheduleTimespan.week => () {
-                  return "${scheduleStartDate.getWeekStart().toExtendedFormattedDateString()} - ${scheduleStartDate.getWeekStart().add(Duration(days: 6)).toExtendedFormattedDateString()}${scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : ""}";
-                }(),
-                ScheduleTimespan.month =>
-                  scheduleStartDate.getMonthName() +
-                      (scheduleStartDate.year != DateTime.now().year
-                          ? (" ${scheduleStartDate.year.toString()}")
-                          : ""),
-              }, style: TextStyle(fontSize: 20)),
-              IconButton(
-                onPressed: () {
-                  if (scheduleTimespan == ScheduleTimespan.day) {
-                    ref
-                        .read(scheduleStartDateProvider.notifier)
-                        .state = scheduleStartDate.add(Duration(days: 1));
-                  } else if (scheduleTimespan == ScheduleTimespan.week) {
-                    ref
-                        .read(scheduleStartDateProvider.notifier)
-                        .state = DateTime(
-                      scheduleStartDate.year,
-                      scheduleStartDate.month,
-                      scheduleStartDate.day + 7,
-                    );
-                    print(
-                      ref
-                          .read(scheduleStartDateProvider)
-                          .toFormattedDateTimeString(),
-                    );
-                  } else {
-                    ref
-                        .read(scheduleStartDateProvider.notifier)
-                        .state = DateTime(
-                      scheduleStartDate.year,
-                      scheduleStartDate.month + 1,
-                    );
-                  }
-                },
-                icon: Icon(Icons.arrow_right, size: 30),
-              ),
-            ],
-          ),
+          TimespanDateSwitcher(),
           Divider(color: Theme.of(context).primaryColor),
           SizedBox(height: 15),
           Expanded(
@@ -505,6 +431,78 @@ class DialogerSchedulePage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class TimespanDateSwitcher extends ConsumerWidget {
+  const TimespanDateSwitcher({super.key});
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final scheduleTimespan = ref.watch(scheduleTimespanProvider);
+    final scheduleStartDate = ref.watch(scheduleStartDateProvider);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: () {
+            if (scheduleTimespan == ScheduleTimespan.day) {
+              ref
+                  .read(scheduleStartDateProvider.notifier)
+                  .state = scheduleStartDate.subtract(Duration(days: 1));
+            } else if (scheduleTimespan == ScheduleTimespan.week) {
+              ref.read(scheduleStartDateProvider.notifier).state = DateTime(
+                scheduleStartDate.year,
+                scheduleStartDate.month,
+                scheduleStartDate.day - 7,
+              );
+            } else {
+              ref.read(scheduleStartDateProvider.notifier).state = DateTime(
+                scheduleStartDate.year,
+                scheduleStartDate.month - 1,
+              );
+            }
+          },
+          icon: Icon(Icons.arrow_left, size: 30),
+        ),
+        Text(switch (scheduleTimespan) {
+          ScheduleTimespan.day =>
+            "${scheduleStartDate.getWeekday()}, ${scheduleStartDate.toExtendedFormattedDateString()}${(scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : "")}",
+          ScheduleTimespan.week => () {
+            return "${scheduleStartDate.getWeekStart().toExtendedFormattedDateString()} - ${scheduleStartDate.getWeekStart().add(Duration(days: 6)).toExtendedFormattedDateString()}${scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : ""}";
+          }(),
+          ScheduleTimespan.month =>
+            scheduleStartDate.getMonthName() +
+                (scheduleStartDate.year != DateTime.now().year
+                    ? (" ${scheduleStartDate.year.toString()}")
+                    : ""),
+        }, style: TextStyle(fontSize: 20)),
+        IconButton(
+          onPressed: () {
+            if (scheduleTimespan == ScheduleTimespan.day) {
+              ref
+                  .read(scheduleStartDateProvider.notifier)
+                  .state = scheduleStartDate.add(Duration(days: 1));
+            } else if (scheduleTimespan == ScheduleTimespan.week) {
+              ref.read(scheduleStartDateProvider.notifier).state = DateTime(
+                scheduleStartDate.year,
+                scheduleStartDate.month,
+                scheduleStartDate.day + 7,
+              );
+              print(
+                ref.read(scheduleStartDateProvider).toFormattedDateTimeString(),
+              );
+            } else {
+              ref.read(scheduleStartDateProvider.notifier).state = DateTime(
+                scheduleStartDate.year,
+                scheduleStartDate.month + 1,
+              );
+            }
+          },
+          icon: Icon(Icons.arrow_right, size: 30),
+        ),
+      ],
     );
   }
 }

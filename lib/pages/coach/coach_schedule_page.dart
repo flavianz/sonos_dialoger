@@ -734,22 +734,23 @@ class CoachSchedulePage extends ConsumerWidget {
                                               if (dateFilteredScheduleDocs
                                                   .isEmpty) {
                                                 final children = [
-                                                  Text(
-                                                    "Noch keine Einteilung erstellt",
+                                                  Text("Keine Einteilung"),
+                                                  FilledButton.icon(
+                                                    icon: Icon(Icons.add),
+                                                    onPressed: () {
+                                                      context.push(
+                                                        "/coach/schedules/new/${date.year}/${date.month}/${date.day}",
+                                                      );
+                                                    },
+                                                    label: Text(
+                                                      "Jetzt erstellen",
+                                                    ),
                                                   ),
                                                 ];
-                                                return isScreenWide
-                                                    ? Row(
-                                                      spacing: 10,
-                                                      children: children,
-                                                    )
-                                                    : Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      spacing: 5,
-                                                      children: children,
-                                                    );
+                                                return Row(
+                                                  spacing: 10,
+                                                  children: children,
+                                                );
                                               }
                                               final scheduleData =
                                                   dateFilteredScheduleDocs[0]

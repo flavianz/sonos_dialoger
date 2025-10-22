@@ -25,13 +25,14 @@ class AdminSchedulePage extends ConsumerWidget {
           forceMaterialTransparency: true,
           bottom: TabBar(
             tabs: [
-              Tab(text: "Anfragen", icon: Icon(Icons.new_releases_outlined)),
               Tab(text: "Kalender", icon: Icon(Icons.calendar_month)),
+              Tab(text: "Anfragen", icon: Icon(Icons.new_releases_outlined)),
             ],
           ),
         ),
         body: TabBarView(
           children: [
+            Center(),
             ref
                 .watch(scheduleRequestsProvider)
                 .when(
@@ -118,7 +119,6 @@ class AdminSchedulePage extends ConsumerWidget {
                   },
                   loading: () => Center(child: CircularProgressIndicator()),
                 ),
-            Center(),
           ],
         ),
       ),

@@ -24,7 +24,7 @@ final scheduleStartDateProvider = StateProvider<DateTime>((ref) {
   }
 });
 
-final schedulesProvider = StreamProvider((ref) {
+final dialogerSchedulesProvider = StreamProvider((ref) {
   final scheduleTimespan = ref.watch(scheduleTimespanProvider);
   final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
@@ -52,9 +52,9 @@ final schedulesProvider = StreamProvider((ref) {
       .snapshots();
 });
 
-final scheduleLocationsProvider =
+final dialogerScheduleLocationsProvider =
     StreamProvider<List<QueryDocumentSnapshot<Map<String, dynamic>>>?>((ref) {
-      final schedules = ref.watch(schedulesProvider);
+      final schedules = ref.watch(dialogerSchedulesProvider);
       if (schedules.isLoading) {
         return Stream.empty();
       }
@@ -92,8 +92,8 @@ class DialogerSchedulePage extends ConsumerWidget {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
-    final schedules = ref.watch(schedulesProvider);
-    final locationDocs = ref.watch(scheduleLocationsProvider);
+    final dialogerSchedules = ref.watch(dialogerSchedulesProvider);
+    final dialogerLocationDocs = ref.watch(dialogerScheduleLocationsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -145,19 +145,19 @@ class DialogerSchedulePage extends ConsumerWidget {
           Divider(color: Theme.of(context).primaryColor),
           SizedBox(height: 15),
           Expanded(
-            child: schedules.when(
+            child: dialogerSchedules.when(
               data: (scheduleDocs) {
-                if (locationDocs.isLoading) {
+                if (dialogerLocationDocs.isLoading) {
                   return Center(child: CircularProgressIndicator());
                 }
-                if (locationDocs.hasError) {
-                  print(locationDocs.error);
-                  print(locationDocs.stackTrace);
+                if (dialogerLocationDocs.hasError) {
+                  print(dialogerLocationDocs.error);
+                  print(dialogerLocationDocs.stackTrace);
                   return Center(
                     child: Text("Ups, hier hat etwas nicht geklappt"),
                   );
                 }
-                final locations = locationDocs.value!;
+                final locations = dialogerLocationDocs.value!;
 
                 if (scheduleDocs.docs.isEmpty) {
                   return Center(child: Text("Noch keine Einteilung erstellt"));

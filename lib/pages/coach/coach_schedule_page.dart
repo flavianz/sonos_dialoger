@@ -21,7 +21,7 @@ final confirmedSchedulesProvider = realtimeCollectionProvider(
       .orderBy("date"),
 );
 
-final coachSchedulesProvider = StreamProvider((ref) {
+final schedulesProvider = StreamProvider((ref) {
   final scheduleTimespan = ref.watch(scheduleTimespanProvider);
   final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
@@ -48,9 +48,9 @@ final coachSchedulesProvider = StreamProvider((ref) {
       .snapshots();
 });
 
-final coachScheduleLocationsProvider =
+final scheduleLocationsProvider =
     StreamProvider<List<QueryDocumentSnapshot<Map<String, dynamic>>>?>((ref) {
-      final schedules = ref.watch(coachSchedulesProvider);
+      final schedules = ref.watch(schedulesProvider);
       if (schedules.isLoading) {
         return Stream.empty();
       }
@@ -149,7 +149,7 @@ class CoachSchedulePage extends ConsumerWidget {
                 SizedBox(height: 15),
                 Expanded(
                   child: ref
-                      .watch(coachSchedulesProvider)
+                      .watch(schedulesProvider)
                       .when(
                         data: (coachSchedulesDocs) {
                           if (scheduleTimespan == ScheduleTimespan.day) {
@@ -233,7 +233,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                     color: Theme.of(context).primaryColor,
                                   ),
                                   ref
-                                      .watch(coachScheduleLocationsProvider)
+                                      .watch(scheduleLocationsProvider)
                                       .when(
                                         data: (locationDocs) {
                                           return SingleChildScrollView(
@@ -347,7 +347,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                   ),
                                   Expanded(
                                     child: ref
-                                        .watch(coachScheduleLocationsProvider)
+                                        .watch(scheduleLocationsProvider)
                                         .when(
                                           data: (locationDocs) {
                                             return SingleChildScrollView(
@@ -473,7 +473,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                   ),
                                   Expanded(
                                     child: ref
-                                        .watch(coachScheduleLocationsProvider)
+                                        .watch(scheduleLocationsProvider)
                                         .when(
                                           data: (locationDocs) {
                                             final userDocsProvider = ref.watch(
@@ -630,19 +630,6 @@ class CoachSchedulePage extends ConsumerWidget {
                                           error: errorHandling,
                                           loading: loadingHandling,
                                         ),
-                                  ),
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(minHeight: 50),
-                                    child: FilledButton(
-                                      onPressed: () {
-                                        context.push(
-                                          "/coach/schedule/personnel_assignment/${coachScheduleDoc.id}",
-                                        );
-                                      },
-                                      child: Text(
-                                        "Jetzt Dialoger*innen einteilen",
-                                      ),
-                                    ),
                                   ),
                                 ],
                               );

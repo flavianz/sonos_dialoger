@@ -852,7 +852,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                                           "Standplätze bestätigt",
                                                         ),
                                                         Text(
-                                                          "${((scheduleData["confirmed_locations"] as List?) ?? []).length} Standplätze bestätigt",
+                                                          "${((scheduleData["confirmed_locations"] as List?) ?? []).length} Standplätze",
                                                           style: TextStyle(
                                                             fontSize: 15,
                                                           ),

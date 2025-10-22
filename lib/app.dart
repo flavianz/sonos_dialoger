@@ -8,11 +8,11 @@ import 'package:sonos_dialoger/pages/assignment_page.dart';
 final firestore = FirebaseFirestore.instance;
 
 final userProvider = StreamProvider<User?>(
-      (ref) => FirebaseAuth.instance.authStateChanges(),
+  (ref) => FirebaseAuth.instance.authStateChanges(),
 );
 
 final userDataProvider = StreamProvider<DocumentSnapshot<Map<String, dynamic>>>(
-      (ref) {
+  (ref) {
     final userStream = ref.watch(userProvider);
     if (userStream.value != null) {
       userStream.value!.getIdToken(true);
@@ -125,8 +125,13 @@ class _AppState extends ConsumerState<App> {
       destinations = [
         {
           "icon": Icon(Icons.request_page),
-          "label": "Deine Leistungen",
+          "label": "Leistungen",
           "url": "/dialoger/payments",
+        },
+        {
+          "icon": Icon(Icons.assignment),
+          "label": "Einteilung",
+          "url": "/coach/schedules",
         },
         {
           "icon": Icon(Icons.add),
@@ -135,9 +140,9 @@ class _AppState extends ConsumerState<App> {
           "barOnly": true,
         },
         {
-          "icon": Icon(Icons.assignment),
-          "label": "Einteilung",
-          "url": "/coach/schedules",
+          "icon": Icon(Icons.place),
+          "label": "Standplätze",
+          "url": "/admin/locations",
         },
         {
           "icon": Icon(Icons.settings),
@@ -150,7 +155,7 @@ class _AppState extends ConsumerState<App> {
       destinations = [
         {
           "icon": Icon(Icons.request_page),
-          "label": "Deine Leistungen",
+          "label": "Leistungen",
           "url": "/dialoger/payments",
         },
         {
@@ -172,91 +177,88 @@ class _AppState extends ConsumerState<App> {
       ];
     }
 
-    final isScreenWide = MediaQuery
-        .of(context)
-        .size
-        .aspectRatio > 1;
+    final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
 
     return Scaffold(
       body:
-      isScreenWide
-          ? Row(
-        spacing: 5,
-        children: [
-          NavigationRail(
-            leading:
-            role == "coach" || role == "dialog"
-                ? FloatingActionButton.extended(
-              onPressed: () {
-                context.go("/dialoger/payments/register");
-              },
-              icon: Icon(Icons.add),
-              elevation: 0,
-              label: Text("Erfassen"),
-            )
-                : null,
-            destinations:
-            destinations
-                .where((route) => route["barOnly"] != true)
-                .map((element) {
-              return NavigationRailDestination(
-                icon: element["icon"],
-                label: Text(element["label"]),
-              );
-            })
-                .toList(),
-            selectedIndex: selectedIndex,
-            extended: true,
-            trailing: FilledButton(
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-              },
-              child: Text("Sign Out"),
-            ),
-            onDestinationSelected: (i) {
-              setState(() {
-                selectedIndex = i;
-                context.go(
-                  destinations
-                      .where((route) => route["barOnly"] != true)
-                      .toList()[i]["url"],
-                );
-              });
-            },
-          ),
-          VerticalDivider(),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              child: widget.child,
-            ),
-          ),
-        ],
-      )
-          : Padding(padding: EdgeInsets.all(12), child: widget.child),
+          isScreenWide
+              ? Row(
+                spacing: 5,
+                children: [
+                  NavigationRail(
+                    leading:
+                        role == "coach" || role == "dialog"
+                            ? FloatingActionButton.extended(
+                              onPressed: () {
+                                context.go("/dialoger/payments/register");
+                              },
+                              icon: Icon(Icons.add),
+                              elevation: 0,
+                              label: Text("Erfassen"),
+                            )
+                            : null,
+                    destinations:
+                        destinations
+                            .where((route) => route["barOnly"] != true)
+                            .map((element) {
+                              return NavigationRailDestination(
+                                icon: element["icon"],
+                                label: Text(element["label"]),
+                              );
+                            })
+                            .toList(),
+                    selectedIndex: selectedIndex,
+                    extended: true,
+                    trailing: FilledButton(
+                      onPressed: () {
+                        FirebaseAuth.instance.signOut();
+                      },
+                      child: Text("Sign Out"),
+                    ),
+                    onDestinationSelected: (i) {
+                      setState(() {
+                        selectedIndex = i;
+                        context.go(
+                          destinations
+                              .where((route) => route["barOnly"] != true)
+                              .toList()[i]["url"],
+                        );
+                      });
+                    },
+                  ),
+                  VerticalDivider(),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: widget.child,
+                    ),
+                  ),
+                ],
+              )
+              : Padding(padding: EdgeInsets.all(12), child: widget.child),
       bottomNavigationBar:
-      isScreenWide
-          ? null
-          : NavigationBar(
-        destinations:
-        destinations.map((element) {
-          return NavigationDestination(
-            icon: element["icon"],
-            label: element["label"],
-          );
-        }).toList(),
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (i) {
-          setState(() {
-            selectedIndex = i;
-            context.go(destinations[i]["url"]);
-          });
-        },
-        elevation: 5,
-      ),
+          isScreenWide
+              ? null
+              : NavigationBar(
+                destinations:
+                    destinations.map((element) {
+                      return NavigationDestination(
+                        icon: element["icon"],
+                        label: element["label"],
+                      );
+                    }).toList(),
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (i) {
+                  setState(() {
+                    selectedIndex = i;
+                    context.go(destinations[i]["url"]);
+                  });
+                },
+                elevation: 5,
+              ),
     );
   }
 }

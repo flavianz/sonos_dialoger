@@ -85,6 +85,9 @@ class CoachSchedulePage extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
+
+    final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -644,6 +647,303 @@ class CoachSchedulePage extends ConsumerWidget {
                                 ],
                               );
                             }
+                          } else if (scheduleTimespan ==
+                                  ScheduleTimespan.week ||
+                              scheduleTimespan == ScheduleTimespan.month) {
+                            return ListView.builder(
+                              itemCount:
+                                  scheduleTimespan == ScheduleTimespan.week
+                                      ? 7
+                                      : DateTime(
+                                        scheduleStartDate.year,
+                                        scheduleStartDate.month + 1,
+                                        0,
+                                      ).day,
+                              itemBuilder: (BuildContext context, int index) {
+                                final date =
+                                    scheduleTimespan == ScheduleTimespan.week
+                                        ? DateTime(
+                                          scheduleStartDate.year,
+                                          scheduleStartDate.month,
+                                          scheduleStartDate.day -
+                                              scheduleStartDate.weekday +
+                                              index +
+                                              1,
+                                        )
+                                        : DateTime(
+                                          scheduleStartDate.year,
+                                          scheduleStartDate.month,
+                                          index + 1,
+                                        );
+                                final dateFilteredScheduleDocs =
+                                    coachSchedulesDocs.docs.where((doc) {
+                                      final scheduleDate =
+                                          parseDateTimeFromTimestamp(
+                                            doc.data()["date"],
+                                          );
+                                      return date.isSameDate(scheduleDate);
+                                    }).toList();
+                                return Card.outlined(
+                                  color:
+                                      date.isSameDate(DateTime.now())
+                                          ? Theme.of(
+                                            context,
+                                          ).secondaryHeaderColor
+                                          : null,
+                                  child: Tappable(
+                                    onTap: () {
+                                      final currentTimespan = scheduleTimespan;
+                                      final currentStartDate =
+                                          scheduleStartDate;
+
+                                      ref
+                                          .read(
+                                            scheduleTimespanProvider.notifier,
+                                          )
+                                          .state = ScheduleTimespan.day;
+                                      ref
+                                          .read(
+                                            scheduleStartDateProvider.notifier,
+                                          )
+                                          .state = date.getDayStart();
+                                      context.push("./").then((_) {
+                                        ref
+                                            .read(
+                                              scheduleTimespanProvider.notifier,
+                                            )
+                                            .state = currentTimespan;
+                                        ref
+                                            .read(
+                                              scheduleStartDateProvider
+                                                  .notifier,
+                                            )
+                                            .state = currentStartDate;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Text(
+                                                  date.getWeekdayAbbreviation(),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  date.toFormattedDateString(),
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                              height: 50,
+                                              child: VerticalDivider(width: 20),
+                                            ),
+                                            () {
+                                              if (dateFilteredScheduleDocs
+                                                  .isEmpty) {
+                                                final children = [
+                                                  Text(
+                                                    "Noch keine Einteilung erstellt",
+                                                  ),
+                                                ];
+                                                return isScreenWide
+                                                    ? Row(
+                                                      spacing: 10,
+                                                      children: children,
+                                                    )
+                                                    : Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      spacing: 5,
+                                                      children: children,
+                                                    );
+                                              }
+                                              final scheduleData =
+                                                  dateFilteredScheduleDocs[0]
+                                                      .data();
+                                              if (scheduleData["reviewed"] !=
+                                                  true) {
+                                                return Row(
+                                                  spacing: 10,
+                                                  children: [
+                                                    Container(
+                                                      constraints:
+                                                          BoxConstraints(
+                                                            minHeight: 25,
+                                                            minWidth: 25,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            Colors
+                                                                .redAccent
+                                                                .shade100,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              100,
+                                                            ),
+                                                      ),
+                                                      child: Center(
+                                                        child: Icon(
+                                                          Icons.access_time,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          "Standplätze noch nicht bestätigt",
+                                                        ),
+                                                        Text(
+                                                          "${((scheduleData["requested_locations"] as List?) ?? []).length} Standplätze angefragt",
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (scheduleData["reviewed"] ==
+                                                      true &&
+                                                  scheduleData["personnel_assigned"] !=
+                                                      true) {
+                                                return Row(
+                                                  spacing: 10,
+                                                  children: [
+                                                    Container(
+                                                      constraints:
+                                                          BoxConstraints(
+                                                            minHeight: 25,
+                                                            minWidth: 25,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            Colors
+                                                                .amberAccent
+                                                                .shade100,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              100,
+                                                            ),
+                                                      ),
+                                                      child: Center(
+                                                        child: Icon(
+                                                          Icons.info_outline,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          "Standplätze bestätigt",
+                                                        ),
+                                                        Text(
+                                                          "${((scheduleData["confirmed_locations"] as List?) ?? []).length} Standplätze bestätigt",
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (scheduleData["reviewed"] ==
+                                                      true &&
+                                                  scheduleData["personnel_assigned"] ==
+                                                      true) {
+                                                return Row(
+                                                  spacing: 10,
+                                                  children: [
+                                                    Container(
+                                                      constraints:
+                                                          BoxConstraints(
+                                                            minHeight: 25,
+                                                            minWidth: 25,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            Colors
+                                                                .green
+                                                                .shade100,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              100,
+                                                            ),
+                                                      ),
+                                                      child: Center(
+                                                        child: Icon(
+                                                          Icons.check,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          "Einteilung abgeschlossen",
+                                                        ),
+                                                        Text(
+                                                          "${flatten(((scheduleData["personnel"] as Map?) ?? {}).values).length} Dialoger*innen in ${((scheduleData["confirmed_locations"] as List?) ?? []).length} Standplätze eingeteilt",
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                );
+                                              }
+                                              final Map<String, dynamic>
+                                              assignments =
+                                                  scheduleData["personnel"] ??
+                                                  {};
+                                              final userId =
+                                                  ref
+                                                      .watch(userProvider)
+                                                      .value
+                                                      ?.uid;
+
+                                              if (!flatten(
+                                                assignments.values,
+                                              ).contains(userId)) {
+                                                return Center(
+                                                  child: Text(
+                                                    "An diesem Tag bist du nicht eingeteilt",
+                                                  ),
+                                                );
+                                              }
+
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [Row()],
+                                              );
+                                            }(),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
                           } else {
                             return Center(child: Text("unim"));
                           }

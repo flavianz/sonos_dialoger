@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/providers.dart';
@@ -303,6 +304,10 @@ class DialogerSchedulePage extends ConsumerWidget {
                                           : null,
                                   child: Tappable(
                                     onTap: () {
+                                      final currentTimespan = scheduleTimespan;
+                                      final currentStartDate =
+                                          scheduleStartDate;
+
                                       ref
                                           .read(
                                             scheduleTimespanProvider.notifier,
@@ -313,6 +318,19 @@ class DialogerSchedulePage extends ConsumerWidget {
                                             scheduleStartDateProvider.notifier,
                                           )
                                           .state = date.getDayStart();
+                                      context.push("./").then((_) {
+                                        ref
+                                            .read(
+                                              scheduleTimespanProvider.notifier,
+                                            )
+                                            .state = currentTimespan;
+                                        ref
+                                            .read(
+                                              scheduleStartDateProvider
+                                                  .notifier,
+                                            )
+                                            .state = currentStartDate;
+                                      });
                                     },
                                     child: Padding(
                                       padding: EdgeInsets.all(16),
@@ -466,18 +484,22 @@ class TimespanDateSwitcher extends ConsumerWidget {
           },
           icon: Icon(Icons.arrow_left, size: 30),
         ),
-        Text(switch (scheduleTimespan) {
-          ScheduleTimespan.day =>
-            "${scheduleStartDate.getWeekday()}, ${scheduleStartDate.toExtendedFormattedDateString()}${(scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : "")}",
-          ScheduleTimespan.week => () {
-            return "${scheduleStartDate.getWeekStart().toExtendedFormattedDateString()} - ${scheduleStartDate.getWeekStart().add(Duration(days: 6)).toExtendedFormattedDateString()}${scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : ""}";
-          }(),
-          ScheduleTimespan.month =>
-            scheduleStartDate.getMonthName() +
-                (scheduleStartDate.year != DateTime.now().year
-                    ? (" ${scheduleStartDate.year.toString()}")
-                    : ""),
-        }, style: TextStyle(fontSize: 20)),
+        Expanded(
+          child: Center(
+            child: Text(switch (scheduleTimespan) {
+              ScheduleTimespan.day =>
+                "${scheduleStartDate.getWeekday()}, ${scheduleStartDate.toExtendedFormattedDateString()}${(scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : "")}",
+              ScheduleTimespan.week => () {
+                return "${scheduleStartDate.getWeekStart().toExtendedFormattedDateString()} - ${scheduleStartDate.getWeekStart().add(Duration(days: 6)).toExtendedFormattedDateString()}${scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : ""}";
+              }(),
+              ScheduleTimespan.month =>
+                scheduleStartDate.getMonthName() +
+                    (scheduleStartDate.year != DateTime.now().year
+                        ? (" ${scheduleStartDate.year.toString()}")
+                        : ""),
+            }, style: TextStyle(fontSize: 20)),
+          ),
+        ),
         IconButton(
           onPressed: () {
             if (scheduleTimespan == ScheduleTimespan.day) {

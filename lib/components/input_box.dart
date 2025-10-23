@@ -28,7 +28,7 @@ class InputBox extends StatelessWidget {
 
   factory InputBox.text(
     String title,
-    String value,
+    String initialValue,
     Function(String?) onChanged, {
     String? hint,
     bool password = false,
@@ -36,8 +36,27 @@ class InputBox extends StatelessWidget {
     return InputBox(
       title: title,
       widget: TextFormField(
-        initialValue: value,
+        initialValue: initialValue,
         onChanged: onChanged,
+        obscureText: password,
+        decoration: InputDecoration(
+          hintText: hint,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  factory InputBox.textControlled(
+    String title,
+    TextEditingController controller, {
+    String? hint,
+    bool password = false,
+  }) {
+    return InputBox(
+      title: title,
+      widget: TextFormField(
+        controller: controller,
         obscureText: password,
         decoration: InputDecoration(
           hintText: hint,

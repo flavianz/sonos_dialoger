@@ -4,6 +4,7 @@ import 'package:sonos_dialoger/pages/admin/admin_schedule_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
 import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
+import 'package:sonos_dialoger/pages/admin/location_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/locations_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/admin/schedule_review_page.dart';
@@ -101,6 +102,19 @@ final router = GoRouter(
           builder: (context, state) {
             final locationId = state.pathParameters['locationId']!;
             return LocationDetailsPage(locationId: locationId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/location/:locationId/edit',
+          builder: (context, state) {
+            final locationId = state.pathParameters['locationId']!;
+            return LocationEditPage(locationId: locationId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/locations/new',
+          builder: (context, state) {
+            return LocationEditPage(isCreate: true);
           },
         ),
         GoRoute(

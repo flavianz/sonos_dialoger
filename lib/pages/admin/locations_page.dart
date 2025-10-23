@@ -17,7 +17,19 @@ class LocationsPage extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final locationDocs = ref.watch(locationsProvider);
     return Scaffold(
-      appBar: AppBar(title: Text("Standplätze")),
+      appBar: AppBar(
+        title: Text("Standplätze"),
+        actions: [
+          FilledButton.icon(
+            onPressed: () {
+              context.push("/admin/locations/new");
+            },
+            label: Text("Neu"),
+            icon: Icon(Icons.add),
+          ),
+        ],
+        forceMaterialTransparency: true,
+      ),
       body: locationDocs.when(
         data:
             (data) => Column(

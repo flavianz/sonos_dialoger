@@ -262,3 +262,9 @@ class _AppState extends ConsumerState<App> {
     );
   }
 }
+
+Widget handleErrorWidget(error, stackTrace) {
+  print(error);
+  print(stackTrace);
+  return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
+}

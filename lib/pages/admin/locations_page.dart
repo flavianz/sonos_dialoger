@@ -38,23 +38,14 @@ class LocationsPage extends ConsumerWidget {
                                   children: [
                                     Expanded(
                                       flex: 2,
-                                      child: Text(
-                                        "${data["name"] ?? ""}, ${data["address"]?["town"] ?? ""}",
-                                        style: TextStyle(fontSize: 15),
-                                      ),
+                                      child: Text("${data["name"] ?? ""}"),
                                     ),
                                     Expanded(
                                       child: Text(
-                                        "",
-                                        style: TextStyle(fontSize: 15),
+                                        data["address"]?["town"] ?? "",
                                       ),
                                     ),
-                                    Expanded(
-                                      child: Text(
-                                        "",
-                                        style: TextStyle(fontSize: 15),
-                                      ),
-                                    ),
+                                    Expanded(child: Text("")),
                                     SizedBox(width: 5),
                                     IconButton(
                                       onPressed: () {

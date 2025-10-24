@@ -213,7 +213,7 @@ class _AppState extends ConsumerState<App> {
                       onPressed: () {
                         FirebaseAuth.instance.signOut();
                       },
-                      child: Text("Sign Out"),
+                      child: Text("Abmelden"),
                     ),
                     onDestinationSelected: (i) {
                       setState(() {

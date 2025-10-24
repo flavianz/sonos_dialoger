@@ -15,6 +15,7 @@ import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_schedule_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
 import 'package:sonos_dialoger/pages/home_page.dart';
+import 'package:sonos_dialoger/pages/settings_page.dart';
 import 'package:sonos_dialoger/utils.dart';
 
 import 'app.dart';
@@ -129,6 +130,12 @@ final router = GoRouter(
           builder: (context, state) {
             final scheduleId = state.pathParameters['scheduleId']!;
             return CoachSchedulePersonnelAssignmentPage(scheduleId: scheduleId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/settings',
+          builder: (context, state) {
+            return SettingsPage();
           },
         ),
       ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
 import 'package:sonos_dialoger/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -100,44 +101,7 @@ class DialogerSchedulePage extends ConsumerWidget {
       appBar: AppBar(
         forceMaterialTransparency: true,
         title: Text("Einteilung"),
-        actions: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 150),
-            child: DropdownButtonFormField(
-              initialValue: ref.watch(scheduleTimespanProvider),
-              decoration: InputDecoration(
-                hintText: "Zeitraum",
-                border: InputBorder.none,
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: ScheduleTimespan.day,
-                  child: Text("Tag"),
-                ),
-                DropdownMenuItem(
-                  value: ScheduleTimespan.week,
-                  child: Text("Woche"),
-                ),
-                DropdownMenuItem(
-                  value: ScheduleTimespan.month,
-                  child: Text("Monat"),
-                ),
-              ],
-              onChanged: (newValue) {
-                if (newValue != null) {
-                  ref.read(scheduleTimespanProvider.notifier).state = newValue;
-                  if (newValue == ScheduleTimespan.week) {
-                    ref.read(scheduleStartDateProvider.notifier).state =
-                        scheduleStartDate.getWeekStart();
-                  } else if (newValue == ScheduleTimespan.month) {
-                    ref.read(scheduleStartDateProvider.notifier).state =
-                        scheduleStartDate.getMonthStart();
-                  }
-                }
-              },
-            ),
-          ),
-        ],
+        actions: [ScheduleTimespanDropdown()],
       ),
       body: Column(
         children: [

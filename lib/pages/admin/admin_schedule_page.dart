@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/basic_providers.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
 
 import '../../app.dart';
 import '../../providers.dart';
@@ -39,6 +40,7 @@ class AdminSchedulePage extends ConsumerWidget {
               Tab(text: "Anfragen", icon: Icon(Icons.new_releases_outlined)),
             ],
           ),
+          actions: [ScheduleTimespanDropdown()],
         ),
         body: TabBarView(
           children: [

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
 
 import '../../app.dart';
 import '../../basic_providers.dart';
@@ -99,45 +100,7 @@ class CoachSchedulePage extends ConsumerWidget {
               Tab(icon: Icon(Icons.new_releases_outlined), text: "Bestätigt"),
             ],
           ),
-          actions: [
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 150),
-              child: DropdownButtonFormField(
-                initialValue: ref.watch(scheduleTimespanProvider),
-                decoration: InputDecoration(
-                  hintText: "Zeitraum",
-                  border: InputBorder.none,
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: ScheduleTimespan.day,
-                    child: Text("Tag"),
-                  ),
-                  DropdownMenuItem(
-                    value: ScheduleTimespan.week,
-                    child: Text("Woche"),
-                  ),
-                  DropdownMenuItem(
-                    value: ScheduleTimespan.month,
-                    child: Text("Monat"),
-                  ),
-                ],
-                onChanged: (newValue) {
-                  if (newValue != null) {
-                    ref.read(scheduleTimespanProvider.notifier).state =
-                        newValue;
-                    if (newValue == ScheduleTimespan.week) {
-                      ref.read(scheduleStartDateProvider.notifier).state =
-                          scheduleStartDate.getWeekStart();
-                    } else if (newValue == ScheduleTimespan.month) {
-                      ref.read(scheduleStartDateProvider.notifier).state =
-                          scheduleStartDate.getMonthStart();
-                    }
-                  }
-                },
-              ),
-            ),
-          ],
+          actions: [ScheduleTimespanDropdown()],
         ),
         body: TabBarView(
           children: [

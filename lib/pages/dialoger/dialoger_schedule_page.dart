@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
+import 'package:sonos_dialoger/components/clickable_link.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
 import 'package:sonos_dialoger/providers.dart';
@@ -177,20 +178,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                         SizedBox(height: 5),
                         (myLocationData["link"] != null &&
                                 !myLocationData["link"].isEmpty)
-                            ? TextButton.icon(
-                              icon: Icon(Icons.open_in_new),
-                              onPressed: () async {
-                                if (!await launchUrl(
-                                  Uri.parse(myLocationData["link"]),
-                                  mode: LaunchMode.externalApplication,
-                                )) {
-                                  throw Exception(
-                                    'Could not launch ${myLocationData["link"]}',
-                                  );
-                                }
-                              },
-                              label: Text(myLocationData["link"]),
-                            )
+                            ? ClickableLink(link: myLocationData["link"])
                             : SizedBox.shrink(),
                         (myLocationData["notes"] != null &&
                                 !myLocationData["notes"].isEmpty)

@@ -104,11 +104,6 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                     nameController,
                     hint: "Name des Standplatzes",
                   ),
-                  InputBox.textControlled(
-                    "Link",
-                    linkController,
-                    hint: "Link zum Standplatz",
-                  ),
                   InputBox.number("Preis pro Tag", price, (value) {
                     if (value != null) {
                       setState(() {
@@ -127,6 +122,11 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                     ),
                   ),
                   Divider(),
+                  InputBox.textControlled(
+                    "Link",
+                    linkController,
+                    hint: "Link zum Standplatz",
+                  ),
                   InputBox.textControlled(
                     "E-Mail",
                     emailController,

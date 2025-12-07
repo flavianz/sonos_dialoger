@@ -35,6 +35,9 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
   final townController = TextEditingController();
   final linkController = TextEditingController();
   final notesController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  double price = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -58,22 +61,27 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
         if (data["address"] == null) {
           data["address"] = {};
         }
-        hasBeenInit = true;
       }
     } else {
       if (!hasBeenInit) {
         data["address"] = {};
-        hasBeenInit = true;
       }
     }
-
-    nameController.text = data["name"] ?? "";
-    streetController.text = data["address"]["street"] ?? "";
-    houseNumberController.text = data["address"]["house_number"] ?? "";
-    postalCodeController.text = data["address"]["postal_code"] ?? "";
-    townController.text = data["address"]["town"] ?? "";
-    linkController.text = data["link"] ?? "";
-    notesController.text = data["notes"] ?? "";
+    if (!hasBeenInit) {
+      setState(() {
+        nameController.text = data["name"] ?? "";
+        streetController.text = data["address"]["street"] ?? "";
+        houseNumberController.text = data["address"]["house_number"] ?? "";
+        postalCodeController.text = data["address"]["postal_code"] ?? "";
+        townController.text = data["address"]["town"] ?? "";
+        linkController.text = data["link"] ?? "";
+        notesController.text = data["notes"] ?? "";
+        emailController.text = data["email"] ?? "";
+        phoneController.text = data["phone"] ?? "";
+        price = data["price"] ?? 0;
+        hasBeenInit = true;
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -100,6 +108,34 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                     "Link",
                     linkController,
                     hint: "Link zum Standplatz",
+                  ),
+                  InputBox.number("Preis pro Tag", price, (value) {
+                    if (value != null) {
+                      setState(() {
+                        price = value;
+                      });
+                    }
+                  }, hint: "Preis pro Tag"),
+                  Padding(
+                    padding: EdgeInsets.only(left: 4, top: 12),
+                    child: Text(
+                      "Kontakt",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  Divider(),
+                  InputBox.textControlled(
+                    "E-Mail",
+                    emailController,
+                    hint: "Kontakt: E-Mail",
+                  ),
+                  InputBox.textControlled(
+                    "Telefon",
+                    phoneController,
+                    hint: "Kontakt: Telefonnummer",
                   ),
                   Padding(
                     padding: EdgeInsets.only(left: 4, top: 12),
@@ -177,6 +213,9 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                           data["address"]["postal_code"] ?? "";
                       townController.text = data["address"]["town"] ?? "";
                       notesController.text = data["notes"] ?? "";
+                      emailController.text = data["email"] ?? "";
+                      phoneController.text = data["phone"] ?? "";
+                      price = data["price"] ?? 0;
                     });
                   },
                   child: Text("Zurücksetzen"),
@@ -190,16 +229,20 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                       setState(() {
                         isLoading = true;
                       });
+                      print(price);
                       final writeData = {
                         "name": nameController.text,
                         "link": linkController.text,
                         "notes": notesController.text,
+                        "email": emailController.text,
+                        "phone": phoneController.text,
                         "address": {
                           "street": streetController.text,
                           "house_number": houseNumberController.text,
                           "postal_code": postalCodeController.text,
                           "town": townController.text,
                         },
+                        "price": price,
                       };
                       if (widget.isCreate) {
                         await firestore.collection("locations").add(writeData);

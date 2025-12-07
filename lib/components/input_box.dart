@@ -26,6 +26,28 @@ class InputBox extends StatelessWidget {
     );
   }
 
+  factory InputBox.number(
+    String title,
+    double initialValue,
+    Function(double?) onChanged, {
+    String? hint,
+  }) {
+    return InputBox(
+      title: title,
+      widget: TextFormField(
+        keyboardType: TextInputType.number,
+        initialValue: initialValue.toString(),
+        onChanged: (value) {
+          onChanged(double.tryParse(value));
+        },
+        decoration: InputDecoration(
+          hintText: hint,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
   factory InputBox.text(
     String title,
     String initialValue,

@@ -221,7 +221,6 @@ class LocationDetailsPage extends ConsumerWidget {
       );
     }
     final locationData = locationDoc.value!.data() ?? {};
-    print(locationData);
     final locationPaymentDocs = ref.watch(locationPaymentsProvider(locationId));
 
     return DefaultTabController(

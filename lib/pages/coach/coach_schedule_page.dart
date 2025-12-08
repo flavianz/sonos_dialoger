@@ -947,32 +947,38 @@ class CoachSchedulePage extends ConsumerWidget {
                                                             Timestamp.now())
                                                         as Timestamp)
                                                     .toDate();
-                                            return Tappable(
-                                              onTap: () {
-                                                context.push(
-                                                  "/coach/schedule/personnel_assignment/${scheduleRequestDoc.id}",
-                                                );
-                                              },
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 5,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        date.toExtendedFormattedDateString(),
-                                                      ),
+                                            return Column(
+                                              children: [
+                                                Tappable(
+                                                  onTap: () {
+                                                    context.push(
+                                                      "/coach/schedule/personnel_assignment/${scheduleRequestDoc.id}",
+                                                    );
+                                                  },
+                                                  child: Padding(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 5,
+                                                        ),
+                                                    child: Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            date.toExtendedFormattedDateString(),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Text(
+                                                            creationTimestamp
+                                                                .toFormattedDateTimeString(),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                    Expanded(
-                                                      child: Text(
-                                                        creationTimestamp
-                                                            .toFormattedDateTimeString(),
-                                                      ),
-                                                    ),
-                                                  ],
+                                                  ),
                                                 ),
-                                              ),
+                                                Divider(),
+                                              ],
                                             );
                                           }).toList(),
                                     ),

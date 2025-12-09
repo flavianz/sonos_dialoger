@@ -12,6 +12,29 @@ final paymentProvider = FutureProvider.family(
       FirebaseFirestore.instance.collection("payments").doc(id).get(),
 );
 
+final scheduleProvider = StreamProvider((ref) {
+  return firestore
+      .collection("schedules")
+      .where(
+        Filter.and(
+          Filter(
+            "date",
+            isGreaterThanOrEqualTo: Timestamp.fromDate(
+              DateTime.now().getDayStart(),
+            ),
+          ),
+          Filter(
+            "date",
+            isLessThan: Timestamp.fromDate(
+              DateTime.now().add(Duration(days: 1)).getDayStart(),
+            ),
+          ),
+          Filter("personnel_assigned", isEqualTo: true),
+        ),
+      )
+      .snapshots();
+});
+
 class RegisterPaymentPage extends ConsumerStatefulWidget {
   final bool editing;
   final String? id;
@@ -28,6 +51,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
   String? interval;
   bool hasFirstPayment = false;
   String? paymentMethod;
+  String? myLocationId;
 
   bool isLoading = false;
   bool isInit = false;
@@ -73,6 +97,35 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
       }
 
       isInit = true;
+    }
+    final scheduleDocs = ref.watch(scheduleProvider);
+
+    if (!widget.editing) {
+      if (scheduleDocs.isLoading) {
+        return Center(child: CircularProgressIndicator());
+      }
+      if (scheduleDocs.hasError) {
+        return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
+      }
+      if (scheduleDocs.value!.docs.isEmpty) {
+        return Center(child: Text("Heute bist du nicht eingeteilt"));
+      }
+      final scheduleData = scheduleDocs.value!.docs[0].data();
+      final uid = ref.watch(userProvider).value?.uid;
+      if (scheduleData["personnel_assigned"] != true) {
+        return Center(child: Text("Heute bist du nicht eingeteilt"));
+      }
+      final assignments =
+          (scheduleData["personnel"] as Map<String, dynamic>? ?? {}).entries
+              .where(
+                (assignment) => (assignment.value as List? ?? []).contains(uid),
+              )
+              .toList();
+      if (assignments.isEmpty) {
+        return Center(child: Text("Heute bist du nicht eingeteilt"));
+      }
+      final myAssignment = assignments[0];
+      myLocationId = myAssignment.key;
     }
     final isInfoComplete =
         amountController.text.isNotEmpty &&
@@ -349,8 +402,10 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                               "dialoger":
                                   ref.watch(userProvider).value?.uid ?? "",
                               "timestamp": Timestamp.fromDate(DateTime.now()),
-                              "location": "XX02iPTWTYwDy9xRn7Hh",
                             };
+                            if (myLocationId != null) {
+                              commonData["location"] = myLocationId!;
+                            }
                             final isCoach =
                                 ref
                                     .watch(userDataProvider)

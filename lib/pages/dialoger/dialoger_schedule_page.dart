@@ -7,7 +7,6 @@ import 'package:sonos_dialoger/components/clickable_link.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
 import 'package:sonos_dialoger/providers.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 enum ScheduleTimespan { day, week, month }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
+import 'package:sonos_dialoger/core/payment.dart';
 
 import '../../components/misc.dart';
 import '../../providers.dart';
@@ -110,43 +111,40 @@ class PaymentsPage extends ConsumerWidget {
             child: ListView(
               children:
                   paymentDocs.value!.docs.map((doc) {
-                    final data = doc.data();
-                    final date =
-                        ((data["timestamp"] ?? Timestamp.now()) as Timestamp)
-                            .toDate();
+                    final payment = Payment.fromDoc(doc);
                     late String datePrefix;
                     final today = DateTime.now();
                     final yesterday = DateTime.fromMicrosecondsSinceEpoch(
                       DateTime.now().millisecondsSinceEpoch - 1000 * 3600 * 24,
                     );
-                    if (date.year == today.year &&
-                        date.month == today.month &&
-                        date.day == today.day) {
+                    if (payment.timestamp.year == today.year &&
+                        payment.timestamp.month == today.month &&
+                        payment.timestamp.day == today.day) {
                       datePrefix = "Heute";
-                    } else if (date.year == yesterday.year &&
-                        date.month == yesterday.month &&
-                        date.day == yesterday.day) {
+                    } else if (payment.timestamp.year == yesterday.year &&
+                        payment.timestamp.month == yesterday.month &&
+                        payment.timestamp.day == yesterday.day) {
                       datePrefix = "Gestern";
                     } else {
                       datePrefix =
-                          "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.";
+                          "${payment.timestamp.day.toString().padLeft(2, '0')}.${payment.timestamp.month.toString().padLeft(2, '0')}.";
                     }
                     late Widget isPaidWidget;
-                    if (data["type"] == "once" ||
-                        data["has_first_payment"] == true ||
-                        data["payment_status"] == "paid") {
+                    if (payment.getPaymentStatus() == PaymentStatus.paid) {
                       isPaidWidget = getPill(
                         "Bezahlt",
                         Theme.of(context).primaryColor,
                         true,
                       );
-                    } else if (data["payment_status"] == "pending") {
+                    } else if (payment.getPaymentStatus() ==
+                        PaymentStatus.pending) {
                       isPaidWidget = getPill(
                         "Ausstehend",
                         Theme.of(context).primaryColorLight,
                         false,
                       );
-                    } else if (data["payment_status"] == "cancelled") {
+                    } else if (payment.getPaymentStatus() ==
+                        PaymentStatus.cancelled) {
                       isPaidWidget = getPill(
                         "Zurückgenommen",
                         Theme.of(context).cardColor,
@@ -175,7 +173,7 @@ class PaymentsPage extends ConsumerWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    "${data["amount"].toString()} CHF",
+                                    "${payment.amount.toString()} CHF",
                                     style: TextStyle(fontSize: 15),
                                   ),
                                 ),

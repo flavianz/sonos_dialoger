@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/clickable_link.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
+import 'package:sonos_dialoger/core/payment.dart';
 
 import '../../components/misc.dart';
 import '../../providers.dart';
@@ -98,45 +99,44 @@ class LocationDetailsPage extends ConsumerWidget {
 
   const LocationDetailsPage({super.key, required this.locationId});
 
-  BarChartGroupData generateGroupData(
-    int millis,
-    List<Map<dynamic, dynamic>> payments,
-  ) {
+  BarChartGroupData generateGroupData(int millis, List<Payment> payments) {
     final onceTwint = payments
         .where(
           (payment) =>
-              payment["type"] == "once" && payment["method"] == "twint-fast",
+              payment is OncePayment &&
+              payment.paymentMethod == PaymentMethod.twint,
         )
-        .fold(0.0, (total, payment) => total + payment["amount"]);
+        .fold(0.0, (total, payment) => total + payment.amount);
     final onceSumup = payments
         .where(
           (payment) =>
-              payment["type"] == "once" && payment["method"] == "sumup",
+              payment is OncePayment &&
+              payment.paymentMethod == PaymentMethod.sumup,
         )
-        .fold(0.0, (total, payment) => total + payment["amount"]);
+        .fold(0.0, (total, payment) => total + payment.amount);
     final repeatingWithFirstPaymentTwint = payments
         .where(
           (payment) =>
-              payment["type"] == "repeating" &&
-              payment["has_first_payment"] == true &&
-              payment["method"] == "twint-fast",
+              payment is RepeatingPayment &&
+              payment is RepeatingPaymentWithFirstPayment &&
+              payment.paymentMethod == PaymentMethod.twint,
         )
-        .fold(0.0, (total, payment) => total + payment["amount"]);
+        .fold(0.0, (total, payment) => total + payment.amount);
     final repeatingWithFirstPaymentSumup = payments
         .where(
           (payment) =>
-              payment["type"] == "repeating" &&
-              payment["has_first_payment"] == true &&
-              payment["method"] == "sumup",
+              payment is RepeatingPayment &&
+              payment is RepeatingPaymentWithFirstPayment &&
+              payment.paymentMethod == PaymentMethod.sumup,
         )
-        .fold(0.0, (total, payment) => total + payment["amount"]);
+        .fold(0.0, (total, payment) => total + payment.amount);
     final repeatingWithoutFirstPayment = payments
         .where(
           (payment) =>
-              payment["type"] == "repeating" &&
-              payment["has_first_payment"] != true,
+              payment is RepeatingPayment &&
+              payment is RepeatingPaymentWithoutFirstPayment,
         )
-        .fold(0.0, (total, payment) => total + payment["amount"]);
+        .fold(0.0, (total, payment) => total + payment.amount);
     return BarChartGroupData(
       x: millis,
       groupVertically: true,
@@ -249,24 +249,19 @@ class LocationDetailsPage extends ConsumerWidget {
         body: TabBarView(
           children: [
             locationPaymentDocs.when(
-              data: (paymentsData) {
-                final Map<int, List<Map>> dateSortedData = {};
+              data: (paymentsDatas) {
+                final payments = paymentsDatas.docs.map(
+                  (doc) => Payment.fromDoc(doc),
+                );
+                final Map<int, List<Payment>> dateSortedData = {};
                 double maxVal = 1;
-                if (paymentsData.docs.isNotEmpty) {
+                if (payments.isNotEmpty) {
                   final timespan = ref.watch(timespanProvider);
                   if (timespan == Timespan.today ||
                       timespan == Timespan.yesterday) {
                     final hoursPrefixedPayments =
-                        paymentsData.docs
-                            .map(
-                              (doc) => (
-                                ((doc.data()["timestamp"] ?? Timestamp.now())
-                                        as Timestamp)
-                                    .toDate()
-                                    .hour,
-                                doc.data(),
-                              ),
-                            )
+                        payments
+                            .map((payment) => (payment.timestamp.hour, payment))
                             .toList();
                     final int minHour =
                         hoursPrefixedPayments
@@ -285,16 +280,8 @@ class LocationDetailsPage extends ConsumerWidget {
                     }
                   } else if (timespan == Timespan.week) {
                     final weekdayPrefixedPayments =
-                        paymentsData.docs
-                            .map(
-                              (doc) => (
-                                ((doc.data()["timestamp"] ?? Timestamp.now())
-                                        as Timestamp)
-                                    .toDate()
-                                    .weekday,
-                                doc.data(),
-                              ),
-                            )
+                        payments
+                            .map((payment) => (payment.timestamp.hour, payment))
                             .toList();
                     for (int i = 1; i <= DateTime.now().weekday; i++) {
                       dateSortedData[i] =
@@ -305,16 +292,8 @@ class LocationDetailsPage extends ConsumerWidget {
                     }
                   } else if (timespan == Timespan.month) {
                     final dayPrefixedPayments =
-                        paymentsData.docs
-                            .map(
-                              (doc) => (
-                                ((doc.data()["timestamp"] ?? Timestamp.now())
-                                        as Timestamp)
-                                    .toDate()
-                                    .day,
-                                doc.data(),
-                              ),
-                            )
+                        payments
+                            .map((payment) => (payment.timestamp.hour, payment))
                             .toList();
                     final int maxDay =
                         dayPrefixedPayments
@@ -333,11 +312,8 @@ class LocationDetailsPage extends ConsumerWidget {
                         dateRange.end.difference(dateRange.start).inDays;
 
                     final millisPrefixedPayments =
-                        paymentsData.docs.map((doc) {
-                          final date =
-                              ((doc.data()["timestamp"] ?? Timestamp.now())
-                                      as Timestamp)
-                                  .toDate();
+                        payments.map((payment) {
+                          final date = payment.timestamp;
                           if (duration < 30) {
                             return (
                               DateTime(
@@ -345,7 +321,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                 date.month,
                                 date.day,
                               ).millisecondsSinceEpoch,
-                              doc.data(),
+                              payment,
                             );
                           } else if (duration < 140) {
                             return (
@@ -354,7 +330,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                 date.month,
                                 date.day - date.weekday + 1,
                               ).millisecondsSinceEpoch,
-                              doc.data(),
+                              payment,
                             );
                           } else {
                             return (
@@ -362,7 +338,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                 date.year,
                                 date.month,
                               ).millisecondsSinceEpoch,
-                              doc.data(),
+                              payment,
                             );
                           }
                         }).toList();
@@ -413,7 +389,7 @@ class LocationDetailsPage extends ConsumerWidget {
                           .map(
                             (list) => list.fold(
                               0.0,
-                              (total, element) => total + element["amount"],
+                              (total, payment) => total + payment.amount,
                             ),
                           )
                           .reduce(max),
@@ -453,7 +429,7 @@ class LocationDetailsPage extends ConsumerWidget {
                           style: TextStyle(fontSize: 13),
                         ),
                         Text(
-                          "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"]).toString()} CHF",
+                          "${payments.fold(0.0, (total, element) => total + element.amount).toString()} CHF",
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
@@ -469,7 +445,7 @@ class LocationDetailsPage extends ConsumerWidget {
                           style: TextStyle(fontSize: 13),
                         ),
                         Text(
-                          "${paymentsData.docs.fold(0.0, (total, element) => total + element.data()["amount"] * (1 - (element.data()["dialoger_share"] ?? 0))).toStringAsFixed(2)} CHF",
+                          "${payments.fold(0.0, (total, element) => total + element.amount * (1 - element.dialogerShare)).toStringAsFixed(2)} CHF",
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
@@ -608,7 +584,7 @@ class LocationDetailsPage extends ConsumerWidget {
                         SizedBox(height: 5),
                         Expanded(
                           child:
-                              paymentsData.docs.isEmpty
+                              payments.isEmpty
                                   ? Center(child: Text("Keine Daten"))
                                   : BarChart(
                                     BarChartData(
@@ -741,7 +717,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                   ),
                         ),
                         SizedBox(height: 10),
-                        paymentsData.docs.isNotEmpty
+                        payments.isNotEmpty
                             ? Row(
                               spacing: 10,
                               mainAxisSize: MainAxisSize.max,
@@ -885,12 +861,8 @@ class LocationDetailsPage extends ConsumerWidget {
                     Divider(height: 30, color: Theme.of(context).primaryColor),
                     Column(
                       children:
-                          paymentsData.docs.map((paymentDoc) {
-                            final data = paymentDoc.data();
-                            final date =
-                                ((data["timestamp"] ?? Timestamp.now())
-                                        as Timestamp)
-                                    .toDate();
+                          payments.map((payment) {
+                            final date = payment.timestamp;
                             late String datePrefix;
                             final today = DateTime.now();
                             final yesterday =
@@ -911,21 +883,22 @@ class LocationDetailsPage extends ConsumerWidget {
                                   "${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.";
                             }
                             late Widget isPaidWidget;
-                            if (data["type"] == "once" ||
-                                data["has_first_payment"] == true ||
-                                data["payment_status"] == "paid") {
+                            if (payment.getPaymentStatus() ==
+                                PaymentStatus.paid) {
                               isPaidWidget = getPill(
                                 "Bezahlt",
                                 Theme.of(context).primaryColor,
                                 true,
                               );
-                            } else if (data["payment_status"] == "pending") {
+                            } else if (payment.getPaymentStatus() ==
+                                PaymentStatus.pending) {
                               isPaidWidget = getPill(
                                 "Ausstehend",
                                 Theme.of(context).primaryColorLight,
                                 false,
                               );
-                            } else if (data["payment_status"] == "cancelled") {
+                            } else if (payment.getPaymentStatus() ==
+                                PaymentStatus.cancelled) {
                               isPaidWidget = getPill(
                                 "Zurückgenommen",
                                 Theme.of(context).cardColor,
@@ -954,7 +927,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                         ),
                                         Expanded(
                                           child: Text(
-                                            "${data["amount"].toString()} CHF",
+                                            "${payment.amount.toString()} CHF",
                                             style: TextStyle(fontSize: 15),
                                           ),
                                         ),
@@ -962,7 +935,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                         IconButton(
                                           onPressed: () {
                                             context.push(
-                                              "/dialoger/payment/${paymentDoc.id}/edit",
+                                              "/dialoger/payment/${payment.id}/edit",
                                             );
                                           },
                                           icon: Icon(Icons.edit),
@@ -996,9 +969,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                                               .collection(
                                                                 "payments",
                                                               )
-                                                              .doc(
-                                                                paymentDoc.id,
-                                                              )
+                                                              .doc(payment.id)
                                                               .delete();
                                                           if (context.mounted) {
                                                             context.pop();

@@ -2,12 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 
 import '../../app.dart';
-import '../../providers.dart';
+import '../../providers/date_ranges.dart';
 
 final dialogerPaymentsProvider =
     StreamProvider<QuerySnapshot<Map<String, dynamic>>>((ref) {
@@ -15,21 +14,7 @@ final dialogerPaymentsProvider =
           .collection("payments")
           .where(
             Filter.and(
-              switch (ref.watch(timespanProvider)) {
-                Timespan.custom => Filter.and(
-                  Filter(
-                    "timestamp",
-                    isGreaterThanOrEqualTo: Timestamp.fromDate(
-                      ref.watch(rangeProvider).start,
-                    ),
-                  ),
-                  Filter(
-                    "timestamp",
-                    isLessThanOrEqualTo: Timestamp.fromDate(
-                      ref.watch(rangeProvider).end,
-                    ),
-                  ),
-                ),
+              switch (ref.watch(paymentsTimespanProvider)) {
                 Timespan.month => Filter(
                   "timestamp",
                   isGreaterThanOrEqualTo: Timestamp.fromDate(
@@ -48,32 +33,8 @@ final dialogerPaymentsProvider =
                     ),
                   ),
                 ),
-                Timespan.yesterday => () {
-                  final yesterday = DateTime.now().subtract(Duration(days: 1));
-                  return Filter.and(
-                    Filter(
-                      "timestamp",
-                      isGreaterThanOrEqualTo: Timestamp.fromDate(
-                        DateTime(
-                          yesterday.year,
-                          yesterday.month,
-                          yesterday.day,
-                        ),
-                      ),
-                    ),
-                    Filter(
-                      "timestamp",
-                      isLessThan: Timestamp.fromDate(
-                        DateTime(
-                          DateTime.now().year,
-                          DateTime.now().month,
-                          DateTime.now().day,
-                        ),
-                      ),
-                    ),
-                  );
-                }(),
-                Timespan.today => Filter(
+
+                Timespan.day => Filter(
                   "timestamp",
                   isGreaterThanOrEqualTo: Timestamp.fromDate(
                     DateTime(
@@ -110,7 +71,7 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
       appBar: AppBar(
         forceMaterialTransparency: true,
         title: const Text("Leistungen"),
-        actions: [DateRangeDropdown()],
+        actions: [],
       ),
       body: paymentDocs.when(
         data:

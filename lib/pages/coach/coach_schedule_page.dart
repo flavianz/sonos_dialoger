@@ -2,12 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
+import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 
 import '../../app.dart';
 import '../../basic_providers.dart';
 import '../../components/misc.dart';
 import '../../providers.dart';
+import '../../providers/date_ranges.dart';
 import '../dialoger/dialoger_schedule_page.dart';
 
 final confirmedSchedulesProvider = realtimeCollectionProvider(
@@ -27,9 +28,9 @@ final schedulesProvider = StreamProvider((ref) {
   final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
   late final DateTime endDate;
-  if (scheduleTimespan == ScheduleTimespan.day) {
+  if (scheduleTimespan == Timespan.day) {
     endDate = scheduleStartDate.add(Duration(days: 1));
-  } else if (scheduleTimespan == ScheduleTimespan.week) {
+  } else if (scheduleTimespan == Timespan.week) {
     endDate = scheduleStartDate.add(Duration(days: 7));
   } else {
     endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
@@ -87,8 +88,6 @@ class CoachSchedulePage extends ConsumerWidget {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
-    final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
-
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -115,7 +114,7 @@ class CoachSchedulePage extends ConsumerWidget {
                       .watch(schedulesProvider)
                       .when(
                         data: (coachSchedulesDocs) {
-                          if (scheduleTimespan == ScheduleTimespan.day) {
+                          if (scheduleTimespan == Timespan.day) {
                             if (coachSchedulesDocs.docs.isEmpty) {
                               return Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -597,12 +596,11 @@ class CoachSchedulePage extends ConsumerWidget {
                                 ],
                               );
                             }
-                          } else if (scheduleTimespan ==
-                                  ScheduleTimespan.week ||
-                              scheduleTimespan == ScheduleTimespan.month) {
+                          } else if (scheduleTimespan == Timespan.week ||
+                              scheduleTimespan == Timespan.month) {
                             return ListView.builder(
                               itemCount:
-                                  scheduleTimespan == ScheduleTimespan.week
+                                  scheduleTimespan == Timespan.week
                                       ? 7
                                       : DateTime(
                                         scheduleStartDate.year,
@@ -611,7 +609,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                       ).day,
                               itemBuilder: (BuildContext context, int index) {
                                 final date =
-                                    scheduleTimespan == ScheduleTimespan.week
+                                    scheduleTimespan == Timespan.week
                                         ? DateTime(
                                           scheduleStartDate.year,
                                           scheduleStartDate.month,
@@ -650,7 +648,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                           .read(
                                             scheduleTimespanProvider.notifier,
                                           )
-                                          .state = ScheduleTimespan.day;
+                                          .state = Timespan.day;
                                       ref
                                           .read(
                                             scheduleStartDateProvider.notifier,

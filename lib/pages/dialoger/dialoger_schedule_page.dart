@@ -5,35 +5,19 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/clickable_link.dart';
 import 'package:sonos_dialoger/components/misc.dart';
-import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
+import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 import 'package:sonos_dialoger/providers.dart';
 
-enum ScheduleTimespan { day, week, month }
-
-final scheduleTimespanProvider = StateProvider<ScheduleTimespan>(
-  (ref) => ScheduleTimespan.week,
-);
-
-final scheduleStartDateProvider = StateProvider<DateTime>((ref) {
-  final scheduleTimespan = ref.read(scheduleTimespanProvider);
-  final now = DateTime.now();
-  if (scheduleTimespan == ScheduleTimespan.day) {
-    return now.getDayStart();
-  } else if (scheduleTimespan == ScheduleTimespan.week) {
-    return now.getWeekStart();
-  } else {
-    return now.getMonthStart();
-  }
-});
+import '../../providers/date_ranges.dart';
 
 final dialogerSchedulesProvider = StreamProvider((ref) {
   final scheduleTimespan = ref.watch(scheduleTimespanProvider);
   final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
   late final DateTime endDate;
-  if (scheduleTimespan == ScheduleTimespan.day) {
+  if (scheduleTimespan == Timespan.day) {
     endDate = scheduleStartDate.add(Duration(days: 1));
-  } else if (scheduleTimespan == ScheduleTimespan.week) {
+  } else if (scheduleTimespan == Timespan.week) {
     endDate = scheduleStartDate.add(Duration(days: 7));
   } else {
     endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
@@ -128,7 +112,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                   return Center(child: Text("Noch keine Einteilung erstellt"));
                 }
 
-                if (scheduleTimespan == ScheduleTimespan.day) {
+                if (scheduleTimespan == Timespan.day) {
                   final scheduleData = scheduleDocs.docs[0].data();
                   final Map<String, dynamic> assignments =
                       scheduleData["personnel"] ?? {};
@@ -243,13 +227,13 @@ class DialogerSchedulePage extends ConsumerWidget {
                       ],
                     ),
                   );
-                } else if (scheduleTimespan == ScheduleTimespan.week ||
-                    scheduleTimespan == ScheduleTimespan.month) {
+                } else if (scheduleTimespan == Timespan.week ||
+                    scheduleTimespan == Timespan.month) {
                   return SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children:
-                          (scheduleTimespan == ScheduleTimespan.week
+                          (scheduleTimespan == Timespan.week
                                   ? [1, 2, 3, 4, 5, 6, 7]
                                   : List<int>.generate(
                                     DateTime(
@@ -261,7 +245,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                                   ))
                               .map((weekdayOrDayOfTheMonth) {
                                 final date =
-                                    scheduleTimespan == ScheduleTimespan.week
+                                    scheduleTimespan == Timespan.week
                                         ? DateTime(
                                           scheduleStartDate.year,
                                           scheduleStartDate.month,
@@ -300,7 +284,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                                           .read(
                                             scheduleTimespanProvider.notifier,
                                           )
-                                          .state = ScheduleTimespan.day;
+                                          .state = Timespan.day;
                                       ref
                                           .read(
                                             scheduleStartDateProvider.notifier,
@@ -457,11 +441,11 @@ class TimespanDateSwitcher extends ConsumerWidget {
       children: [
         IconButton(
           onPressed: () {
-            if (scheduleTimespan == ScheduleTimespan.day) {
+            if (scheduleTimespan == Timespan.day) {
               ref
                   .read(scheduleStartDateProvider.notifier)
                   .state = scheduleStartDate.subtract(Duration(days: 1));
-            } else if (scheduleTimespan == ScheduleTimespan.week) {
+            } else if (scheduleTimespan == Timespan.week) {
               ref.read(scheduleStartDateProvider.notifier).state = DateTime(
                 scheduleStartDate.year,
                 scheduleStartDate.month,
@@ -479,12 +463,12 @@ class TimespanDateSwitcher extends ConsumerWidget {
         Expanded(
           child: Center(
             child: Text(switch (scheduleTimespan) {
-              ScheduleTimespan.day =>
+              Timespan.day =>
                 "${scheduleStartDate.getWeekday()}, ${scheduleStartDate.toExtendedFormattedDateString()}${(scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : "")}",
-              ScheduleTimespan.week => () {
+              Timespan.week => () {
                 return "${scheduleStartDate.getWeekStart().toExtendedFormattedDateString()} - ${scheduleStartDate.getWeekStart().add(Duration(days: 6)).toExtendedFormattedDateString()}${scheduleStartDate.year != DateTime.now().year ? (" ${scheduleStartDate.year.toString()}") : ""}";
               }(),
-              ScheduleTimespan.month =>
+              Timespan.month =>
                 scheduleStartDate.getMonthName() +
                     (scheduleStartDate.year != DateTime.now().year
                         ? (" ${scheduleStartDate.year.toString()}")
@@ -494,11 +478,11 @@ class TimespanDateSwitcher extends ConsumerWidget {
         ),
         IconButton(
           onPressed: () {
-            if (scheduleTimespan == ScheduleTimespan.day) {
+            if (scheduleTimespan == Timespan.day) {
               ref
                   .read(scheduleStartDateProvider.notifier)
                   .state = scheduleStartDate.add(Duration(days: 1));
-            } else if (scheduleTimespan == ScheduleTimespan.week) {
+            } else if (scheduleTimespan == Timespan.week) {
               ref.read(scheduleStartDateProvider.notifier).state = DateTime(
                 scheduleStartDate.year,
                 scheduleStartDate.month,

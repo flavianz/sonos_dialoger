@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/basic_providers.dart';
 import 'package:sonos_dialoger/components/misc.dart';
-import 'package:sonos_dialoger/components/schedule_timespan_dropdown.dart';
+import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 
 import '../../app.dart';
 import '../../providers.dart';
+import '../../providers/date_ranges.dart';
 import '../coach/coach_schedule_page.dart';
 import '../dialoger/dialoger_schedule_page.dart';
 
@@ -55,7 +56,7 @@ class AdminSchedulePage extends ConsumerWidget {
                       .watch(schedulesProvider)
                       .when(
                         data: (coachSchedulesDocs) {
-                          if (scheduleTimespan == ScheduleTimespan.day) {
+                          if (scheduleTimespan == Timespan.day) {
                             if (coachSchedulesDocs.docs.isEmpty) {
                               return Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -537,12 +538,11 @@ class AdminSchedulePage extends ConsumerWidget {
                                 ],
                               );
                             }
-                          } else if (scheduleTimespan ==
-                                  ScheduleTimespan.week ||
-                              scheduleTimespan == ScheduleTimespan.month) {
+                          } else if (scheduleTimespan == Timespan.week ||
+                              scheduleTimespan == Timespan.month) {
                             return ListView.builder(
                               itemCount:
-                                  scheduleTimespan == ScheduleTimespan.week
+                                  scheduleTimespan == Timespan.week
                                       ? 7
                                       : DateTime(
                                         scheduleStartDate.year,
@@ -551,7 +551,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                       ).day,
                               itemBuilder: (BuildContext context, int index) {
                                 final date =
-                                    scheduleTimespan == ScheduleTimespan.week
+                                    scheduleTimespan == Timespan.week
                                         ? DateTime(
                                           scheduleStartDate.year,
                                           scheduleStartDate.month,
@@ -590,7 +590,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                           .read(
                                             scheduleTimespanProvider.notifier,
                                           )
-                                          .state = ScheduleTimespan.day;
+                                          .state = Timespan.day;
                                       ref
                                           .read(
                                             scheduleStartDateProvider.notifier,

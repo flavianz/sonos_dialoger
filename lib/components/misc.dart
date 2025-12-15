@@ -73,6 +73,26 @@ extension DateTimeFormatExtension on DateTime {
     return year == other.year && month == other.month && day == other.day;
   }
 
+  DateTime addDays(int days) {
+    return DateTime(year, month, day + days, hour, minute, second, millisecond);
+  }
+
+  DateTime addMonths(int months) {
+    return DateTime(
+      year,
+      month + months,
+      day,
+      hour,
+      minute,
+      second,
+      millisecond,
+    );
+  }
+
+  int getMonthDayCount() {
+    return addMonths(1).addDays(-1).day;
+  }
+
   String getWeekdayAbbreviation() {
     return switch (weekday) {
       2 => "Di",

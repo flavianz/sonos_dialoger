@@ -10,7 +10,9 @@ import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 
 import '../../components/misc.dart';
+import '../../components/timespan_dropdowns.dart';
 import '../../providers.dart';
+import '../../providers/date_ranges.dart';
 
 final locationProvider = FutureProvider.family(
   (ref, String locationId) =>
@@ -24,71 +26,10 @@ final locationPaymentsProvider = StreamProvider.family((
   return FirebaseFirestore.instance
       .collection("payments")
       .where(
-        Filter.and(switch (ref.watch(timespanProvider)) {
-          Timespan.custom => Filter.and(
-            Filter(
-              "timestamp",
-              isGreaterThanOrEqualTo: Timestamp.fromDate(
-                ref.watch(rangeProvider).start,
-              ),
-            ),
-            Filter(
-              "timestamp",
-              isLessThanOrEqualTo: Timestamp.fromDate(
-                ref.watch(rangeProvider).end,
-              ),
-            ),
-          ),
-          Timespan.month => Filter(
-            "timestamp",
-            isGreaterThanOrEqualTo: Timestamp.fromDate(
-              DateTime(DateTime.now().year, DateTime.now().month, 1),
-            ),
-          ),
-          Timespan.week => Filter(
-            "timestamp",
-            isGreaterThanOrEqualTo: Timestamp.fromDate(
-              DateTime(
-                DateTime.now().year,
-                DateTime.now().month,
-                DateTime.now().day,
-              ).subtract(
-                Duration(days: DateTime.now().weekday - DateTime.monday),
-              ),
-            ),
-          ),
-          Timespan.yesterday => () {
-            final yesterday = DateTime.now().subtract(Duration(days: 1));
-            return Filter.and(
-              Filter(
-                "timestamp",
-                isGreaterThanOrEqualTo: Timestamp.fromDate(
-                  DateTime(yesterday.year, yesterday.month, yesterday.day),
-                ),
-              ),
-              Filter(
-                "timestamp",
-                isLessThan: Timestamp.fromDate(
-                  DateTime(
-                    DateTime.now().year,
-                    DateTime.now().month,
-                    DateTime.now().day,
-                  ),
-                ),
-              ),
-            );
-          }(),
-          Timespan.today => Filter(
-            "timestamp",
-            isGreaterThanOrEqualTo: Timestamp.fromDate(
-              DateTime(
-                DateTime.now().year,
-                DateTime.now().month,
-                DateTime.now().day,
-              ),
-            ),
-          ),
-        }, Filter("location", isEqualTo: locationId)),
+        Filter.and(
+          ref.watch(paymentsDateFilterProvider),
+          Filter("location", isEqualTo: locationId),
+        ),
       )
       .orderBy("timestamp", descending: true)
       .snapshots();
@@ -230,8 +171,6 @@ class LocationDetailsPage extends ConsumerWidget {
           forceMaterialTransparency: true,
           title: Text(locationData["name"] ?? ""),
           actions: [
-            DateRangeDropdown(),
-            SizedBox(width: 10),
             IconButton(
               icon: Icon(Icons.edit),
               onPressed: () {
@@ -249,16 +188,17 @@ class LocationDetailsPage extends ConsumerWidget {
         body: TabBarView(
           children: [
             locationPaymentDocs.when(
-              data: (paymentsDatas) {
-                final payments = paymentsDatas.docs.map(
+              data: (paymentsData) {
+                final payments = paymentsData.docs.map(
                   (doc) => Payment.fromDoc(doc),
                 );
+                final startDate = ref.watch(paymentsStartDateProvider);
+                final timespan = ref.watch(paymentsTimespanProvider);
                 final Map<int, List<Payment>> dateSortedData = {};
                 double maxVal = 1;
                 if (payments.isNotEmpty) {
-                  final timespan = ref.watch(timespanProvider);
-                  if (timespan == Timespan.today ||
-                      timespan == Timespan.yesterday) {
+                  final timespan = ref.watch(paymentsTimespanProvider);
+                  if (timespan == Timespan.day) {
                     final hoursPrefixedPayments =
                         payments
                             .map((payment) => (payment.timestamp.hour, payment))
@@ -281,9 +221,11 @@ class LocationDetailsPage extends ConsumerWidget {
                   } else if (timespan == Timespan.week) {
                     final weekdayPrefixedPayments =
                         payments
-                            .map((payment) => (payment.timestamp.hour, payment))
+                            .map(
+                              (payment) => (payment.timestamp.weekday, payment),
+                            )
                             .toList();
-                    for (int i = 1; i <= DateTime.now().weekday; i++) {
+                    for (int i = 1; i <= 7; i++) {
                       dateSortedData[i] =
                           weekdayPrefixedPayments
                               .where((payment) => payment.$1 == i)
@@ -293,96 +235,17 @@ class LocationDetailsPage extends ConsumerWidget {
                   } else if (timespan == Timespan.month) {
                     final dayPrefixedPayments =
                         payments
-                            .map((payment) => (payment.timestamp.hour, payment))
+                            .map((payment) => (payment.timestamp.day, payment))
                             .toList();
-                    final int maxDay =
-                        dayPrefixedPayments
-                            .reduce((a, b) => a.$1 >= b.$1 ? a : b)
-                            .$1;
-                    for (int i = 1; i <= maxDay; i++) {
+                    for (int i = 1; i <= startDate.getMonthDayCount(); i++) {
                       dateSortedData[i] =
                           dayPrefixedPayments
                               .where((payment) => payment.$1 == i)
                               .map((payment) => payment.$2)
                               .toList();
                     }
-                  } else if (timespan == Timespan.custom) {
-                    final dateRange = ref.watch(rangeProvider);
-                    final duration =
-                        dateRange.end.difference(dateRange.start).inDays;
-
-                    final millisPrefixedPayments =
-                        payments.map((payment) {
-                          final date = payment.timestamp;
-                          if (duration < 30) {
-                            return (
-                              DateTime(
-                                date.year,
-                                date.month,
-                                date.day,
-                              ).millisecondsSinceEpoch,
-                              payment,
-                            );
-                          } else if (duration < 140) {
-                            return (
-                              DateTime(
-                                date.year,
-                                date.month,
-                                date.day - date.weekday + 1,
-                              ).millisecondsSinceEpoch,
-                              payment,
-                            );
-                          } else {
-                            return (
-                              DateTime(
-                                date.year,
-                                date.month,
-                              ).millisecondsSinceEpoch,
-                              payment,
-                            );
-                          }
-                        }).toList();
-                    DateTime startDate =
-                        duration < 30
-                            ? DateTime(
-                              dateRange.start.year,
-                              dateRange.start.month,
-                              dateRange.start.day,
-                            )
-                            : (duration < 140
-                                ? DateTime(
-                                  dateRange.start.year,
-                                  dateRange.start.month,
-                                  dateRange.start.day -
-                                      dateRange.start.weekday +
-                                      1,
-                                )
-                                : DateTime(
-                                  dateRange.start.year,
-                                  dateRange.start.month,
-                                ));
-                    while (startDate.isBefore(dateRange.end)) {
-                      dateSortedData[startDate.millisecondsSinceEpoch] =
-                          millisPrefixedPayments
-                              .where(
-                                (payment) =>
-                                    payment.$1 ==
-                                    startDate.millisecondsSinceEpoch,
-                              )
-                              .map((payment) => payment.$2)
-                              .toList();
-                      if (duration < 140) {
-                        startDate = startDate.add(
-                          Duration(days: duration < 30 ? 1 : 7),
-                        );
-                      } else {
-                        startDate = DateTime(
-                          startDate.year,
-                          startDate.month + 1,
-                        );
-                      }
-                    }
                   }
+
                   if (dateSortedData.isNotEmpty) {
                     maxVal = max(
                       dateSortedData.values
@@ -403,6 +266,7 @@ class LocationDetailsPage extends ConsumerWidget {
 
                 final isScreenWide =
                     MediaQuery.of(context).size.aspectRatio > 1;
+
                 final summaryCard = Card.outlined(
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
@@ -416,15 +280,10 @@ class LocationDetailsPage extends ConsumerWidget {
                               : CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          "Einnahmen ${switch (ref.watch(timespanProvider)) {
-                            Timespan.today => "heute",
-                            Timespan.yesterday => "gestern",
-                            Timespan.week => "diese Woche",
-                            Timespan.month => "diesen Monat",
-                            Timespan.custom => () {
-                              final dateRange = ref.watch(rangeProvider);
-                              return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
-                            }(),
+                          "Einnahmen ${switch (timespan) {
+                            Timespan.day => "${startDate.day}. ${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
+                            Timespan.week => "KW ${startDate.weekOfYear}",
+                            Timespan.month => "${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
                           }}",
                           style: TextStyle(fontSize: 13),
                         ),
@@ -463,125 +322,6 @@ class LocationDetailsPage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                final currentRange = ref.read(rangeProvider);
-                                final timespan = ref.read(timespanProvider);
-                                if (timespan == Timespan.today ||
-                                    timespan == Timespan.yesterday ||
-                                    timespan == Timespan.week) {
-                                  ref
-                                      .read(rangeProvider.notifier)
-                                      .state = DateTimeRange(
-                                    start: currentRange.start.subtract(
-                                      Duration(
-                                        days: timespan == Timespan.week ? 7 : 1,
-                                      ),
-                                    ),
-                                    end: currentRange.end.subtract(
-                                      Duration(
-                                        days: timespan == Timespan.week ? 7 : 1,
-                                      ),
-                                    ),
-                                  );
-                                  ref.read(timespanProvider.notifier).state =
-                                      Timespan.custom;
-                                } else if (timespan == Timespan.month) {
-                                  ref
-                                      .read(rangeProvider.notifier)
-                                      .state = DateTimeRange(
-                                    start: DateTime(
-                                      currentRange.start.year,
-                                      currentRange.start.month - 1,
-                                    ),
-                                    end: DateTime(
-                                      currentRange.end.year,
-                                      currentRange.end.month - 1,
-                                    ),
-                                  );
-                                  ref.read(timespanProvider.notifier).state =
-                                      Timespan.custom;
-                                } else if (timespan == Timespan.custom) {
-                                  final diff = currentRange.end.difference(
-                                    currentRange.start,
-                                  );
-                                  ref
-                                      .read(rangeProvider.notifier)
-                                      .state = DateTimeRange(
-                                    start: currentRange.start.subtract(diff),
-                                    end: currentRange.end.subtract(diff),
-                                  );
-                                }
-                              },
-                              icon: Icon(Icons.arrow_left),
-                            ),
-                            Text(switch (ref.watch(timespanProvider)) {
-                              Timespan.today => "Heute",
-                              Timespan.yesterday => "Gestern",
-                              Timespan.week => "Diese Woche",
-                              Timespan.month => "Dieser Monat",
-                              Timespan.custom => () {
-                                final dateRange = ref.watch(rangeProvider);
-                                return "${dateRange.start.day}.${dateRange.start.month}. - ${dateRange.end.day}.${dateRange.end.month}.";
-                              }(),
-                            }, style: TextStyle(fontWeight: FontWeight.bold)),
-                            IconButton(
-                              onPressed: () {
-                                final currentRange = ref.read(rangeProvider);
-                                final timespan = ref.read(timespanProvider);
-                                if (timespan == Timespan.today ||
-                                    timespan == Timespan.yesterday ||
-                                    timespan == Timespan.week) {
-                                  ref
-                                      .read(rangeProvider.notifier)
-                                      .state = DateTimeRange(
-                                    start: currentRange.start.add(
-                                      Duration(
-                                        days: timespan == Timespan.week ? 7 : 1,
-                                      ),
-                                    ),
-                                    end: currentRange.end.add(
-                                      Duration(
-                                        days: timespan == Timespan.week ? 7 : 1,
-                                      ),
-                                    ),
-                                  );
-                                  ref.read(timespanProvider.notifier).state =
-                                      Timespan.custom;
-                                } else if (timespan == Timespan.month) {
-                                  ref
-                                      .read(rangeProvider.notifier)
-                                      .state = DateTimeRange(
-                                    start: DateTime(
-                                      currentRange.start.year,
-                                      currentRange.start.month + 1,
-                                    ),
-                                    end: DateTime(
-                                      currentRange.end.year,
-                                      currentRange.end.month + 1,
-                                    ),
-                                  );
-                                  ref.read(timespanProvider.notifier).state =
-                                      Timespan.custom;
-                                } else if (timespan == Timespan.custom) {
-                                  final diff = currentRange.end.difference(
-                                    currentRange.start,
-                                  );
-                                  ref
-                                      .read(rangeProvider.notifier)
-                                      .state = DateTimeRange(
-                                    start: currentRange.start.add(diff),
-                                    end: currentRange.end.add(diff),
-                                  );
-                                }
-                              },
-                              icon: Icon(Icons.arrow_right),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 5),
                         Expanded(
                           child:
                               payments.isEmpty
@@ -592,10 +332,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                         leftTitles: AxisTitles(
                                           sideTitles: SideTitles(
                                             interval: max(
-                                              ((maxVal / 6) -
-                                                          ((maxVal / 6) % 10))
-                                                      .toDouble() *
-                                                  2,
+                                              maxVal / 6 - (maxVal / 6) % 1,
                                               1,
                                             ),
                                             showTitles: true,
@@ -610,10 +347,9 @@ class LocationDetailsPage extends ConsumerWidget {
                                             showTitles: true,
                                             getTitlesWidget: (titleData, _) {
                                               return switch (ref.watch(
-                                                timespanProvider,
+                                                paymentsTimespanProvider,
                                               )) {
-                                                Timespan.today ||
-                                                Timespan.yesterday => Text(
+                                                Timespan.day => Text(
                                                   titleData.toString().padLeft(
                                                     2,
                                                     "0",
@@ -647,42 +383,6 @@ class LocationDetailsPage extends ConsumerWidget {
                                                         ),
                                                       )
                                                       : SizedBox.shrink(),
-                                                Timespan.custom => () {
-                                                  final dateRange = ref.watch(
-                                                    rangeProvider,
-                                                  );
-                                                  final duration =
-                                                      dateRange.end
-                                                          .difference(
-                                                            dateRange.start,
-                                                          )
-                                                          .inDays;
-                                                  return Text(
-                                                    duration <= 30
-                                                        ? "${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).day}."
-                                                        : (duration < 140
-                                                            ? "KW ${DateTime.fromMillisecondsSinceEpoch(titleData.ceil()).weekOfYear}"
-                                                            : switch (DateTime.fromMillisecondsSinceEpoch(
-                                                              titleData.ceil(),
-                                                            ).month) {
-                                                              2 => "Feb",
-                                                              3 => "Mär",
-                                                              4 => "Apr",
-                                                              5 => "Mai",
-                                                              6 => "Jun",
-                                                              7 => "Jul",
-                                                              8 => "Aug",
-                                                              9 => "Sep",
-                                                              10 => "Okt",
-                                                              11 => "Nov",
-                                                              12 => "Dez",
-                                                              1 || _ => "Jan",
-                                                            }),
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                    ),
-                                                  );
-                                                }(),
                                               };
                                             },
                                             reservedSize: 20,
@@ -700,8 +400,7 @@ class LocationDetailsPage extends ConsumerWidget {
                                               .toList(),
                                       gridData: FlGridData(
                                         horizontalInterval: max(
-                                          ((maxVal / 6) - ((maxVal / 6) % 10))
-                                              .toDouble(),
+                                          maxVal / 6 - (maxVal / 6) % 1,
                                           1,
                                         ),
                                         show: true,
@@ -855,6 +554,7 @@ class LocationDetailsPage extends ConsumerWidget {
 
                 return ListView(
                   children: [
+                    Card.outlined(child: PaymentsTimespanBar()),
                     isScreenWide
                         ? Row(children: [summaryCard, Expanded(child: graph)])
                         : Column(children: [summaryCard, graph]),

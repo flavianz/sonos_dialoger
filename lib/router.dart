@@ -1,6 +1,7 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/pages/admin/admin_schedule_page.dart';
+import 'package:sonos_dialoger/pages/admin/admin_settings_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
 import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
@@ -135,7 +136,7 @@ final router = GoRouter(
         GoRoute(
           path: '/admin/settings',
           builder: (context, state) {
-            return SettingsPage();
+            return AdminSettingsPage();
           },
         ),
       ],

@@ -2,82 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/core/payment.dart';
+import 'package:sonos_dialoger/providers/date_ranges.dart';
 
 import '../../components/misc.dart';
-import '../../providers.dart';
 
 final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
   ref,
 ) {
   return FirebaseFirestore.instance
       .collection("payments")
-      .where(switch (ref.watch(timespanProvider)) {
-        Timespan.custom => Filter.and(
-          Filter(
-            "timestamp",
-            isGreaterThanOrEqualTo: Timestamp.fromDate(
-              ref.watch(rangeProvider).start,
-            ),
-          ),
-          Filter(
-            "timestamp",
-            isLessThanOrEqualTo: Timestamp.fromDate(
-              ref.watch(rangeProvider).end,
-            ),
-          ),
-        ),
-        Timespan.month => Filter(
-          "timestamp",
-          isGreaterThanOrEqualTo: Timestamp.fromDate(
-            DateTime(DateTime.now().year, DateTime.now().month, 0),
-          ),
-        ),
-        Timespan.week => Filter(
-          "timestamp",
-          isGreaterThanOrEqualTo: Timestamp.fromDate(
-            DateTime(
-              DateTime.now().year,
-              DateTime.now().month,
-              DateTime.now().day,
-            ).subtract(
-              Duration(days: DateTime.now().weekday - DateTime.monday),
-            ),
-          ),
-        ),
-        Timespan.yesterday => () {
-          final yesterday = DateTime.now().subtract(Duration(days: 1));
-          return Filter.and(
-            Filter(
-              "timestamp",
-              isGreaterThanOrEqualTo: Timestamp.fromDate(
-                DateTime(yesterday.year, yesterday.month, yesterday.day),
-              ),
-            ),
-            Filter(
-              "timestamp",
-              isLessThan: Timestamp.fromDate(
-                DateTime(
-                  DateTime.now().year,
-                  DateTime.now().month,
-                  DateTime.now().day,
-                ),
-              ),
-            ),
-          );
-        }(),
-        Timespan.today || _ => Filter(
-          "timestamp",
-          isGreaterThanOrEqualTo: Timestamp.fromDate(
-            DateTime(
-              DateTime.now().year,
-              DateTime.now().month,
-              DateTime.now().day,
-            ),
-          ),
-        ),
-      })
+      .where(paymentsDateFilterProvider)
       .orderBy("timestamp", descending: true)
       .snapshots();
 });
@@ -102,7 +37,7 @@ class PaymentsPage extends ConsumerWidget {
       appBar: AppBar(
         forceMaterialTransparency: true,
         title: Text("Leistungen"),
-        actions: [DateRangeDropdown()],
+        actions: [],
       ),
       body: Column(
         children: [

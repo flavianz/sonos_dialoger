@@ -2,17 +2,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 import 'package:sonos_dialoger/providers/date_ranges.dart';
 
 import '../../components/misc.dart';
+import '../../components/timespan_dropdowns.dart';
 
 final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
   ref,
 ) {
   return FirebaseFirestore.instance
       .collection("payments")
-      .where(paymentsDateFilterProvider)
+      .where(ref.watch(paymentsDateFilterProvider))
       .orderBy("timestamp", descending: true)
       .snapshots();
 });
@@ -41,11 +43,24 @@ class PaymentsPage extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          Card.outlined(child: PaymentsTimespanBar()),
           Divider(color: Theme.of(context).primaryColor),
-          Expanded(
-            child: ListView(
-              children:
-                  paymentDocs.value!.docs.map((doc) {
+          if (paymentDocs.value!.docs.isEmpty)
+            Expanded(child: Center(child: Text("Keine Daten")))
+          else
+            Expanded(
+              child: ListView(
+                children: [
+                  Card.outlined(
+                    child: PaymentsGraph(
+                      payments:
+                          paymentDocs.value!.docs
+                              .map((doc) => Payment.fromDoc(doc))
+                              .toList(),
+                    ),
+                  ),
+                  Divider(color: Theme.of(context).primaryColor),
+                  ...paymentDocs.value!.docs.map((doc) {
                     final payment = Payment.fromDoc(doc);
                     late String datePrefix;
                     final today = DateTime.now();
@@ -170,9 +185,10 @@ class PaymentsPage extends ConsumerWidget {
                         Divider(),
                       ],
                     );
-                  }).toList(),
+                  }),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

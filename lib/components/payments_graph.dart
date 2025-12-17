@@ -284,205 +284,223 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
     final sortedDates =
         dateSortedData.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
 
-    return Container(
-      padding: EdgeInsets.all(18),
-      constraints: BoxConstraints(maxHeight: 300),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child:
-                widget.payments.isEmpty
-                    ? Center(child: Text("Keine Daten"))
-                    : BarChart(
-                      BarChartData(
-                        titlesData: FlTitlesData(
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              interval: max(maxVal / 6 - (maxVal / 6) % 1, 1),
-                              showTitles: true,
-                              reservedSize: 40,
-                              getTitlesWidget: leftTitles,
-                            ),
-                          ),
-                          rightTitles: const AxisTitles(),
-                          topTitles: const AxisTitles(),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (titleData, _) {
-                                return switch (ref.watch(
-                                  paymentsTimespanProvider,
-                                )) {
-                                  Timespan.day => Text(
-                                    titleData.toString().padLeft(2, "0"),
-                                    style: TextStyle(fontSize: 13),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        late final int columnLabelInterval;
+        if (constraints.maxWidth < 600) {
+          columnLabelInterval = 3;
+        } else if (constraints.maxWidth < 900) {
+          columnLabelInterval = 2;
+        } else {
+          columnLabelInterval = 1;
+        }
+
+        return Container(
+          padding: EdgeInsets.all(18),
+          constraints: BoxConstraints(maxHeight: 300),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child:
+                    widget.payments.isEmpty
+                        ? Center(child: Text("Keine Daten"))
+                        : BarChart(
+                          BarChartData(
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  interval: max(
+                                    maxVal / 6 - (maxVal / 6) % 1,
+                                    1,
                                   ),
-                                  Timespan.week => Text(switch (titleData) {
-                                    2 => "Di",
-                                    3 => "Mi",
-                                    4 => "Do",
-                                    5 => "Fr",
-                                    6 => "Sa",
-                                    7 => "So",
-                                    1 || _ => "Mo",
-                                  }),
-                                  Timespan.month =>
-                                    titleData % 2 == 1
-                                        ? Text(
-                                          "${titleData.toString().padLeft(2, "0")}.",
-                                          style: TextStyle(fontSize: 13),
-                                        )
-                                        : SizedBox.shrink(),
-                                };
-                              },
-                              reservedSize: 20,
-                            ),
-                          ),
-                        ),
-                        barGroups:
-                            sortedDates
-                                .map(
-                                  (entry) =>
-                                      generateGroupData(entry.key, entry.value),
-                                )
-                                .toList(),
-                        gridData: FlGridData(
-                          horizontalInterval: max(
-                            maxVal / 6 - (maxVal / 6) % 1,
-                            1,
-                          ),
-                          show: true,
-                          getDrawingHorizontalLine:
-                              (value) => FlLine(
-                                color: Colors.grey.shade200,
-                                strokeWidth: 1,
+                                  showTitles: true,
+                                  reservedSize: 40,
+                                  getTitlesWidget: leftTitles,
+                                ),
                               ),
-                          drawVerticalLine: false,
+                              rightTitles: const AxisTitles(),
+                              topTitles: const AxisTitles(),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (titleData, _) {
+                                    return switch (ref.watch(
+                                      paymentsTimespanProvider,
+                                    )) {
+                                      Timespan.day => Text(
+                                        titleData.toString().padLeft(2, "0"),
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                      Timespan.week => Text(switch (titleData) {
+                                        2 => "Di",
+                                        3 => "Mi",
+                                        4 => "Do",
+                                        5 => "Fr",
+                                        6 => "Sa",
+                                        7 => "So",
+                                        1 || _ => "Mo",
+                                      }),
+                                      Timespan.month =>
+                                        titleData % columnLabelInterval == 0
+                                            ? Text(
+                                              "${titleData.toString().padLeft(2, "0")}.",
+                                              style: TextStyle(fontSize: 13),
+                                            )
+                                            : SizedBox.shrink(),
+                                    };
+                                  },
+                                  reservedSize: 20,
+                                ),
+                              ),
+                            ),
+                            barGroups:
+                                sortedDates
+                                    .map(
+                                      (entry) => generateGroupData(
+                                        entry.key,
+                                        entry.value,
+                                      ),
+                                    )
+                                    .toList(),
+                            gridData: FlGridData(
+                              horizontalInterval: max(
+                                maxVal / 6 - (maxVal / 6) % 1,
+                                1,
+                              ),
+                              show: true,
+                              getDrawingHorizontalLine:
+                                  (value) => FlLine(
+                                    color: Colors.grey.shade200,
+                                    strokeWidth: 1,
+                                  ),
+                              drawVerticalLine: false,
+                            ),
+                            borderData: FlBorderData(show: false),
+                          ),
                         ),
-                        borderData: FlBorderData(show: false),
+              ),
+              SizedBox(height: 10),
+              widget.payments.isNotEmpty
+                  ? Row(
+                    spacing: 10,
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Row(
+                        spacing: 3,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(50),
+                              color: Colors.amberAccent,
+                            ),
+                            height: 12,
+                            width: 12,
+                          ),
+                          Tooltip(
+                            message: "LSV ohne Erstzahlung",
+                            child: Text("LSV", style: TextStyle(fontSize: 13)),
+                          ),
+                        ],
                       ),
-                    ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            spacing: 3,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color: Colors.lightGreen.shade300,
+                                ),
+                                height: 12,
+                                width: 12,
+                              ),
+                              Tooltip(
+                                message: "LSV mit Erstzahlung via SumUp",
+                                child: Text(
+                                  "LSV mit SumUp",
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            spacing: 3,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color: Colors.lightGreen.shade800,
+                                ),
+                                height: 12,
+                                width: 12,
+                              ),
+                              Tooltip(
+                                message: "LSV mit Erstzahlung via Twint",
+                                child: Text(
+                                  "LSV mit Twint",
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            spacing: 3,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color: Colors.lightBlue.shade200,
+                                ),
+                                height: 12,
+                                width: 12,
+                              ),
+                              Tooltip(
+                                message: "Einmalige Zahlung via SumUp",
+                                child: Text(
+                                  "Einmalig mit SumUp",
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            spacing: 3,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color: Colors.lightBlue.shade700,
+                                ),
+                                height: 12,
+                                width: 12,
+                              ),
+                              Tooltip(
+                                message: "Einmalige Zahlung via Twint",
+                                child: Text(
+                                  "Einmalig mit Twint",
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                  : SizedBox.shrink(),
+            ],
           ),
-          SizedBox(height: 10),
-          widget.payments.isNotEmpty
-              ? Row(
-                spacing: 10,
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Row(
-                    spacing: 3,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(50),
-                          color: Colors.amberAccent,
-                        ),
-                        height: 12,
-                        width: 12,
-                      ),
-                      Tooltip(
-                        message: "LSV ohne Erstzahlung",
-                        child: Text("LSV", style: TextStyle(fontSize: 13)),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        spacing: 3,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: Colors.lightGreen.shade300,
-                            ),
-                            height: 12,
-                            width: 12,
-                          ),
-                          Tooltip(
-                            message: "LSV mit Erstzahlung via SumUp",
-                            child: Text(
-                              "LSV mit SumUp",
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        spacing: 3,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: Colors.lightGreen.shade800,
-                            ),
-                            height: 12,
-                            width: 12,
-                          ),
-                          Tooltip(
-                            message: "LSV mit Erstzahlung via Twint",
-                            child: Text(
-                              "LSV mit Twint",
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        spacing: 3,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: Colors.lightBlue.shade200,
-                            ),
-                            height: 12,
-                            width: 12,
-                          ),
-                          Tooltip(
-                            message: "Einmalige Zahlung via SumUp",
-                            child: Text(
-                              "Einmalig mit SumUp",
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        spacing: 3,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: Colors.lightBlue.shade700,
-                            ),
-                            height: 12,
-                            width: 12,
-                          ),
-                          Tooltip(
-                            message: "Einmalige Zahlung via Twint",
-                            child: Text(
-                              "Einmalig mit Twint",
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              )
-              : SizedBox.shrink(),
-        ],
-      ),
+        );
+      },
     );
   }
 }

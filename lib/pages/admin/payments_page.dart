@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/core/payment.dart';
+import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
 import 'package:sonos_dialoger/providers/date_ranges.dart';
 
 import '../../components/misc.dart';
@@ -35,6 +36,14 @@ class PaymentsPage extends ConsumerWidget {
       return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
     }
 
+    final startDate = ref.watch(paymentsStartDateProvider);
+    final timespan = ref.watch(paymentsTimespanProvider);
+
+    final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
+
+    final payments =
+        paymentDocs.value!.docs.map((doc) => Payment.fromDoc(doc)).toList();
+
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
@@ -52,14 +61,69 @@ class PaymentsPage extends ConsumerWidget {
               child: ListView(
                 children: [
                   Card.outlined(
-                    child: PaymentsGraph(
-                      payments:
-                          paymentDocs.value!.docs
-                              .map((doc) => Payment.fromDoc(doc))
-                              .toList(),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 18,
+                      ),
+                      constraints: BoxConstraints(maxHeight: 300),
+                      child: Column(
+                        mainAxisSize:
+                            isScreenWide ? MainAxisSize.max : MainAxisSize.min,
+                        crossAxisAlignment:
+                            isScreenWide
+                                ? CrossAxisAlignment.start
+                                : CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            "Einnahmen ${switch (timespan) {
+                              Timespan.day => "${startDate.day}. ${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
+                              Timespan.week => "KW ${startDate.weekOfYear}",
+                              Timespan.month => "${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
+                            }}",
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          Text(
+                            "${payments.fold(0.0, (total, element) => total + element.amount).toString()} CHF",
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            "+ -- % über dem Durchschnitt",
+                            style: TextStyle(fontSize: 13, color: Colors.green),
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            "Nach DialogerInnen-Anteil",
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          Text(
+                            "${payments.fold(0.0, (total, element) => total + element.amount * (1 - element.dialogerShare)).toStringAsFixed(2)} CHF",
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  Card.outlined(child: PaymentsGraph(payments: payments)),
                   Divider(color: Theme.of(context).primaryColor),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    child: Text(
+                      "Einzelne Leistungen",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  Divider(),
                   ...paymentDocs.value!.docs.map((doc) {
                     final payment = Payment.fromDoc(doc);
                     late String datePrefix;

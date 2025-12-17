@@ -222,7 +222,6 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
     }
 
     final startDate = ref.watch(paymentsStartDateProvider);
-    final timespan = ref.watch(paymentsTimespanProvider);
     final Map<int, List<Payment>> dateSortedData = {};
     double maxVal = 1;
     if (widget.payments.isNotEmpty) {

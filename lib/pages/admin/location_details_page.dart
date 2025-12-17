@@ -6,13 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/clickable_link.dart';
-import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 
 import '../../components/misc.dart';
 import '../../components/timespan_dropdowns.dart';
-import '../../providers.dart';
 import '../../providers/date_ranges.dart';
 
 final locationProvider = FutureProvider.family(
@@ -196,7 +194,6 @@ class LocationDetailsPage extends ConsumerWidget {
                 final startDate = ref.watch(paymentsStartDateProvider);
                 final timespan = ref.watch(paymentsTimespanProvider);
                 final Map<int, List<Payment>> dateSortedData = {};
-                double maxVal = 1;
                 if (payments.isNotEmpty) {
                   final timespan = ref.watch(paymentsTimespanProvider);
                   if (timespan == Timespan.day) {
@@ -246,24 +243,7 @@ class LocationDetailsPage extends ConsumerWidget {
                               .toList();
                     }
                   }
-
-                  if (dateSortedData.isNotEmpty) {
-                    maxVal = max(
-                      dateSortedData.values
-                          .map(
-                            (list) => list.fold(
-                              0.0,
-                              (total, payment) => total + payment.amount,
-                            ),
-                          )
-                          .reduce(max),
-                      1,
-                    );
-                  }
                 }
-                final sortedDates =
-                    dateSortedData.entries.toList()
-                      ..sort((a, b) => a.key.compareTo(b.key));
 
                 final isScreenWide =
                     MediaQuery.of(context).size.aspectRatio > 1;

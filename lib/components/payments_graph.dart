@@ -58,30 +58,90 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 payment is RepeatingPaymentWithoutFirstPayment,
           )
           .fold(0.0, (total, payment) => total + payment.amount);
+      final double borderRadius = 4;
       return BarChartGroupData(
         x: millis,
         groupVertically: true,
         barRods: [
           BarChartRodData(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(borderRadius),
+              bottomRight: Radius.circular(borderRadius),
+              topRight:
+                  onceSumup +
+                              repeatingWithFirstPaymentTwint +
+                              repeatingWithFirstPaymentSumup +
+                              repeatingWithoutFirstPayment ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              topLeft:
+                  onceSumup +
+                              repeatingWithFirstPaymentTwint +
+                              repeatingWithFirstPaymentSumup +
+                              repeatingWithoutFirstPayment ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+            ),
             fromY: 0,
             toY: onceTwint.toDouble(),
             color: Colors.lightBlue.shade600,
             width: 15,
-            borderRadius: BorderRadius.zero,
           ),
           BarChartRodData(
             fromY: onceTwint,
             toY: onceTwint + onceSumup,
             color: Colors.lightBlue.shade200,
             width: 15,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BorderRadius.only(
+              bottomLeft:
+                  onceTwint == 0 ? Radius.circular(borderRadius) : Radius.zero,
+              bottomRight:
+                  onceTwint == 0 ? Radius.circular(borderRadius) : Radius.zero,
+              topRight:
+                  repeatingWithFirstPaymentTwint +
+                              repeatingWithFirstPaymentSumup +
+                              repeatingWithoutFirstPayment ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              topLeft:
+                  repeatingWithFirstPaymentTwint +
+                              repeatingWithFirstPaymentSumup +
+                              repeatingWithoutFirstPayment ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+            ),
           ),
           BarChartRodData(
             fromY: onceTwint + onceSumup,
             toY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
             color: Colors.lightGreen.shade800,
             width: 15,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BorderRadius.only(
+              bottomLeft:
+                  onceTwint + onceSumup == 0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              bottomRight:
+                  onceTwint + onceSumup == 0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              topRight:
+                  repeatingWithFirstPaymentSumup +
+                              repeatingWithoutFirstPayment ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              topLeft:
+                  repeatingWithFirstPaymentSumup +
+                              repeatingWithoutFirstPayment ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+            ),
           ),
           BarChartRodData(
             fromY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
@@ -92,7 +152,24 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 repeatingWithFirstPaymentSumup,
             color: Colors.lightGreen.shade300,
             width: 15,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BorderRadius.only(
+              bottomLeft:
+                  onceTwint + onceSumup + repeatingWithFirstPaymentTwint == 0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              bottomRight:
+                  onceTwint + onceSumup + repeatingWithFirstPaymentTwint == 0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              topRight:
+                  repeatingWithoutFirstPayment == 0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              topLeft:
+                  repeatingWithoutFirstPayment == 0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+            ),
           ),
           BarChartRodData(
             fromY:
@@ -108,7 +185,26 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 repeatingWithoutFirstPayment,
             color: Colors.amberAccent.shade200,
             width: 15,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BorderRadius.only(
+              bottomLeft:
+                  onceTwint +
+                              onceSumup +
+                              repeatingWithFirstPaymentTwint +
+                              repeatingWithFirstPaymentSumup ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              bottomRight:
+                  onceTwint +
+                              onceSumup +
+                              repeatingWithFirstPaymentTwint +
+                              repeatingWithFirstPaymentSumup ==
+                          0
+                      ? Radius.circular(borderRadius)
+                      : Radius.zero,
+              topRight: Radius.circular(borderRadius),
+              topLeft: Radius.circular(borderRadius),
+            ),
           ),
         ],
       );
@@ -232,10 +328,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                                     1 || _ => "Mo",
                                   }),
                                   Timespan.month =>
-                                    titleData %
-                                                (DateTime.now().day / 8)
-                                                    .ceil() ==
-                                            0
+                                    titleData % 2 == 1
                                         ? Text(
                                           "${titleData.toString().padLeft(2, "0")}.",
                                           style: TextStyle(fontSize: 13),

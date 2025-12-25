@@ -44,6 +44,48 @@ class PaymentsPage extends ConsumerWidget {
     final payments =
         paymentDocs.value!.docs.map((doc) => Payment.fromDoc(doc)).toList();
 
+    final summaryCard = Card.outlined(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        constraints: BoxConstraints(maxHeight: 300),
+        child: Column(
+          mainAxisSize: isScreenWide ? MainAxisSize.max : MainAxisSize.min,
+          crossAxisAlignment:
+              isScreenWide
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              "Einnahmen ${switch (timespan) {
+                Timespan.day => "${startDate.day}. ${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
+                Timespan.week => "KW ${startDate.weekOfYear}",
+                Timespan.month => "${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
+              }}",
+              style: TextStyle(fontSize: 13),
+            ),
+            Text(
+              "${payments.fold(0.0, (total, element) => total + element.amount).toString()} CHF",
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              "+ -- % über dem Durchschnitt",
+              style: TextStyle(fontSize: 13, color: Colors.green),
+            ),
+            SizedBox(height: 20),
+            Text("Nach DialogerInnen-Anteil", style: TextStyle(fontSize: 13)),
+            Text(
+              "${payments.fold(0.0, (total, element) => total + element.amount * (1 - element.dialogerShare)).toStringAsFixed(2)} CHF",
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
@@ -60,58 +102,24 @@ class PaymentsPage extends ConsumerWidget {
             Expanded(
               child: ListView(
                 children: [
-                  Card.outlined(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 18,
-                      ),
-                      constraints: BoxConstraints(maxHeight: 300),
-                      child: Column(
-                        mainAxisSize:
-                            isScreenWide ? MainAxisSize.max : MainAxisSize.min,
-                        crossAxisAlignment:
-                            isScreenWide
-                                ? CrossAxisAlignment.start
-                                : CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            "Einnahmen ${switch (timespan) {
-                              Timespan.day => "${startDate.day}. ${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
-                              Timespan.week => "KW ${startDate.weekOfYear}",
-                              Timespan.month => "${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
-                            }}",
-                            style: TextStyle(fontSize: 13),
+                  if (isScreenWide)
+                    Row(
+                      children: [
+                        summaryCard,
+                        Expanded(
+                          child: Card.outlined(
+                            child: PaymentsGraph(payments: payments),
                           ),
-                          Text(
-                            "${payments.fold(0.0, (total, element) => total + element.amount).toString()} CHF",
-                            style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            "+ -- % über dem Durchschnitt",
-                            style: TextStyle(fontSize: 13, color: Colors.green),
-                          ),
-                          SizedBox(height: 20),
-                          Text(
-                            "Nach DialogerInnen-Anteil",
-                            style: TextStyle(fontSize: 13),
-                          ),
-                          Text(
-                            "${payments.fold(0.0, (total, element) => total + element.amount * (1 - element.dialogerShare)).toStringAsFixed(2)} CHF",
-                            style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      children: [
+                        summaryCard,
+                        Card.outlined(child: PaymentsGraph(payments: payments)),
+                      ],
                     ),
-                  ),
-                  Card.outlined(child: PaymentsGraph(payments: payments)),
                   Divider(color: Theme.of(context).primaryColor),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),

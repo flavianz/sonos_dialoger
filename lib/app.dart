@@ -159,6 +159,11 @@ class _AppState extends ConsumerState<App> {
           "url": "/dialoger/payments",
         },
         {
+          "icon": Icon(Icons.query_stats),
+          "label": "Statistiken",
+          "url": "/dialoger/stats",
+        },
+        {
           "icon": Icon(Icons.add),
           "label": "Erfassen",
           "url": "/dialoger/payments/register",

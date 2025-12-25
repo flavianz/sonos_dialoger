@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/core/payment.dart';
@@ -52,11 +51,6 @@ class DialogerStatsPage extends ConsumerWidget {
     final payments =
         paymentDocs.value!.docs.map((doc) => Payment.fromDoc(doc)).toList();
 
-    final total = payments.fold(
-      0.0,
-      (total, element) => total + element.amount,
-    );
-
     final summaryCard = Card.outlined(
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
@@ -77,7 +71,7 @@ class DialogerStatsPage extends ConsumerWidget {
               style: TextStyle(fontSize: 13),
             ),
             Text(
-              "$total CHF",
+              "${payments.sum.toStringAsFixed(2)} CHF",
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             Text(
@@ -87,7 +81,7 @@ class DialogerStatsPage extends ConsumerWidget {
             SizedBox(height: 20),
             Text("Dein Anteil", style: TextStyle(fontSize: 13)),
             Text(
-              "${(total - payments.fold(0.0, (total, element) => total + element.amount * (1 - element.dialogerShare))).toStringAsFixed(2)} CHF",
+              "${payments.dialogerShareSum.toStringAsFixed(2)} CHF",
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,

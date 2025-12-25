@@ -195,3 +195,44 @@ class RepeatingPaymentWithoutFirstPayment extends RepeatingPayment {
     this.paymentStatus,
   );
 }
+
+extension PaymentsSum on Iterable<Payment> {
+  num get sum {
+    num sum = 0;
+    for (var element in this) {
+      if (element is RepeatingPaymentWithoutFirstPayment) {
+        if (element.paymentStatus == PaymentStatus.cancelled) {
+          continue;
+        }
+      }
+      sum += element.amount;
+    }
+    return sum;
+  }
+
+  num get sumWithoutDialogerShare {
+    num sum = 0;
+    for (var element in this) {
+      if (element is RepeatingPaymentWithoutFirstPayment) {
+        if (element.paymentStatus == PaymentStatus.cancelled) {
+          continue;
+        }
+      }
+      sum += element.amount * (1 - element.dialogerShare);
+    }
+    return sum;
+  }
+
+  num get dialogerShareSum {
+    num sum = 0;
+    for (var element in this) {
+      if (element is RepeatingPaymentWithoutFirstPayment) {
+        if (element.paymentStatus == PaymentStatus.cancelled) {
+          continue;
+        }
+      }
+      sum += element.amount * element.dialogerShare;
+    }
+    return sum;
+  }
+}

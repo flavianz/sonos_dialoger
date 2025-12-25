@@ -64,7 +64,7 @@ class PaymentsPage extends ConsumerWidget {
               style: TextStyle(fontSize: 13),
             ),
             Text(
-              "${payments.fold(0.0, (total, element) => total + element.amount).toString()} CHF",
+              "${payments.sum.toStringAsFixed(2)} CHF",
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             Text(
@@ -74,7 +74,7 @@ class PaymentsPage extends ConsumerWidget {
             SizedBox(height: 20),
             Text("Nach DialogerInnen-Anteil", style: TextStyle(fontSize: 13)),
             Text(
-              "${payments.fold(0.0, (total, element) => total + element.amount * (1 - element.dialogerShare)).toStringAsFixed(2)} CHF",
+              "${payments.sumWithoutDialogerShare.toStringAsFixed(2)} CHF",
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,

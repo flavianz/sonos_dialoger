@@ -6,54 +6,9 @@ import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 
 import '../../app.dart';
+import '../../components/timespan_dropdowns.dart';
 import '../../providers/date_ranges.dart';
-
-final dialogerPaymentsProvider =
-    StreamProvider<QuerySnapshot<Map<String, dynamic>>>((ref) {
-      return FirebaseFirestore.instance
-          .collection("payments")
-          .where(
-            Filter.and(
-              switch (ref.watch(paymentsTimespanProvider)) {
-                Timespan.month => Filter(
-                  "timestamp",
-                  isGreaterThanOrEqualTo: Timestamp.fromDate(
-                    DateTime(DateTime.now().year, DateTime.now().month, 0),
-                  ),
-                ),
-                Timespan.week => Filter(
-                  "timestamp",
-                  isGreaterThanOrEqualTo: Timestamp.fromDate(
-                    DateTime(
-                      DateTime.now().year,
-                      DateTime.now().month,
-                      DateTime.now().day,
-                    ).subtract(
-                      Duration(days: DateTime.now().weekday - DateTime.monday),
-                    ),
-                  ),
-                ),
-
-                Timespan.day => Filter(
-                  "timestamp",
-                  isGreaterThanOrEqualTo: Timestamp.fromDate(
-                    DateTime(
-                      DateTime.now().year,
-                      DateTime.now().month,
-                      DateTime.now().day,
-                    ),
-                  ),
-                ),
-              },
-              Filter(
-                "dialoger",
-                isEqualTo: ref.watch(userProvider).value?.uid ?? "",
-              ),
-            ),
-          )
-          .orderBy("timestamp", descending: true)
-          .snapshots();
-    });
+import 'dialoger_stats_page.dart';
 
 class DialogerPaymentsPage extends ConsumerStatefulWidget {
   const DialogerPaymentsPage({super.key});
@@ -77,6 +32,7 @@ class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
         data:
             (data) => Column(
               children: [
+                Card.outlined(child: PaymentsTimespanBar()),
                 SizedBox(height: 24),
                 Row(
                   children: [

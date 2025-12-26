@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/basic_providers.dart';
 import 'package:sonos_dialoger/components/dialog_bottom_sheet.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+import 'package:sonos_dialoger/core/user.dart';
 
 class CoachSchedulePersonnelAssignmentPage extends ConsumerStatefulWidget {
   final String scheduleId;
@@ -55,8 +56,7 @@ final locationsProvider =
 
 class _CoachSchedulePersonnelAssignmentPageState
     extends ConsumerState<CoachSchedulePersonnelAssignmentPage> {
-  final Map<String, List<DocumentSnapshot<Map<String, dynamic>>>>
-  assignedDialoguers = {};
+  final Map<String, List<SonosUser>> assignedDialoguers = {};
 
   bool isLoading = false;
 
@@ -83,7 +83,10 @@ class _CoachSchedulePersonnelAssignmentPageState
               print(dialoguers.error);
               return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
             }
-            final dialoguerDocs = dialoguers.value!;
+            final dialoguerDocs =
+                dialoguers.value!.docs
+                    .map((doc) => SonosUser.fromDoc(doc))
+                    .toList();
             final scheduleData = scheduleDoc.data() ?? {};
             final date = parseDateTimeFromTimestamp(scheduleData["date"]);
 
@@ -123,10 +126,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                   children: [
                                     ...(locationDocs.docs.map((locationDoc) {
                                       final locationData = locationDoc.data();
-                                      final List<
-                                        DocumentSnapshot<Map<String, dynamic>>
-                                      >
-                                      locationDialoguers =
+                                      final List<SonosUser> locationDialoguers =
                                           assignedDialoguers[locationDoc.id] ??
                                           [];
                                       return Card.outlined(
@@ -177,11 +177,8 @@ class _CoachSchedulePersonnelAssignmentPageState
                                               Column(
                                                 children:
                                                     locationDialoguers.map((
-                                                      dialoguerDoc,
+                                                      dialoguer,
                                                     ) {
-                                                      final dialoguerData =
-                                                          dialoguerDoc.data() ??
-                                                          {};
                                                       return Column(
                                                         crossAxisAlignment:
                                                             CrossAxisAlignment
@@ -193,7 +190,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                                     .spaceBetween,
                                                             children: [
                                                               Text(
-                                                                "${dialoguerData["first"] ?? ""} ${dialoguerData["last"] ?? ""}",
+                                                                "${dialoguer.first} ${dialoguer.last}",
                                                               ),
                                                               IconButton(
                                                                 onPressed: () {
@@ -205,7 +202,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                                             doc,
                                                                           ) =>
                                                                               doc.id ==
-                                                                              dialoguerDoc.id,
+                                                                              dialoguer.id,
                                                                         );
                                                                   });
                                                                 },
@@ -229,8 +226,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                           context,
                                                           DialoguerAdderDialog(
                                                             allDialoguers:
-                                                                dialoguerDocs
-                                                                    .docs,
+                                                                dialoguerDocs,
                                                             alreadyAssignedDialoguers:
                                                                 alreadyAssignedDialoguers,
                                                           ),
@@ -239,12 +235,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                             null &&
                                                         addedDialoguers
                                                             is List<
-                                                              DocumentSnapshot<
-                                                                Map<
-                                                                  String,
-                                                                  dynamic
-                                                                >
-                                                              >
+                                                              SonosUser
                                                             > &&
                                                         addedDialoguers
                                                             .isNotEmpty) {
@@ -288,7 +279,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                       ),
                                     ),
                                     Divider(),
-                                    dialoguerDocs.docs
+                                    dialoguerDocs
                                             .where(
                                               (doc) =>
                                                   alreadyAssignedDialoguers
@@ -311,7 +302,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                         : SizedBox.shrink(),
                                     Column(
                                       children:
-                                          dialoguerDocs.docs
+                                          dialoguerDocs
                                               .where(
                                                 (doc) =>
                                                     alreadyAssignedDialoguers
@@ -322,9 +313,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                         )
                                                         .isEmpty,
                                               )
-                                              .map((dialoguerDoc) {
-                                                final dialoguerData =
-                                                    dialoguerDoc.data();
+                                              .map((dialoguer) {
                                                 return Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -335,7 +324,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                             vertical: 4,
                                                           ),
                                                       child: Text(
-                                                        "${dialoguerData["first"] ?? ""} ${dialoguerData["last"] ?? ""}",
+                                                        "${dialoguer.first} ${dialoguer.last}",
                                                       ),
                                                     ),
                                                     Divider(),
@@ -421,8 +410,8 @@ class _CoachSchedulePersonnelAssignmentPageState
 }
 
 class DialoguerAdderDialog extends ConsumerStatefulWidget {
-  final List<DocumentSnapshot<Map<String, dynamic>>> allDialoguers;
-  final List<DocumentSnapshot<Map<String, dynamic>>> alreadyAssignedDialoguers;
+  final List<SonosUser> allDialoguers;
+  final List<SonosUser> alreadyAssignedDialoguers;
 
   const DialoguerAdderDialog({
     super.key,
@@ -436,7 +425,7 @@ class DialoguerAdderDialog extends ConsumerStatefulWidget {
 }
 
 class _DialoguerAdderDialogState extends ConsumerState<DialoguerAdderDialog> {
-  final List<DocumentSnapshot<Map<String, dynamic>>> selectedDocs = [];
+  final List<SonosUser> selectedDocs = [];
 
   @override
   Widget build(BuildContext context) {
@@ -447,20 +436,19 @@ class _DialoguerAdderDialogState extends ConsumerState<DialoguerAdderDialog> {
         Divider(color: Theme.of(context).primaryColor, height: 30),
         Expanded(
           child: () {
-            final addableLocations = widget.allDialoguers.where(
+            final addableDialoguers = widget.allDialoguers.where(
               (doc) =>
                   widget.alreadyAssignedDialoguers
                       .where((existingDoc) => doc.id == existingDoc.id)
                       .isEmpty,
             );
-            if (addableLocations.isEmpty) {
+            if (addableDialoguers.isEmpty) {
               return Center(child: Text("Keine weiteren Dialoger*innen"));
             }
             return SingleChildScrollView(
               child: Column(
                 children:
-                    addableLocations.map((location) {
-                      final locationData = location.data() ?? {};
+                    addableDialoguers.map((user) {
                       return Column(
                         children: [
                           Padding(
@@ -469,12 +457,12 @@ class _DialoguerAdderDialogState extends ConsumerState<DialoguerAdderDialog> {
                               onTap: () {
                                 setState(() {
                                   if (!selectedDocs
-                                      .where((doc) => doc.id == location.id)
+                                      .where((doc) => doc.id == user.id)
                                       .isNotEmpty) {
-                                    selectedDocs.add(location);
+                                    selectedDocs.add(user);
                                   } else {
                                     selectedDocs.removeWhere(
-                                      (doc) => doc.id == location.id,
+                                      (doc) => doc.id == user.id,
                                     );
                                   }
                                 });
@@ -484,25 +472,21 @@ class _DialoguerAdderDialogState extends ConsumerState<DialoguerAdderDialog> {
                                   Checkbox(
                                     value:
                                         selectedDocs
-                                            .where(
-                                              (doc) => doc.id == location.id,
-                                            )
+                                            .where((doc) => doc.id == user.id)
                                             .isNotEmpty,
                                     onChanged: (newValue) {
                                       setState(() {
                                         if (newValue == true) {
-                                          selectedDocs.add(location);
+                                          selectedDocs.add(user);
                                         } else {
                                           selectedDocs.removeWhere(
-                                            (doc) => doc.id == location.id,
+                                            (doc) => doc.id == user.id,
                                           );
                                         }
                                       });
                                     },
                                   ),
-                                  Text(
-                                    "${locationData["first"] ?? ""} ${locationData["last"] ?? ""}",
-                                  ),
+                                  Text("${user.first} ${user.last}"),
                                 ],
                               ),
                             ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/core/user.dart';
 import 'package:sonos_dialoger/pages/assignment_page.dart';
 
 final firestore = FirebaseFirestore.instance;
@@ -62,11 +63,9 @@ class _AppState extends ConsumerState<App> {
       return AssignmentPage();
     }
 
-    final userData = userDataDoc.data()!;
+    final userData = SonosUser.fromDoc(userDataDoc);
 
-    final role = userData["role"];
-
-    if (!["admin", "coach", "dialog"].contains(role)) {
+    if (userData.role == null) {
       return Scaffold(
         body: Padding(
           padding: EdgeInsets.all(32),
@@ -93,7 +92,7 @@ class _AppState extends ConsumerState<App> {
 
     late final List<Map<String, dynamic>> destinations;
 
-    if (role == "admin") {
+    if (userData.role == UserRole.admin) {
       destinations = [
         {
           "icon": Icon(Icons.request_page),
@@ -121,7 +120,7 @@ class _AppState extends ConsumerState<App> {
           "url": "/admin/settings",
         },
       ];
-    } else if (role == "coach") {
+    } else if (userData.role == UserRole.coach) {
       destinations = [
         {
           "icon": Icon(Icons.request_page),
@@ -192,7 +191,7 @@ class _AppState extends ConsumerState<App> {
                 children: [
                   NavigationRail(
                     leading:
-                        role == "coach" || role == "dialog"
+                        userData.role != UserRole.admin
                             ? FloatingActionButton.extended(
                               onPressed: () {
                                 context.go("/dialoger/payments/register");

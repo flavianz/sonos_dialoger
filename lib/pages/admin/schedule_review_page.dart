@@ -3,53 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/dialog_bottom_sheet.dart';
+import 'package:sonos_dialoger/providers/firestore_providers.dart';
 
-import '../../basic_providers.dart';
 import '../../components/misc.dart';
-
-final scheduleProvider = StreamProvider.family((ref, String scheduleId) {
-  return FirebaseFirestore.instance
-      .collection("schedules")
-      .doc(scheduleId)
-      .snapshots();
-});
-
-final locationIdsProvider = Provider.family<List<dynamic>, String>((
-  ref,
-  scheduleId,
-) {
-  final scheduleAsyncValue = ref.watch(scheduleProvider(scheduleId));
-  final data = scheduleAsyncValue.value?.data() ?? {};
-
-  // When data is available, return the locations list, otherwise return an empty list.
-  return [
-    ...(data["requested_locations"] ?? []),
-    ...(data["added_locations"] ?? []),
-  ];
-});
-
-final requestedLocationsProvider =
-    StreamProvider.family<QuerySnapshot<Map<String, dynamic>>, String>((
-      ref,
-      String scheduleId, // Changed from List to String
-    ) {
-      // Watch the new provider to get the list of IDs
-      final locationIds = ref.watch(locationIdsProvider(scheduleId));
-
-      // If there are no IDs, return an empty stream to avoid an error
-      if (locationIds.isEmpty) {
-        return Stream.empty();
-      }
-
-      if (locationIds.length > 30) {
-        throw ErrorDescription("Too many locations provided (>30)");
-      }
-
-      return FirebaseFirestore.instance
-          .collection("locations")
-          .where(FieldPath.documentId, whereIn: locationIds)
-          .snapshots();
-    });
 
 class ScheduleReviewPage extends ConsumerStatefulWidget {
   final String scheduleId;
@@ -398,11 +354,7 @@ class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final locations = ref.watch(
-      realtimeCollectionProvider(
-        FirebaseFirestore.instance.collection("locations"),
-      ),
-    );
+    final locations = ref.watch(allLocationsProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

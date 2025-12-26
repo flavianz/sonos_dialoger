@@ -6,34 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 
 import '../../components/misc.dart';
-
-final paymentProvider = FutureProvider.family(
-  (ref, String id) =>
-      FirebaseFirestore.instance.collection("payments").doc(id).get(),
-);
-
-final scheduleProvider = StreamProvider((ref) {
-  return firestore
-      .collection("schedules")
-      .where(
-        Filter.and(
-          Filter(
-            "date",
-            isGreaterThanOrEqualTo: Timestamp.fromDate(
-              DateTime.now().getDayStart(),
-            ),
-          ),
-          Filter(
-            "date",
-            isLessThan: Timestamp.fromDate(
-              DateTime.now().add(Duration(days: 1)).getDayStart(),
-            ),
-          ),
-          Filter("personnel_assigned", isEqualTo: true),
-        ),
-      )
-      .snapshots();
-});
+import '../../providers/firestore_providers.dart';
 
 class RegisterPaymentPage extends ConsumerStatefulWidget {
   final bool editing;
@@ -98,7 +71,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
 
       isInit = true;
     }
-    final scheduleDocs = ref.watch(scheduleProvider);
+    final scheduleDocs = ref.watch(todayScheduleProvider);
 
     if (!widget.editing) {
       if (scheduleDocs.isLoading) {

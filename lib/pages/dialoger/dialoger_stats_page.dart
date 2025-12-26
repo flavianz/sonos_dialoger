@@ -1,7 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
@@ -9,30 +7,14 @@ import 'package:sonos_dialoger/providers/date_ranges.dart';
 
 import '../../components/misc.dart';
 import '../../components/timespan_dropdowns.dart';
-
-final dialogerPaymentsProvider =
-    StreamProvider<QuerySnapshot<Map<String, dynamic>>>((ref) {
-      return FirebaseFirestore.instance
-          .collection("payments")
-          .where(
-            Filter.and(
-              ref.watch(paymentsDateFilterProvider),
-              Filter(
-                "dialoger",
-                isEqualTo: ref.watch(userProvider).value?.uid ?? "",
-              ),
-            ),
-          )
-          .orderBy("timestamp", descending: true)
-          .snapshots();
-    });
+import '../../providers/firestore_providers.dart';
 
 class DialogerStatsPage extends ConsumerWidget {
   const DialogerStatsPage({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final paymentDocs = ref.watch(dialogerPaymentsProvider);
+    final paymentDocs = ref.watch(localDialogerPaymentsProvider);
 
     if (paymentDocs.isLoading) {
       return Center(child: CircularProgressIndicator());

@@ -2,22 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/basic_providers.dart';
 
-final dialogerProvider = realtimeCollectionProvider(
-  FirebaseFirestore.instance
-      .collection("users")
-      .where("role", isNotEqualTo: "admin")
-      .orderBy("role")
-      .orderBy("first"),
-);
+import '../../providers/firestore_providers.dart';
 
 class DialogerPage extends ConsumerWidget {
   const DialogerPage({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final dialogerDocs = ref.watch(dialogerProvider);
+    final dialogerDocs = ref.watch(nonAdminUsersProvider);
 
     if (dialogerDocs.isLoading) {
       return Center(child: CircularProgressIndicator());

@@ -2,22 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/basic_providers.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 
 import '../../app.dart';
 import '../../providers.dart';
 import '../../providers/date_ranges.dart';
-import '../coach/coach_schedule_page.dart';
+import '../../providers/firestore_providers.dart';
 import '../dialoger/dialoger_schedule_page.dart';
-
-final scheduleRequestsProvider = realtimeCollectionProvider(
-  FirebaseFirestore.instance
-      .collection("schedules")
-      .where("reviewed", isEqualTo: false)
-      .orderBy("date"),
-);
 
 class AdminSchedulePage extends ConsumerWidget {
   const AdminSchedulePage({super.key});
@@ -136,7 +128,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                   ),
                                   Expanded(
                                     child: ref
-                                        .watch(scheduleLocationsProvider)
+                                        .watch(schedulesLocationsProvider)
                                         .when(
                                           data: (locationDocs) {
                                             return SingleChildScrollView(
@@ -262,7 +254,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                   ),
                                   Expanded(
                                     child: ref
-                                        .watch(scheduleLocationsProvider)
+                                        .watch(schedulesLocationsProvider)
                                         .when(
                                           data: (locationDocs) {
                                             return SingleChildScrollView(
@@ -375,7 +367,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                   ),
                                   Expanded(
                                     child: ref
-                                        .watch(scheduleLocationsProvider)
+                                        .watch(schedulesLocationsProvider)
                                         .when(
                                           data: (locationDocs) {
                                             final userDocsProvider = ref.watch(

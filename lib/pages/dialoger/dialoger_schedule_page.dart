@@ -9,66 +9,7 @@ import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 import 'package:sonos_dialoger/providers.dart';
 
 import '../../providers/date_ranges.dart';
-
-final dialogerSchedulesProvider = StreamProvider((ref) {
-  final scheduleTimespan = ref.watch(scheduleTimespanProvider);
-  final scheduleStartDate = ref.watch(scheduleStartDateProvider);
-
-  late final DateTime endDate;
-  if (scheduleTimespan == Timespan.day) {
-    endDate = scheduleStartDate.add(Duration(days: 1));
-  } else if (scheduleTimespan == Timespan.week) {
-    endDate = scheduleStartDate.add(Duration(days: 7));
-  } else {
-    endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
-  }
-
-  return firestore
-      .collection("schedules")
-      .where(
-        Filter.and(
-          Filter(
-            "date",
-            isGreaterThanOrEqualTo: Timestamp.fromDate(scheduleStartDate),
-          ),
-          Filter("date", isLessThan: Timestamp.fromDate(endDate)),
-          Filter("personnel_assigned", isEqualTo: true),
-        ),
-      )
-      .snapshots();
-});
-
-final dialogerScheduleLocationsProvider =
-    StreamProvider<List<QueryDocumentSnapshot<Map<String, dynamic>>>?>((ref) {
-      final schedules = ref.watch(dialogerSchedulesProvider);
-      if (schedules.isLoading) {
-        return Stream.empty();
-      }
-      if (schedules.hasError) {
-        return Stream.error(schedules.error ?? "Unknown error");
-      }
-      final scheduleDocs = schedules.value!.docs;
-      final locationIds = flatten(
-        scheduleDocs.map((doc) {
-          return doc.data()["confirmed_locations"] ?? [];
-        }),
-      );
-      final locations = ref.watch(
-        queryByIdsProvider(
-          QueryByIdsArgs(
-            queryKey: "locations",
-            ids: locationIds.toSet().toList(),
-          ),
-        ),
-      );
-      if (locations.isLoading) {
-        return Stream.empty();
-      }
-      if (locations.hasError) {
-        return Stream.error(locations.error ?? "Unknown error");
-      }
-      return Stream.value(locations.value);
-    });
+import '../../providers/firestore_providers.dart';
 
 class DialogerSchedulePage extends ConsumerWidget {
   const DialogerSchedulePage({super.key});
@@ -78,8 +19,10 @@ class DialogerSchedulePage extends ConsumerWidget {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
-    final dialogerSchedules = ref.watch(dialogerSchedulesProvider);
-    final dialogerLocationDocs = ref.watch(dialogerScheduleLocationsProvider);
+    final dialogerSchedules = ref.watch(personnelAssignedSchedulesProvider);
+    final dialogerLocationDocs = ref.watch(
+      personnelAssignedSchedulesLocationsProvider,
+    );
 
     return Scaffold(
       appBar: AppBar(

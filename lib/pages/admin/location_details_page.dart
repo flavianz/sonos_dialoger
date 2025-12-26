@@ -12,27 +12,7 @@ import 'package:sonos_dialoger/core/payment.dart';
 import '../../components/misc.dart';
 import '../../components/timespan_dropdowns.dart';
 import '../../providers/date_ranges.dart';
-
-final locationProvider = FutureProvider.family(
-  (ref, String locationId) =>
-      FirebaseFirestore.instance.collection("locations").doc(locationId).get(),
-);
-
-final locationPaymentsProvider = StreamProvider.family((
-  ref,
-  String locationId,
-) {
-  return FirebaseFirestore.instance
-      .collection("payments")
-      .where(
-        Filter.and(
-          ref.watch(paymentsDateFilterProvider),
-          Filter("location", isEqualTo: locationId),
-        ),
-      )
-      .orderBy("timestamp", descending: true)
-      .snapshots();
-});
+import '../../providers/firestore_providers.dart';
 
 class LocationDetailsPage extends ConsumerWidget {
   final String locationId;

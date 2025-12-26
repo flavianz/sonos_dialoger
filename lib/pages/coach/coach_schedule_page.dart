@@ -9,76 +9,8 @@ import '../../basic_providers.dart';
 import '../../components/misc.dart';
 import '../../providers.dart';
 import '../../providers/date_ranges.dart';
+import '../../providers/firestore_providers.dart';
 import '../dialoger/dialoger_schedule_page.dart';
-
-final confirmedSchedulesProvider = realtimeCollectionProvider(
-  FirebaseFirestore.instance
-      .collection("schedules")
-      .where(
-        Filter.and(
-          Filter("reviewed", isEqualTo: true),
-          Filter("personnel_assigned", isEqualTo: false),
-        ),
-      )
-      .orderBy("date"),
-);
-
-final schedulesProvider = StreamProvider((ref) {
-  final scheduleTimespan = ref.watch(scheduleTimespanProvider);
-  final scheduleStartDate = ref.watch(scheduleStartDateProvider);
-
-  late final DateTime endDate;
-  if (scheduleTimespan == Timespan.day) {
-    endDate = scheduleStartDate.add(Duration(days: 1));
-  } else if (scheduleTimespan == Timespan.week) {
-    endDate = scheduleStartDate.add(Duration(days: 7));
-  } else {
-    endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
-  }
-
-  return firestore
-      .collection("schedules")
-      .where(
-        Filter.and(
-          Filter(
-            "date",
-            isGreaterThanOrEqualTo: Timestamp.fromDate(scheduleStartDate),
-          ),
-          Filter("date", isLessThan: Timestamp.fromDate(endDate)),
-        ),
-      )
-      .snapshots();
-});
-
-final scheduleLocationsProvider =
-    StreamProvider<List<QueryDocumentSnapshot<Map<String, dynamic>>>?>((ref) {
-      final schedules = ref.watch(schedulesProvider);
-      if (schedules.isLoading) {
-        return Stream.empty();
-      }
-      if (schedules.hasError) {
-        return Stream.error(schedules.error ?? "Unknown error");
-      }
-      final scheduleDocs = schedules.value!.docs;
-      final locationIds = flatten(
-        scheduleDocs.map((doc) {
-          return doc.data()["reviewed"] == true
-              ? (doc.data()["confirmed_locations"] ?? [])
-              : (doc.data()["requested_locations"] ?? []);
-        }),
-      );
-
-      return Stream.fromFuture(
-        ref.read(
-          queryByIdsProvider(
-            QueryByIdsArgs(
-              queryKey: "locations",
-              ids: locationIds.toSet().toList(),
-            ),
-          ).future,
-        ),
-      );
-    });
 
 class CoachSchedulePage extends ConsumerWidget {
   const CoachSchedulePage({super.key});
@@ -195,7 +127,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                     color: Theme.of(context).primaryColor,
                                   ),
                                   ref
-                                      .watch(scheduleLocationsProvider)
+                                      .watch(schedulesLocationsProvider)
                                       .when(
                                         data: (locationDocs) {
                                           return SingleChildScrollView(
@@ -309,7 +241,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                   ),
                                   Expanded(
                                     child: ref
-                                        .watch(scheduleLocationsProvider)
+                                        .watch(schedulesLocationsProvider)
                                         .when(
                                           data: (locationDocs) {
                                             return SingleChildScrollView(
@@ -435,7 +367,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                   ),
                                   Expanded(
                                     child: ref
-                                        .watch(scheduleLocationsProvider)
+                                        .watch(schedulesLocationsProvider)
                                         .when(
                                           data: (locationDocs) {
                                             final userDocsProvider = ref.watch(

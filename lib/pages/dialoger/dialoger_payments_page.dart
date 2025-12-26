@@ -5,10 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 
-import '../../app.dart';
 import '../../components/timespan_dropdowns.dart';
-import '../../providers/date_ranges.dart';
-import 'dialoger_stats_page.dart';
+import '../../providers/firestore_providers.dart';
 
 class DialogerPaymentsPage extends ConsumerStatefulWidget {
   const DialogerPaymentsPage({super.key});
@@ -21,7 +19,7 @@ class DialogerPaymentsPage extends ConsumerStatefulWidget {
 class _DialogerPaymentsPageState extends ConsumerState<DialogerPaymentsPage> {
   @override
   Widget build(BuildContext context) {
-    final paymentDocs = ref.watch(dialogerPaymentsProvider);
+    final paymentDocs = ref.watch(localDialogerPaymentsProvider);
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,

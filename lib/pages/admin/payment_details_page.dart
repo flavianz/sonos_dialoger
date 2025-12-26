@@ -1,35 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 
 import '../../core/payment.dart';
-
-final paymentProvider = FutureProvider.family(
-  (ref, String paymentId) =>
-      FirebaseFirestore.instance.collection("payments").doc(paymentId).get(),
-);
-
-final locationProvider = FutureProvider.family((ref, String paymentId) async {
-  final payment = Payment.fromDoc(
-    await ref.watch(paymentProvider(paymentId).future),
-  );
-  return FirebaseFirestore.instance
-      .collection("locations")
-      .doc(payment.location)
-      .get();
-});
-
-final dialogerProvider = FutureProvider.family((ref, String paymentId) async {
-  final payment = Payment.fromDoc(
-    await ref.watch(paymentProvider(paymentId).future),
-  );
-  return FirebaseFirestore.instance
-      .collection("users")
-      .doc(payment.dialoger)
-      .get();
-});
+import '../../providers/firestore_providers.dart';
 
 class PaymentDetailsPage extends ConsumerWidget {
   final String paymentId;
@@ -39,7 +14,7 @@ class PaymentDetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final paymentDoc = ref.watch(paymentProvider(paymentId));
-    final locationDoc = ref.watch(locationProvider(paymentId));
+    final locationDoc = ref.watch(paymentLocationProvider(paymentId));
     final dialogerDoc = ref.watch(dialogerProvider(paymentId));
 
     if (paymentDoc.isLoading) {

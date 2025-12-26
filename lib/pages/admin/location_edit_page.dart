@@ -5,6 +5,8 @@ import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 
+import '../../providers/firestore_providers.dart';
+
 class LocationEditPage extends ConsumerStatefulWidget {
   final String locationId;
   final bool isCreate;
@@ -18,10 +20,6 @@ class LocationEditPage extends ConsumerStatefulWidget {
   @override
   ConsumerState<LocationEditPage> createState() => _LocationEditPageState();
 }
-
-final locationDocProvider = StreamProvider.family((ref, String locationId) {
-  return firestore.collection("locations").doc(locationId).snapshots();
-});
 
 class _LocationEditPageState extends ConsumerState<LocationEditPage> {
   bool hasBeenInit = false;
@@ -42,7 +40,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
   @override
   Widget build(BuildContext context) {
     if (!widget.isCreate) {
-      final locationDoc = ref.watch(locationDocProvider(widget.locationId));
+      final locationDoc = ref.watch(locationProvider(widget.locationId));
       if (locationDoc.isLoading) {
         return Scaffold(
           appBar: AppBar(title: Text("Laden...")),

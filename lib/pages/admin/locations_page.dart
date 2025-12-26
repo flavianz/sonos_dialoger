@@ -3,19 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../basic_providers.dart';
 import '../../components/misc.dart';
-
-final locationsProvider = realtimeCollectionProvider(
-  FirebaseFirestore.instance.collection("locations"),
-);
+import '../../providers/firestore_providers.dart';
 
 class LocationsPage extends ConsumerWidget {
   const LocationsPage({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final locationDocs = ref.watch(locationsProvider);
+    final locationDocs = ref.watch(allLocationsProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text("Standplätze"),

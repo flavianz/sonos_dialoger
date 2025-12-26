@@ -3,9 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/basic_providers.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+
+import '../../providers/firestore_providers.dart';
 
 class DialogerEditPage extends ConsumerStatefulWidget {
   final String userId;
@@ -33,11 +34,7 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
   Widget build(BuildContext context) {
     Map<String, dynamic> data = {};
     if (!widget.creating) {
-      final doc = ref.watch(
-        staticDocProvider(
-          FirebaseFirestore.instance.collection("users").doc(widget.userId),
-        ),
-      );
+      final doc = ref.watch(dialogerFutureProvider(widget.userId));
 
       if (doc.isLoading) {
         return Center(child: CircularProgressIndicator());

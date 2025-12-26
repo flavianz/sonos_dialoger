@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/basic_providers.dart';
 import 'package:sonos_dialoger/components/dialog_bottom_sheet.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/core/user.dart';
+import 'package:sonos_dialoger/providers/firestore_providers.dart';
 
 class CoachSchedulePersonnelAssignmentPage extends ConsumerStatefulWidget {
   final String scheduleId;
@@ -20,40 +20,6 @@ class CoachSchedulePersonnelAssignmentPage extends ConsumerStatefulWidget {
       _CoachSchedulePersonnelAssignmentPageState();
 }
 
-final scheduleProvider =
-    StreamProvider.family<DocumentSnapshot<Map<String, dynamic>>, String>((
-      ref,
-      String scheduleId,
-    ) {
-      return FirebaseFirestore.instance
-          .collection("schedules")
-          .doc(scheduleId)
-          .snapshots();
-    });
-
-final locationsProvider =
-    StreamProvider.family<QuerySnapshot<Map<String, dynamic>>, String>((
-      ref,
-      String scheduleId,
-    ) {
-      final schedule = ref.watch(scheduleProvider(scheduleId));
-      if (schedule.hasError) {
-        return Stream.error(schedule.error!);
-      }
-      if (schedule.isLoading) {
-        return Stream.empty();
-      }
-
-      final scheduleData = schedule.value?.data() ?? {};
-
-      List<dynamic> confirmedLocations = scheduleData["confirmed_locations"];
-
-      return FirebaseFirestore.instance
-          .collection("locations")
-          .where(FieldPath.documentId, whereIn: confirmedLocations)
-          .snapshots();
-    });
-
 class _CoachSchedulePersonnelAssignmentPageState
     extends ConsumerState<CoachSchedulePersonnelAssignmentPage> {
   final Map<String, List<SonosUser>> assignedDialoguers = {};
@@ -62,13 +28,7 @@ class _CoachSchedulePersonnelAssignmentPageState
 
   @override
   Widget build(BuildContext context) {
-    final dialoguers = ref.watch(
-      realtimeCollectionProvider(
-        FirebaseFirestore.instance
-            .collection("users")
-            .where("role", isNotEqualTo: "admin"),
-      ),
-    );
+    final dialoguers = ref.watch(nonAdminUsersProvider);
     final alreadyAssignedDialoguers = [
       for (var sublist in assignedDialoguers.values) ...sublist,
     ];
@@ -92,7 +52,7 @@ class _CoachSchedulePersonnelAssignmentPageState
 
             final isNotSubmittable =
                 (ref
-                        .watch(locationsProvider(widget.scheduleId))
+                        .watch(confirmedLocationsProvider(widget.scheduleId))
                         .when(
                           data:
                               (data) =>
@@ -117,7 +77,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                   Expanded(
                     child: SingleChildScrollView(
                       child: ref
-                          .watch(locationsProvider(widget.scheduleId))
+                          .watch(confirmedLocationsProvider(widget.scheduleId))
                           .when(
                             data:
                                 (locationDocs) => Column(

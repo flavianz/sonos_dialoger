@@ -9,16 +9,7 @@ import 'package:sonos_dialoger/providers/date_ranges.dart';
 
 import '../../components/misc.dart';
 import '../../components/timespan_dropdowns.dart';
-
-final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
-  ref,
-) {
-  return FirebaseFirestore.instance
-      .collection("payments")
-      .where(ref.watch(paymentsDateFilterProvider))
-      .orderBy("timestamp", descending: true)
-      .snapshots();
-});
+import '../../providers/firestore_providers.dart';
 
 class PaymentsPage extends ConsumerWidget {
   const PaymentsPage({super.key});

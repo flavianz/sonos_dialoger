@@ -7,6 +7,7 @@ import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
 import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
 import 'package:sonos_dialoger/pages/admin/location_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/locations_page.dart';
+import 'package:sonos_dialoger/pages/admin/payment_details_page.dart';
 import 'package:sonos_dialoger/pages/admin/payments_page.dart';
 import 'package:sonos_dialoger/pages/admin/schedule_review_page.dart';
 import 'package:sonos_dialoger/pages/coach/coach_schedule_page.dart';
@@ -17,7 +18,6 @@ import 'package:sonos_dialoger/pages/dialoger/dialoger_schedule_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_stats_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
 import 'package:sonos_dialoger/pages/home_page.dart';
-import 'package:sonos_dialoger/pages/settings_page.dart';
 import 'package:sonos_dialoger/utils.dart';
 
 import 'app.dart';
@@ -98,6 +98,13 @@ final router = GoRouter(
           builder: (context, state) {
             final paymentId = state.pathParameters['paymentId']!;
             return RegisterPaymentPage(editing: true, id: paymentId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/payment/:paymentId',
+          builder: (context, state) {
+            final paymentId = state.pathParameters['paymentId']!;
+            return PaymentDetailsPage(paymentId: paymentId);
           },
         ),
         GoRoute(

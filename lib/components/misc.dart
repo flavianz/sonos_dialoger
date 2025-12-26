@@ -156,3 +156,9 @@ extension ContainsWhere<T> on Iterable<T> {
     return where(test).isEmpty;
   }
 }
+
+extension ScreenWidth on BuildContext {
+  bool get isScreenWide {
+    return MediaQuery.of(this).size.aspectRatio > 1;
+  }
+}

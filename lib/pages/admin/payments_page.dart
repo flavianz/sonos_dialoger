@@ -46,7 +46,7 @@ class PaymentsPage extends ConsumerWidget {
 
     final summaryCard = Card.outlined(
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        padding: EdgeInsets.all(18),
         constraints: BoxConstraints(maxHeight: 300),
         child: Column(
           mainAxisSize: isScreenWide ? MainAxisSize.max : MainAxisSize.min,
@@ -181,77 +181,75 @@ class PaymentsPage extends ConsumerWidget {
                     }
                     return Column(
                       children: [
-                        GestureDetector(
-                          onTap: () {},
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    datePrefix,
-                                    style: TextStyle(fontSize: 15),
-                                  ),
+                        Tappable(
+                          onTap: () {
+                            context.push("/admin/payment/${payment.id}");
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  datePrefix,
+                                  style: TextStyle(fontSize: 15),
                                 ),
-                                Expanded(
-                                  child: Text(
-                                    "${payment.amount.toString()} CHF",
-                                    style: TextStyle(fontSize: 15),
-                                  ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  "${payment.amount.toString()} CHF",
+                                  style: TextStyle(fontSize: 15),
                                 ),
-                                Expanded(child: isPaidWidget),
-                                IconButton(
-                                  onPressed: () {
-                                    context.push(
-                                      "/dialoger/payment/${doc.id}/edit",
-                                    );
-                                  },
-                                  icon: Icon(Icons.edit),
-                                  tooltip: "Bearbeiten",
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder:
-                                          (context) => AlertDialog(
-                                            title: Text("Leistung löschen?"),
-                                            content: Text(
-                                              "Dieser Schritt kann nicht rückgängig gemacht werden",
-                                            ),
-                                            actions: [
-                                              OutlinedButton(
-                                                onPressed: () {
-                                                  context.pop();
-                                                },
-                                                child: Text("Abbrechen"),
-                                              ),
-                                              FilledButton(
-                                                onPressed: () async {
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection("payments")
-                                                      .doc(doc.id)
-                                                      .delete();
-                                                  if (context.mounted) {
-                                                    context.pop();
-                                                    showSnackBar(
-                                                      context,
-                                                      "Leistung gelöscht!",
-                                                    );
-                                                  }
-                                                },
-                                                child: Text("Löschen"),
-                                              ),
-                                            ],
+                              ),
+                              Expanded(child: isPaidWidget),
+                              IconButton(
+                                onPressed: () {
+                                  context.push(
+                                    "/dialoger/payment/${doc.id}/edit",
+                                  );
+                                },
+                                icon: Icon(Icons.edit),
+                                tooltip: "Bearbeiten",
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (context) => AlertDialog(
+                                          title: Text("Leistung löschen?"),
+                                          content: Text(
+                                            "Dieser Schritt kann nicht rückgängig gemacht werden",
                                           ),
-                                    );
-                                  },
-                                  icon: Icon(Icons.delete),
-                                  tooltip: "Löschen",
-                                ),
-                              ],
-                            ),
+                                          actions: [
+                                            OutlinedButton(
+                                              onPressed: () {
+                                                context.pop();
+                                              },
+                                              child: Text("Abbrechen"),
+                                            ),
+                                            FilledButton(
+                                              onPressed: () async {
+                                                await FirebaseFirestore.instance
+                                                    .collection("payments")
+                                                    .doc(doc.id)
+                                                    .delete();
+                                                if (context.mounted) {
+                                                  context.pop();
+                                                  showSnackBar(
+                                                    context,
+                                                    "Leistung gelöscht!",
+                                                  );
+                                                }
+                                              },
+                                              child: Text("Löschen"),
+                                            ),
+                                          ],
+                                        ),
+                                  );
+                                },
+                                icon: Icon(Icons.delete),
+                                tooltip: "Löschen",
+                              ),
+                            ],
                           ),
                         ),
                         Divider(),

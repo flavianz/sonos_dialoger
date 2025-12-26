@@ -1,10 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
+import '../components/misc.dart';
 
 enum PaymentInterval { monthly, quarterly, semester, yearly }
 
 enum PaymentMethod { twint, sumup }
 
+extension PaymentMethodName on PaymentMethod {
+  String paymentMethodName() {
+    return switch (this) {
+      PaymentMethod.twint => "Twint",
+      PaymentMethod.sumup => "Sumup",
+    };
+  }
+}
+
 enum PaymentStatus { paid, pending, cancelled }
+
+extension PaymentStatusName on PaymentStatus {
+  Widget widget(BuildContext context) {
+    if (this == PaymentStatus.paid) {
+      return getPill("Bezahlt", Theme.of(context).primaryColor, true);
+    }
+    if (this == PaymentStatus.pending) {
+      return getPill("Ausstehend", Theme.of(context).primaryColorLight, false);
+    }
+    return getPill("Zurückgenommen", Theme.of(context).cardColor, false);
+  }
+}
 
 class Payment {
   final String id;

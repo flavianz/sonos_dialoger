@@ -27,8 +27,6 @@ class AdminSchedulePage extends ConsumerWidget {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
-    final isScreenWide = MediaQuery.of(context).size.aspectRatio > 1;
-
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -641,7 +639,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                                     "Noch keine Einteilung erstellt",
                                                   ),
                                                 ];
-                                                return isScreenWide
+                                                return context.isScreenWide
                                                     ? Row(
                                                       spacing: 10,
                                                       children: children,

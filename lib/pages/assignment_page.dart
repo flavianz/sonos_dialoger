@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
 
-import '../basic_providers.dart';
+import '../providers/basic_providers.dart';
 
 class AssignmentPage extends ConsumerStatefulWidget {
   const AssignmentPage({super.key});

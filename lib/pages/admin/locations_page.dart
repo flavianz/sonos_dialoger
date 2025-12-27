@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../components/misc.dart';
-import '../../providers/firestore_providers.dart';
+import '../../providers/firestore_providers/location_providers.dart';
 
 class LocationsPage extends ConsumerWidget {
   const LocationsPage({super.key});
@@ -28,37 +28,34 @@ class LocationsPage extends ConsumerWidget {
       ),
       body: locationDocs.when(
         data:
-            (data) => Column(
+            (locations) => Column(
               children: [
                 Divider(color: Theme.of(context).primaryColor),
                 Expanded(
                   child: ListView(
                     children:
-                        data.docs.map((doc) {
-                          final data = doc.data();
+                        locations.map((location) {
                           return Column(
                             children: [
                               Tappable(
                                 onTap: () {
-                                  context.push("/admin/location/${doc.id}");
+                                  context.push(
+                                    "/admin/location/${location.id}",
+                                  );
                                 },
                                 child: Row(
                                   children: [
                                     Expanded(
                                       flex: 2,
-                                      child: Text("${data["name"] ?? ""}"),
+                                      child: Text(location.name),
                                     ),
-                                    Expanded(
-                                      child: Text(
-                                        data["address"]?["town"] ?? "",
-                                      ),
-                                    ),
+                                    Expanded(child: Text(location.town ?? "-")),
                                     Expanded(child: Text("")),
                                     SizedBox(width: 5),
                                     IconButton(
                                       onPressed: () {
                                         context.push(
-                                          "/admin/location/${doc.id}/edit",
+                                          "/admin/location/${location.id}/edit",
                                         );
                                       },
                                       icon: Icon(Icons.edit),
@@ -90,7 +87,7 @@ class LocationsPage extends ConsumerWidget {
                                                           .collection(
                                                             "payments",
                                                           )
-                                                          .doc(doc.id)
+                                                          .doc(location.id)
                                                           .delete();
                                                       if (context.mounted) {
                                                         context.pop();

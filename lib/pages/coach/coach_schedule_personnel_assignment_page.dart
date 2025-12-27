@@ -7,6 +7,8 @@ import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/core/user.dart';
 import 'package:sonos_dialoger/providers/firestore_providers.dart';
 
+import '../../providers/firestore_providers/location_providers.dart';
+
 class CoachSchedulePersonnelAssignmentPage extends ConsumerStatefulWidget {
   final String scheduleId;
 
@@ -55,8 +57,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                         .watch(confirmedLocationsProvider(widget.scheduleId))
                         .when(
                           data:
-                              (data) =>
-                                  assignedDialoguers.length < data.docs.length,
+                              (data) => assignedDialoguers.length < data.length,
                           error: (error, stack) => false,
                           loading: () => false,
                         ) ||
@@ -80,15 +81,13 @@ class _CoachSchedulePersonnelAssignmentPageState
                           .watch(confirmedLocationsProvider(widget.scheduleId))
                           .when(
                             data:
-                                (locationDocs) => Column(
+                                (locations) => Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    ...(locationDocs.docs.map((locationDoc) {
-                                      final locationData = locationDoc.data();
+                                    ...(locations.map((location) {
                                       final List<SonosUser> locationDialoguers =
-                                          assignedDialoguers[locationDoc.id] ??
-                                          [];
+                                          assignedDialoguers[location.id] ?? [];
                                       return Card.outlined(
                                         child: Padding(
                                           padding: EdgeInsets.all(12),
@@ -106,7 +105,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                           .spaceBetween,
                                                   children: [
                                                     Text(
-                                                      "${locationData["name"] ?? ""}, ${locationData["address"]?["town"] ?? ""}",
+                                                      "${location.name}, ${location.town ?? "-"}",
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
@@ -155,7 +154,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                               IconButton(
                                                                 onPressed: () {
                                                                   setState(() {
-                                                                    assignedDialoguers[locationDoc
+                                                                    assignedDialoguers[location
                                                                             .id]
                                                                         ?.removeWhere(
                                                                           (
@@ -202,13 +201,13 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                       setState(() {
                                                         if (!assignedDialoguers
                                                             .containsKey(
-                                                              locationDoc.id,
+                                                              location.id,
                                                             )) {
-                                                          assignedDialoguers[locationDoc
+                                                          assignedDialoguers[location
                                                                   .id] =
                                                               [];
                                                         }
-                                                        assignedDialoguers[locationDoc
+                                                        assignedDialoguers[location
                                                                 .id]
                                                             ?.addAll(
                                                               addedDialoguers,

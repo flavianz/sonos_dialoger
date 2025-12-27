@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+import 'package:sonos_dialoger/core/location.dart';
 
 import '../../components/dialog_bottom_sheet.dart';
 import '../admin/schedule_review_page.dart';
@@ -18,7 +19,7 @@ class CreateSchedulePage extends ConsumerStatefulWidget {
 }
 
 class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
-  final List<DocumentSnapshot<Map<String, dynamic>>> locations = [];
+  final List<Location> locations = [];
 
   bool isLoading = false;
 
@@ -44,9 +45,7 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
                       child: Center(child: Text("Noch keine Standplätze")),
                     )
                     : SizedBox.shrink(),
-                ...locations.map((locationDoc) {
-                  late final Map<String, dynamic> locationData =
-                      locationDoc.data() ?? {};
+                ...locations.map((location) {
                   return Column(
                     children: [
                       Padding(
@@ -55,7 +54,7 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
                           children: [
                             Expanded(
                               child: Text(
-                                "${locationData["name"] ?? ""}, ${locationData["address"]?["town"] ?? ""}",
+                                "${location.name}, ${location.town ?? "-"}",
                               ),
                             ),
                           ],

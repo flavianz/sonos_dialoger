@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 
 import '../../app.dart';
-import '../../basic_providers.dart';
 import '../../components/misc.dart';
 import '../../providers.dart';
 import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
+import '../../providers/firestore_providers/location_providers.dart';
 import '../dialoger/dialoger_schedule_page.dart';
 
 class CoachSchedulePage extends ConsumerWidget {
@@ -129,7 +129,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                   ref
                                       .watch(schedulesLocationsProvider)
                                       .when(
-                                        data: (locationDocs) {
+                                        data: (locations) {
                                           return SingleChildScrollView(
                                             child: Column(
                                               children:
@@ -137,7 +137,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                                           as List)
                                                       .map((locationId) {
                                                         final filteredDocs =
-                                                            locationDocs!
+                                                            locations
                                                                 .where(
                                                                   (doc) =>
                                                                       doc.id ==
@@ -154,16 +154,15 @@ class CoachSchedulePage extends ConsumerWidget {
                                                             ],
                                                           );
                                                         }
-                                                        final locationData =
-                                                            filteredDocs[0]
-                                                                .data();
+                                                        final location =
+                                                            filteredDocs[0];
                                                         return Column(
                                                           crossAxisAlignment:
                                                               CrossAxisAlignment
                                                                   .start,
                                                           children: [
                                                             Text(
-                                                              "${locationData["name"]}, ${locationData["address"]?["town"]}",
+                                                              "${location.name}, ${location.town ?? "-"}",
                                                             ),
                                                             Divider(),
                                                           ],
@@ -243,7 +242,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                     child: ref
                                         .watch(schedulesLocationsProvider)
                                         .when(
-                                          data: (locationDocs) {
+                                          data: (locations) {
                                             return SingleChildScrollView(
                                               child: Column(
                                                 children:
@@ -251,7 +250,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                                             as List)
                                                         .map((locationId) {
                                                           final filteredDocs =
-                                                              locationDocs!
+                                                              locations
                                                                   .where(
                                                                     (doc) =>
                                                                         doc.id ==
@@ -268,16 +267,15 @@ class CoachSchedulePage extends ConsumerWidget {
                                                               ],
                                                             );
                                                           }
-                                                          final locationData =
-                                                              filteredDocs[0]
-                                                                  .data();
+                                                          final location =
+                                                              filteredDocs[0];
                                                           return Column(
                                                             crossAxisAlignment:
                                                                 CrossAxisAlignment
                                                                     .start,
                                                             children: [
                                                               Text(
-                                                                "${locationData["name"]}, ${locationData["address"]?["town"]}",
+                                                                "${location.name}, ${location.town}",
                                                               ),
                                                               Divider(),
                                                             ],
@@ -411,7 +409,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                                             as List)
                                                         .map((locationId) {
                                                           final filteredDocs =
-                                                              locationDocs!
+                                                              locationDocs
                                                                   .where(
                                                                     (doc) =>
                                                                         doc.id ==
@@ -432,11 +430,8 @@ class CoachSchedulePage extends ConsumerWidget {
                                                               ),
                                                             );
                                                           }
-                                                          final locationDoc =
+                                                          final location =
                                                               filteredDocs[0];
-                                                          final locationData =
-                                                              locationDoc
-                                                                  .data();
                                                           return Card.outlined(
                                                             child: Padding(
                                                               padding:
@@ -454,7 +449,7 @@ class CoachSchedulePage extends ConsumerWidget {
                                                                             .spaceBetween,
                                                                     children: [
                                                                       Text(
-                                                                        "${locationData["name"]}, ${locationData["address"]?["town"]}",
+                                                                        "${location.name}, ${location.town ?? "-"}",
                                                                         style: TextStyle(
                                                                           fontWeight:
                                                                               FontWeight.bold,

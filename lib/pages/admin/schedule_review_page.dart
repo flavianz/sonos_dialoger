@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/dialog_bottom_sheet.dart';
+import 'package:sonos_dialoger/core/location.dart';
 import 'package:sonos_dialoger/providers/firestore_providers.dart';
 
 import '../../components/misc.dart';
+import '../../providers/firestore_providers/location_providers.dart';
 
 class ScheduleReviewPage extends ConsumerStatefulWidget {
   final String scheduleId;
@@ -17,12 +19,11 @@ class ScheduleReviewPage extends ConsumerStatefulWidget {
 }
 
 class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
-  late final List<dynamic> requestedLocations;
-  late final List<dynamic> addedLocations;
-  late final List<dynamic> removedLocations;
+  late final List<String> requestedLocationIds;
+  late final List<String> addedLocationIds;
+  late final List<String> removedLocationIds;
 
-  final List<DocumentSnapshot<Map<String, dynamic>>>
-  additionallyFetchedLocations = [];
+  final List<Location> additionallyFetchedLocations = [];
 
   bool isLoading = false;
   bool hasBeenInit = false;
@@ -49,15 +50,21 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
     final scheduleData = schedule.value!.data() ?? {};
     if (!hasBeenInit) {
       setState(() {
-        requestedLocations = scheduleData["requested_locations"] ?? [];
-        addedLocations = scheduleData["added_locations"] ?? [];
-        removedLocations = scheduleData["removed_locations"] ?? [];
+        requestedLocationIds = List<String>.from(
+          (scheduleData["requested_locations"] ?? []) as List,
+        );
+        addedLocationIds = List<String>.from(
+          (scheduleData["added_locations"] ?? []) as List,
+        );
+        removedLocationIds = List<String>.from(
+          (scheduleData["removed_locations"] ?? []) as List,
+        );
         hasBeenInit = true;
       });
     }
 
     final fetchedLocations = [
-      ...locationsDocs.value!.docs,
+      ...locationsDocs.value!,
       ...additionallyFetchedLocations,
     ];
 
@@ -92,7 +99,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                   SizedBox(height: 10),
                   Row(children: [Expanded(child: Text("Name"))]),
                   Divider(height: 20, color: Theme.of(context).primaryColor),
-                  requestedLocations.isEmpty
+                  requestedLocationIds.isEmpty
                       ? SizedBox(
                         height: 50,
                         child: Center(
@@ -102,18 +109,16 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                       : SizedBox.shrink(),
                   Column(
                     children:
-                        requestedLocations.map((requestedId) {
-                          late final Map<String, dynamic> locationData;
+                        requestedLocationIds.map((requestedId) {
+                          Location? location;
                           final docList =
                               fetchedLocations
                                   .where((doc) => doc.id == requestedId)
                                   .toList();
                           if (docList.isNotEmpty) {
-                            locationData = docList[0].data() ?? {};
-                          } else {
-                            locationData = {};
+                            location = docList[0];
                           }
-                          final bool wasRemoved = removedLocations.contains(
+                          final bool wasRemoved = removedLocationIds.contains(
                             requestedId,
                           );
                           return Column(
@@ -122,7 +127,9 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      "${locationData["name"] ?? ""}, ${locationData["address"]?["town"] ?? ""}",
+                                      location == null
+                                          ? "Standplatz gelöscht"
+                                          : "${location.name}, ${location.town ?? "-"}",
                                       style: TextStyle(
                                         decoration:
                                             wasRemoved
@@ -139,7 +146,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                         icon: Icon(Icons.add_circle_outline),
                                         onPressed:
                                             () => setState(
-                                              () => removedLocations.remove(
+                                              () => removedLocationIds.remove(
                                                 requestedId,
                                               ),
                                             ),
@@ -149,7 +156,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                         icon: Icon(Icons.remove_circle_outline),
                                         onPressed:
                                             () => setState(
-                                              () => removedLocations.add(
+                                              () => removedLocationIds.add(
                                                 requestedId,
                                               ),
                                             ),
@@ -169,7 +176,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                   SizedBox(height: 10),
                   Row(children: [Expanded(child: Text("Name"))]),
                   Divider(height: 20, color: Theme.of(context).primaryColor),
-                  addedLocations.isEmpty
+                  addedLocationIds.isEmpty
                       ? SizedBox(
                         height: 50,
                         child: Center(
@@ -179,18 +186,16 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                       : SizedBox.shrink(),
                   Column(
                     children:
-                        addedLocations.map((requestedId) {
-                          late final Map<String, dynamic> locationData;
+                        addedLocationIds.map((requestedId) {
+                          Location? location;
                           final docList =
                               fetchedLocations
                                   .where((doc) => doc.id == requestedId)
                                   .toList();
                           if (docList.isNotEmpty) {
-                            locationData = docList[0].data() ?? {};
-                          } else {
-                            locationData = {};
+                            location = docList[0];
                           }
-                          final bool wasRemoved = removedLocations.contains(
+                          final bool wasRemoved = removedLocationIds.contains(
                             requestedId,
                           );
                           return Column(
@@ -199,7 +204,9 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      "${locationData["name"] ?? ""}, ${locationData["address"]?["town"] ?? ""}",
+                                      location == null
+                                          ? "Standplatz gelöscht"
+                                          : "${location.name}, ${location.town ?? "-"}",
                                       style: TextStyle(
                                         decoration:
                                             wasRemoved
@@ -216,7 +223,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                         icon: Icon(Icons.add_circle_outline),
                                         onPressed:
                                             () => setState(
-                                              () => removedLocations.remove(
+                                              () => removedLocationIds.remove(
                                                 requestedId,
                                               ),
                                             ),
@@ -226,7 +233,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                         icon: Icon(Icons.remove_circle_outline),
                                         onPressed:
                                             () => setState(
-                                              () => removedLocations.add(
+                                              () => removedLocationIds.add(
                                                 requestedId,
                                               ),
                                             ),
@@ -251,16 +258,13 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                               ),
                             );
                             if (newLocations != null &&
-                                newLocations
-                                    is List<
-                                      DocumentSnapshot<Map<String, dynamic>>
-                                    > &&
+                                newLocations is List<Location> &&
                                 newLocations.isNotEmpty) {
                               setState(() {
                                 additionallyFetchedLocations.addAll(
                                   newLocations,
                                 );
-                                addedLocations.addAll(
+                                addedLocationIds.addAll(
                                   newLocations.map((doc) => doc.id),
                                 );
                               });
@@ -308,17 +312,17 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                           isLoading = true;
                         });
                         final finalLocations = {
-                          ...requestedLocations,
-                          ...addedLocations,
-                        }..removeAll(removedLocations);
+                          ...requestedLocationIds,
+                          ...addedLocationIds,
+                        }..removeAll(removedLocationIds);
 
                         await FirebaseFirestore.instance
                             .collection("schedules")
                             .doc(widget.scheduleId)
                             .update({
                               "reviewed": true,
-                              "removed_locations": removedLocations,
-                              "added_locations": addedLocations,
+                              "removed_locations": removedLocationIds,
+                              "added_locations": addedLocationIds,
                               "reviewed_at": FieldValue.serverTimestamp(),
                               "confirmed_locations": finalLocations.toList(),
                               "personnel_assigned": false,
@@ -340,7 +344,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
 }
 
 class LocationAdderDialog extends ConsumerStatefulWidget {
-  final List<DocumentSnapshot<Map<String, dynamic>>> alreadyFetchedLocations;
+  final List<Location> alreadyFetchedLocations;
 
   const LocationAdderDialog({super.key, required this.alreadyFetchedLocations});
 
@@ -350,7 +354,7 @@ class LocationAdderDialog extends ConsumerStatefulWidget {
 }
 
 class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
-  final List<DocumentSnapshot<Map<String, dynamic>>> selectedDocs = [];
+  final List<Location> selectedDocs = [];
 
   @override
   Widget build(BuildContext context) {
@@ -363,10 +367,10 @@ class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
         Expanded(
           child: locations.when(
             data: (locationsData) {
-              final addableLocations = locationsData.docs.where(
-                (doc) =>
+              final addableLocations = locationsData.where(
+                (location) =>
                     widget.alreadyFetchedLocations
-                        .where((existingDoc) => doc.id == existingDoc.id)
+                        .where((existingDoc) => location.id == existingDoc.id)
                         .isEmpty,
               );
               if (addableLocations.isEmpty) {
@@ -376,7 +380,6 @@ class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
                 child: Column(
                   children:
                       addableLocations.map((location) {
-                        final locationData = location.data();
                         return Column(
                           children: [
                             Padding(
@@ -403,7 +406,7 @@ class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
                                     },
                                   ),
                                   Text(
-                                    "${locationData["name"]}, ${locationData["address"]?["town"] ?? ""}",
+                                    "${location.name}, ${location.town ?? "-"}",
                                   ),
                                 ],
                               ),

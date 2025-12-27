@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,7 @@ import 'package:sonos_dialoger/providers.dart';
 
 import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
+import '../../providers/firestore_providers/location_providers.dart';
 
 class DialogerSchedulePage extends ConsumerWidget {
   const DialogerSchedulePage({super.key});
@@ -82,32 +82,30 @@ class DialogerSchedulePage extends ConsumerWidget {
                       child: Text("Ups, hier hat etwas nicht geklappt"),
                     );
                   }
-                  final myLocationDoc = filteredLocations[0];
-                  final myLocationData = myLocationDoc.data();
+                  final myLocation = filteredLocations[0];
                   return SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "${myLocationData["name"]}, ${myLocationData["address"]?["town"]}",
+                          "${myLocation.name}, ${myLocation.town ?? "-"}",
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          "${myLocationData["address"]?["street"] ?? ""} ${myLocationData["address"]?["house_number"] ?? ""}",
+                          "${myLocation.street ?? "-"} ${myLocation.houseNumber ?? ""}",
                         ),
                         Text(
-                          "${myLocationData["address"]?["postal_code"] ?? ""} ${myLocationData["address"]?["town"] ?? ""}",
+                          "${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
                         ),
                         SizedBox(height: 5),
-                        (myLocationData["link"] != null &&
-                                !myLocationData["link"].isEmpty)
-                            ? ClickableLink(link: myLocationData["link"])
+                        (myLocation.link != null && myLocation.link!.isNotEmpty)
+                            ? ClickableLink(link: myLocation.link!)
                             : SizedBox.shrink(),
-                        (myLocationData["notes"] != null &&
-                                !myLocationData["notes"].isEmpty)
+                        (myLocation.notes != null &&
+                                myLocation.notes!.isNotEmpty)
                             ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -117,7 +115,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  myLocationData["notes"],
+                                  myLocation.notes!,
                                   style: TextStyle(fontSize: 14),
                                 ),
                               ],
@@ -327,23 +325,21 @@ class DialogerSchedulePage extends ConsumerWidget {
                                                   ),
                                                 );
                                               }
-                                              final myLocationDoc =
+                                              final myLocation =
                                                   filteredLocations[0];
-                                              final myLocationData =
-                                                  myLocationDoc.data();
                                               return Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    "${myLocationData["name"]}",
+                                                    myLocation.name,
                                                     style: TextStyle(
                                                       fontSize: 20,
                                                     ),
                                                   ),
 
                                                   Text(
-                                                    "${myLocationData["address"]?["street"] ?? ""} ${myLocationData["address"]?["house_number"] ?? ""}, ${myLocationData["address"]?["postal_code"] ?? ""} ${myLocationData["address"]?["town"] ?? ""}",
+                                                    "${myLocation.street ?? "-"} ${myLocation.houseNumber ?? ""}, ${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
                                                   ),
                                                 ],
                                               );

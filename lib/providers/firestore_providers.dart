@@ -8,11 +8,6 @@ import '../core/payment.dart';
 import '../providers.dart';
 import 'date_ranges.dart';
 
-final allLocationsProvider =
-    StreamProvider.autoDispose<QuerySnapshot<Map<String, dynamic>>>((ref) {
-      return firestore.collection("locations").snapshots();
-    });
-
 final confirmedSchedulesProvider =
     StreamProvider.autoDispose<QuerySnapshot<Map<String, dynamic>>>((ref) {
       return firestore
@@ -117,61 +112,6 @@ final personnelAssignedSchedulesProvider = StreamProvider((ref) {
       .snapshots();
 });
 
-final personnelAssignedSchedulesLocationsProvider =
-    StreamProvider<List<QueryDocumentSnapshot<Map<String, dynamic>>>?>((ref) {
-      final schedules = ref.watch(personnelAssignedSchedulesProvider);
-      if (schedules.isLoading) {
-        return Stream.empty();
-      }
-      if (schedules.hasError) {
-        return Stream.error(schedules.error ?? "Unknown error");
-      }
-      final scheduleDocs = schedules.value!.docs;
-      final locationIds = flatten(
-        scheduleDocs.map((doc) {
-          return doc.data()["confirmed_locations"] ?? [];
-        }),
-      );
-      final locations = ref.watch(
-        queryByIdsProvider(
-          QueryByIdsArgs(
-            queryKey: "locations",
-            ids: locationIds.toSet().toList(),
-          ),
-        ),
-      );
-      if (locations.isLoading) {
-        return Stream.empty();
-      }
-      if (locations.hasError) {
-        return Stream.error(locations.error ?? "Unknown error");
-      }
-      return Stream.value(locations.value);
-    });
-
-final confirmedLocationsProvider =
-    StreamProvider.family<QuerySnapshot<Map<String, dynamic>>, String>((
-      ref,
-      String scheduleId,
-    ) {
-      final schedule = ref.watch(scheduleProvider(scheduleId));
-      if (schedule.hasError) {
-        return Stream.error(schedule.error!);
-      }
-      if (schedule.isLoading) {
-        return Stream.empty();
-      }
-
-      final scheduleData = schedule.value?.data() ?? {};
-
-      List<dynamic> confirmedLocations = scheduleData["confirmed_locations"];
-
-      return FirebaseFirestore.instance
-          .collection("locations")
-          .where(FieldPath.documentId, whereIn: confirmedLocations)
-          .snapshots();
-    });
-
 final schedulesProvider = StreamProvider((ref) {
   final scheduleTimespan = ref.watch(scheduleTimespanProvider);
   final scheduleStartDate = ref.watch(scheduleStartDateProvider);
@@ -199,36 +139,6 @@ final schedulesProvider = StreamProvider((ref) {
       .snapshots();
 });
 
-final schedulesLocationsProvider =
-    StreamProvider<List<QueryDocumentSnapshot<Map<String, dynamic>>>?>((ref) {
-      final schedules = ref.watch(schedulesProvider);
-      if (schedules.isLoading) {
-        return Stream.empty();
-      }
-      if (schedules.hasError) {
-        return Stream.error(schedules.error ?? "Unknown error");
-      }
-      final scheduleDocs = schedules.value!.docs;
-      final locationIds = flatten(
-        scheduleDocs.map((doc) {
-          return doc.data()["reviewed"] == true
-              ? (doc.data()["confirmed_locations"] ?? [])
-              : (doc.data()["requested_locations"] ?? []);
-        }),
-      );
-
-      return Stream.fromFuture(
-        ref.read(
-          queryByIdsProvider(
-            QueryByIdsArgs(
-              queryKey: "locations",
-              ids: locationIds.toSet().toList(),
-            ),
-          ).future,
-        ),
-      );
-    });
-
 final scheduleLocationIdsProvider = Provider.family<List<dynamic>, String>((
   ref,
   scheduleId,
@@ -242,29 +152,6 @@ final scheduleLocationIdsProvider = Provider.family<List<dynamic>, String>((
     ...(data["added_locations"] ?? []),
   ];
 });
-
-final requestedLocationsProvider =
-    StreamProvider.family<QuerySnapshot<Map<String, dynamic>>, String>((
-      ref,
-      String scheduleId, // Changed from List to String
-    ) {
-      // Watch the new provider to get the list of IDs
-      final locationIds = ref.watch(scheduleLocationIdsProvider(scheduleId));
-
-      // If there are no IDs, return an empty stream to avoid an error
-      if (locationIds.isEmpty) {
-        return Stream.empty();
-      }
-
-      if (locationIds.length > 30) {
-        throw ErrorDescription("Too many locations provided (>30)");
-      }
-
-      return FirebaseFirestore.instance
-          .collection("locations")
-          .where(FieldPath.documentId, whereIn: locationIds)
-          .snapshots();
-    });
 
 final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
   ref,

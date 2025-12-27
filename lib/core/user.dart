@@ -27,4 +27,18 @@ class SonosUser {
 
     return SonosUser(id, first, last, linked, userRole);
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "first": first,
+      "last": last,
+      "linked": linked,
+      "role": switch (role) {
+        UserRole.admin => "admin",
+        UserRole.coach => "coach",
+        UserRole.dialog => "dialog",
+        _ => null,
+      },
+    };
+  }
 }

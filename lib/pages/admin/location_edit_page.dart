@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+import 'package:sonos_dialoger/core/location.dart';
 
-import '../../providers/firestore_providers.dart';
+import '../../providers/firestore_providers/location_providers.dart';
 
 class LocationEditPage extends ConsumerStatefulWidget {
   final String locationId;
@@ -55,7 +56,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
       }
 
       if (!hasBeenInit) {
-        data = locationDoc.value!.data() ?? {};
+        data = locationDoc.value!.toMap();
         if (data["address"] == null) {
           data["address"] = {};
         }
@@ -227,28 +228,29 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                       setState(() {
                         isLoading = true;
                       });
-                      print(price);
-                      final writeData = {
-                        "name": nameController.text,
-                        "link": linkController.text,
-                        "notes": notesController.text,
-                        "email": emailController.text,
-                        "phone": phoneController.text,
-                        "address": {
-                          "street": streetController.text,
-                          "house_number": houseNumberController.text,
-                          "postal_code": postalCodeController.text,
-                          "town": townController.text,
-                        },
-                        "price": price,
-                      };
+                      final writeLocation = Location(
+                        "" /*id irrelevant here*/,
+                        nameController.text,
+                        townController.text,
+                        postalCodeController.text,
+                        streetController.text,
+                        houseNumberController.text,
+                        emailController.text,
+                        phoneController.text,
+                        linkController.text,
+                        price,
+                        notesController.text,
+                      );
+
                       if (widget.isCreate) {
-                        await firestore.collection("locations").add(writeData);
+                        await firestore
+                            .collection("locations")
+                            .add(writeLocation.toMap());
                       } else {
                         await firestore
                             .collection("locations")
                             .doc(widget.locationId)
-                            .update(writeData);
+                            .update(writeLocation.toMap());
                       }
                       setState(() {
                         isLoading = false;

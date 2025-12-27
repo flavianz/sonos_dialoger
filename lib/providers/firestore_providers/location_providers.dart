@@ -5,6 +5,7 @@ import 'package:sonos_dialoger/core/location.dart';
 
 import '../../app.dart';
 import '../../components/misc.dart';
+import '../../core/payment.dart';
 import '../../providers.dart';
 import '../firestore_providers.dart';
 
@@ -122,3 +123,26 @@ final requestedLocationsProvider =
           .snapshots()
           .map((doc) => doc.docs.map((doc) => Location.fromDoc(doc)));
     });
+
+final paymentLocationProvider = FutureProvider.family((
+  ref,
+  String paymentId,
+) async {
+  final payment = Payment.fromDoc(
+    await ref.watch(paymentProvider(paymentId).future),
+  );
+  return Location.fromDoc(
+    await FirebaseFirestore.instance
+        .collection("locations")
+        .doc(payment.location)
+        .get(),
+  );
+});
+
+final locationProvider = StreamProvider.family((ref, String locationId) {
+  return firestore
+      .collection("locations")
+      .doc(locationId)
+      .snapshots()
+      .map((doc) => Location.fromDoc(doc));
+});

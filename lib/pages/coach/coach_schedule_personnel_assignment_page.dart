@@ -8,6 +8,7 @@ import 'package:sonos_dialoger/core/user.dart';
 import 'package:sonos_dialoger/providers/firestore_providers.dart';
 
 import '../../providers/firestore_providers/location_providers.dart';
+import '../../providers/firestore_providers/user_providers.dart';
 
 class CoachSchedulePersonnelAssignmentPage extends ConsumerStatefulWidget {
   final String scheduleId;
@@ -30,7 +31,7 @@ class _CoachSchedulePersonnelAssignmentPageState
 
   @override
   Widget build(BuildContext context) {
-    final dialoguers = ref.watch(nonAdminUsersProvider);
+    final dialoguersDocs = ref.watch(nonAdminUsersProvider);
     final alreadyAssignedDialoguers = [
       for (var sublist in assignedDialoguers.values) ...sublist,
     ];
@@ -38,17 +39,14 @@ class _CoachSchedulePersonnelAssignmentPageState
         .watch(scheduleProvider(widget.scheduleId))
         .when(
           data: (scheduleDoc) {
-            if (dialoguers.isLoading) {
+            if (dialoguersDocs.isLoading) {
               return Center(child: CircularProgressIndicator());
             }
-            if (dialoguers.hasError) {
-              print(dialoguers.error);
+            if (dialoguersDocs.hasError) {
+              print(dialoguersDocs.error);
               return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
             }
-            final dialoguerDocs =
-                dialoguers.value!.docs
-                    .map((doc) => SonosUser.fromDoc(doc))
-                    .toList();
+            final dialoguers = dialoguersDocs.value!;
             final scheduleData = scheduleDoc.data() ?? {};
             final date = parseDateTimeFromTimestamp(scheduleData["date"]);
 
@@ -185,7 +183,8 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                           context,
                                                           DialoguerAdderDialog(
                                                             allDialoguers:
-                                                                dialoguerDocs,
+                                                                dialoguers
+                                                                    .toList(),
                                                             alreadyAssignedDialoguers:
                                                                 alreadyAssignedDialoguers,
                                                           ),
@@ -238,7 +237,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                       ),
                                     ),
                                     Divider(),
-                                    dialoguerDocs
+                                    dialoguers
                                             .where(
                                               (doc) =>
                                                   alreadyAssignedDialoguers
@@ -261,7 +260,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                         : SizedBox.shrink(),
                                     Column(
                                       children:
-                                          dialoguerDocs
+                                          dialoguers
                                               .where(
                                                 (doc) =>
                                                     alreadyAssignedDialoguers

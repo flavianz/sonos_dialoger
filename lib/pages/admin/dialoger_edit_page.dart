@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/input_box.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 
-import '../../providers/firestore_providers.dart';
+import '../../providers/firestore_providers/user_providers.dart';
 
 class DialogerEditPage extends ConsumerStatefulWidget {
   final String userId;
@@ -34,7 +34,7 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
   Widget build(BuildContext context) {
     Map<String, dynamic> data = {};
     if (!widget.creating) {
-      final doc = ref.watch(dialogerFutureProvider(widget.userId));
+      final doc = ref.watch(dialogerProvider(widget.userId));
 
       if (doc.isLoading) {
         return Center(child: CircularProgressIndicator());
@@ -46,7 +46,7 @@ class _DialogerEditPageState extends ConsumerState<DialogerEditPage> {
         }
         return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
       }
-      data = doc.value!.data() ?? {};
+      data = doc.value!.toMap();
     }
     if (!areInputsInitialized) {
       setState(() {

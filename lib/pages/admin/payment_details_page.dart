@@ -5,6 +5,8 @@ import 'package:sonos_dialoger/components/misc.dart';
 
 import '../../core/payment.dart';
 import '../../providers/firestore_providers.dart';
+import '../../providers/firestore_providers/location_providers.dart';
+import '../../providers/firestore_providers/user_providers.dart';
 
 class PaymentDetailsPage extends ConsumerWidget {
   final String paymentId;
@@ -15,7 +17,7 @@ class PaymentDetailsPage extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final paymentDoc = ref.watch(paymentProvider(paymentId));
     final locationDoc = ref.watch(paymentLocationProvider(paymentId));
-    final dialogerDoc = ref.watch(dialogerProvider(paymentId));
+    final dialogerDoc = ref.watch(paymentDialogerProvider(paymentId));
 
     if (paymentDoc.isLoading) {
       return Scaffold(
@@ -191,8 +193,8 @@ class PaymentDetailsPage extends ConsumerWidget {
                 Text("Standplatz"),
                 locationDoc.when(
                   data:
-                      (data) => Text(
-                        "${data.data()?["name"]}, ${data.data()?["address"]?["town"]}",
+                      (location) => Text(
+                        "${location.name}, ${location.town ?? "-"}",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                   error: errorHandling,
@@ -210,8 +212,8 @@ class PaymentDetailsPage extends ConsumerWidget {
                 Text("Dailoger*in"),
                 dialogerDoc.when(
                   data:
-                      (data) => Text(
-                        "${data.data()?["first"] ?? ""} ${data.data()?["last"] ?? ""}",
+                      (dialoguer) => Text(
+                        "${dialoguer.first} ${dialoguer.last}",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                   error: errorHandling,

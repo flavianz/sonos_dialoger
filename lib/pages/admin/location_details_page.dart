@@ -13,6 +13,7 @@ import '../../components/misc.dart';
 import '../../components/timespan_dropdowns.dart';
 import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
+import '../../providers/firestore_providers/location_providers.dart';
 
 class LocationDetailsPage extends ConsumerWidget {
   final String locationId;
@@ -140,7 +141,7 @@ class LocationDetailsPage extends ConsumerWidget {
         body: Center(child: Text("Ups, hier hat etwas nicht geklappt")),
       );
     }
-    final locationData = locationDoc.value!.data() ?? {};
+    final location = locationDoc.value!;
     final locationPaymentDocs = ref.watch(locationPaymentsProvider(locationId));
 
     return DefaultTabController(
@@ -148,7 +149,7 @@ class LocationDetailsPage extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           forceMaterialTransparency: true,
-          title: Text(locationData["name"] ?? ""),
+          title: Text(location.name),
           actions: [
             IconButton(
               icon: Icon(Icons.edit),
@@ -453,19 +454,19 @@ class LocationDetailsPage extends ConsumerWidget {
                     ),
                   ),
                   Divider(),
-                  locationData["link"] != null
-                      ? ClickableLink(link: locationData["link"])
+                  location.link != null
+                      ? ClickableLink(link: location.link!)
                       : Text("Kein Link"),
-                  locationData["email"] != null
+                  location.email != null
                       ? ClickableLink(
-                        link: "mailto:${locationData["email"]}",
-                        label: locationData["email"],
+                        link: "mailto:${location.email!}",
+                        label: location.email!,
                       )
                       : Text("Keine Email"),
-                  locationData["phone"] != null
+                  location.phone != null
                       ? ClickableLink(
-                        link: "tel:${locationData["phone"]}",
-                        label: locationData["phone"],
+                        link: "tel:${location.phone!}",
+                        label: location.phone,
                       )
                       : Text("Keine Email"),
                   Padding(
@@ -480,11 +481,9 @@ class LocationDetailsPage extends ConsumerWidget {
                   ),
                   Divider(),
                   Text(
-                    "${locationData["address"]?["street"] ?? ""} ${locationData["address"]?["house_number"] ?? ""}",
+                    "${location.street ?? "-"} ${location.houseNumber ?? ""}",
                   ),
-                  Text(
-                    "${locationData["address"]?["postal_code"] ?? ""} ${locationData["address"]?["town"] ?? ""}",
-                  ),
+                  Text("${location.postalCode ?? ""} ${location.town ?? "-"}"),
                   Padding(
                     padding: EdgeInsets.only(left: 4, top: 12),
                     child: Text(
@@ -496,7 +495,7 @@ class LocationDetailsPage extends ConsumerWidget {
                     ),
                   ),
                   Divider(),
-                  Text(locationData["notes"] ?? "Keine Notizen"),
+                  Text(location.notes ?? "Keine Notizen"),
                 ],
               ),
             ),

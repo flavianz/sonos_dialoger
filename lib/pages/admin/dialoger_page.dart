@@ -1,23 +1,23 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/firestore_providers.dart';
+import '../../core/user.dart';
+import '../../providers/firestore_providers/user_providers.dart';
 
 class DialogerPage extends ConsumerWidget {
   const DialogerPage({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final dialogerDocs = ref.watch(nonAdminUsersProvider);
+    final dialoguers = ref.watch(nonAdminUsersProvider);
 
-    if (dialogerDocs.isLoading) {
+    if (dialoguers.isLoading) {
       return Center(child: CircularProgressIndicator());
     }
 
-    if (dialogerDocs.hasError) {
-      print(dialogerDocs.error);
+    if (dialoguers.hasError) {
+      print(dialoguers.error);
       return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
     }
 
@@ -41,8 +41,7 @@ class DialogerPage extends ConsumerWidget {
           Expanded(
             child: ListView(
               children:
-                  dialogerDocs.value!.docs.map((doc) {
-                    final data = doc.data();
+                  dialoguers.value!.map((dialoguer) {
                     return Column(
                       children: [
                         GestureDetector(
@@ -53,19 +52,21 @@ class DialogerPage extends ConsumerWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    "${data["first"]} ${data["last"]}",
+                                    "${dialoguer.first} ${dialoguer.last}",
                                   ),
                                 ),
                                 Expanded(
                                   child: Text(
-                                    data["role"] == "coach"
+                                    dialoguer.role == UserRole.coach
                                         ? "Coach"
                                         : "DialogerIn",
                                   ),
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    context.push("/admin/dialog/${doc.id}");
+                                    context.push(
+                                      "/admin/dialog/${dialoguer.id}",
+                                    );
                                   },
                                   icon: Icon(Icons.edit),
                                   tooltip: "Bearbeiten",

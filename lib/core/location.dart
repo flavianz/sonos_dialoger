@@ -46,4 +46,21 @@ class Location {
       data["notes"] as String?,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "name": name,
+      "address": {
+        "town": town,
+        "postal_code": postalCode,
+        "street": street,
+        "house_number": houseNumber,
+      },
+      "email": email,
+      "phone": phone,
+      "link": link,
+      "price": price,
+      "notes": notes,
+    };
+  }
 }

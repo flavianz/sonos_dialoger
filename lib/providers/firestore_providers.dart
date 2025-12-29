@@ -32,6 +32,11 @@ final paymentProvider = FutureProvider.family(
       FirebaseFirestore.instance.collection("payments").doc(id).get(),
 );
 
+final livePaymentProvider =
+    StreamProvider.family<DocumentSnapshot<Map<String, dynamic>>, String>(
+      (ref, String id) => firestore.collection("payments").doc(id).snapshots(),
+    );
+
 final todayScheduleProvider = StreamProvider((ref) {
   return firestore
       .collection("schedules")

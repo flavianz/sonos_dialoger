@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 
 import '../../core/payment.dart';
@@ -15,7 +16,7 @@ class PaymentDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    final paymentDoc = ref.watch(paymentProvider(paymentId));
+    final paymentDoc = ref.watch(livePaymentProvider(paymentId));
     final locationDoc = ref.watch(paymentLocationProvider(paymentId));
     final dialogerDoc = ref.watch(paymentDialogerProvider(paymentId));
 
@@ -258,6 +259,7 @@ class PaymentStatusEditDialog extends StatefulWidget {
 class _PaymentStatusEditDialogState extends State<PaymentStatusEditDialog> {
   late PaymentStatus newPaymentStatus;
   bool hasBeenInit = false;
+  bool loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -277,22 +279,85 @@ class _PaymentStatusEditDialogState extends State<PaymentStatusEditDialog> {
           },
           child: Column(
             children: <Widget>[
-              ListTile(
-                title: PaymentStatus.paid.widget(context),
-                leading: Radio<PaymentStatus>(value: PaymentStatus.paid),
+              Tappable(
+                onTap: () {
+                  setState(() {
+                    newPaymentStatus = PaymentStatus.paid;
+                  });
+                },
+                child: ListTile(
+                  title: PaymentStatus.paid.widget(context),
+                  leading: Radio<PaymentStatus>(value: PaymentStatus.paid),
+                ),
               ),
-              ListTile(
-                title: PaymentStatus.pending.widget(context),
-                leading: Radio<PaymentStatus>(value: PaymentStatus.pending),
+              Tappable(
+                onTap: () {
+                  setState(() {
+                    newPaymentStatus = PaymentStatus.pending;
+                  });
+                },
+                child: ListTile(
+                  title: PaymentStatus.pending.widget(context),
+                  leading: Radio<PaymentStatus>(value: PaymentStatus.pending),
+                ),
               ),
-              ListTile(
-                title: PaymentStatus.cancelled.widget(context),
-                leading: Radio<PaymentStatus>(value: PaymentStatus.cancelled),
+              Tappable(
+                onTap: () {
+                  setState(() {
+                    newPaymentStatus = PaymentStatus.cancelled;
+                  });
+                },
+                child: ListTile(
+                  title: PaymentStatus.cancelled.widget(context),
+                  leading: Radio<PaymentStatus>(value: PaymentStatus.cancelled),
+                ),
               ),
             ],
           ),
         ),
       ),
+      actions: [
+        OutlinedButton(
+          onPressed: () {
+            context.pop();
+          },
+          child: Text("Abbrechen"),
+        ),
+        FilledButton(
+          onPressed:
+              newPaymentStatus == widget.payment.getPaymentStatus()
+                  ? null
+                  : () async {
+                    setState(() {
+                      loading = true;
+                    });
+                    await firestore
+                        .collection("payments")
+                        .doc(widget.payment.id)
+                        .update({
+                          "payment_status": switch (newPaymentStatus) {
+                            PaymentStatus.paid => "paid",
+                            PaymentStatus.pending => "pending",
+                            PaymentStatus.cancelled => "cancelled",
+                          },
+                        });
+                    setState(() {
+                      loading = false;
+                    });
+                    if (context.mounted) {
+                      context.pop();
+                    }
+                  },
+          child:
+              loading
+                  ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                  : Text("Speichern"),
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,111 +16,6 @@ class LocationDetailsPage extends ConsumerWidget {
   final String locationId;
 
   const LocationDetailsPage({super.key, required this.locationId});
-
-  BarChartGroupData generateGroupData(int millis, List<Payment> payments) {
-    final onceTwint = payments
-        .where(
-          (payment) =>
-              payment is OncePayment &&
-              payment.paymentMethod == PaymentMethod.twint,
-        )
-        .fold(0.0, (total, payment) => total + payment.amount);
-    final onceSumup = payments
-        .where(
-          (payment) =>
-              payment is OncePayment &&
-              payment.paymentMethod == PaymentMethod.sumup,
-        )
-        .fold(0.0, (total, payment) => total + payment.amount);
-    final repeatingWithFirstPaymentTwint = payments
-        .where(
-          (payment) =>
-              payment is RepeatingPayment &&
-              payment is RepeatingPaymentWithFirstPayment &&
-              payment.paymentMethod == PaymentMethod.twint,
-        )
-        .fold(0.0, (total, payment) => total + payment.amount);
-    final repeatingWithFirstPaymentSumup = payments
-        .where(
-          (payment) =>
-              payment is RepeatingPayment &&
-              payment is RepeatingPaymentWithFirstPayment &&
-              payment.paymentMethod == PaymentMethod.sumup,
-        )
-        .fold(0.0, (total, payment) => total + payment.amount);
-    final repeatingWithoutFirstPayment = payments
-        .where(
-          (payment) =>
-              payment is RepeatingPayment &&
-              payment is RepeatingPaymentWithoutFirstPayment,
-        )
-        .fold(0.0, (total, payment) => total + payment.amount);
-    return BarChartGroupData(
-      x: millis,
-      groupVertically: true,
-      barRods: [
-        BarChartRodData(
-          fromY: 0,
-          toY: onceTwint.toDouble(),
-          color: Colors.lightBlue.shade600,
-          width: 15,
-          borderRadius: BorderRadius.zero,
-        ),
-        BarChartRodData(
-          fromY: onceTwint,
-          toY: onceTwint + onceSumup,
-          color: Colors.lightBlue.shade200,
-          width: 15,
-          borderRadius: BorderRadius.zero,
-        ),
-        BarChartRodData(
-          fromY: onceTwint + onceSumup,
-          toY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
-          color: Colors.lightGreen.shade800,
-          width: 15,
-          borderRadius: BorderRadius.zero,
-        ),
-        BarChartRodData(
-          fromY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
-          toY:
-              onceTwint +
-              onceSumup +
-              repeatingWithFirstPaymentTwint +
-              repeatingWithFirstPaymentSumup,
-          color: Colors.lightGreen.shade300,
-          width: 15,
-          borderRadius: BorderRadius.zero,
-        ),
-        BarChartRodData(
-          fromY:
-              onceTwint +
-              onceSumup +
-              repeatingWithFirstPaymentTwint +
-              repeatingWithFirstPaymentSumup,
-          toY:
-              onceTwint +
-              onceSumup +
-              repeatingWithFirstPaymentTwint +
-              repeatingWithFirstPaymentSumup +
-              repeatingWithoutFirstPayment,
-          color: Colors.amberAccent.shade200,
-          width: 15,
-          borderRadius: BorderRadius.zero,
-        ),
-      ],
-    );
-  }
-
-  Widget leftTitles(double value, TitleMeta meta) {
-    if (value == meta.max) {
-      return Container();
-    }
-    const style = TextStyle(fontSize: 10);
-    return SideTitleWidget(
-      meta: meta,
-      child: Text(meta.formattedValue, style: style),
-    );
-  }
 
   @override
   Widget build(BuildContext context, ref) {
@@ -174,57 +66,6 @@ class LocationDetailsPage extends ConsumerWidget {
                 );
                 final startDate = ref.watch(paymentsStartDateProvider);
                 final timespan = ref.watch(paymentsTimespanProvider);
-                final Map<int, List<Payment>> dateSortedData = {};
-                if (payments.isNotEmpty) {
-                  final timespan = ref.watch(paymentsTimespanProvider);
-                  if (timespan == Timespan.day) {
-                    final hoursPrefixedPayments =
-                        payments
-                            .map((payment) => (payment.timestamp.hour, payment))
-                            .toList();
-                    final int minHour =
-                        hoursPrefixedPayments
-                            .reduce((a, b) => a.$1 <= b.$1 ? a : b)
-                            .$1;
-                    final int maxHour =
-                        hoursPrefixedPayments
-                            .reduce((a, b) => a.$1 >= b.$1 ? a : b)
-                            .$1;
-                    for (int i = min(minHour, 8); i <= max(maxHour, 19); i++) {
-                      dateSortedData[i] =
-                          hoursPrefixedPayments
-                              .where((payment) => payment.$1 == i)
-                              .map((payment) => payment.$2)
-                              .toList();
-                    }
-                  } else if (timespan == Timespan.week) {
-                    final weekdayPrefixedPayments =
-                        payments
-                            .map(
-                              (payment) => (payment.timestamp.weekday, payment),
-                            )
-                            .toList();
-                    for (int i = 1; i <= 7; i++) {
-                      dateSortedData[i] =
-                          weekdayPrefixedPayments
-                              .where((payment) => payment.$1 == i)
-                              .map((payment) => payment.$2)
-                              .toList();
-                    }
-                  } else if (timespan == Timespan.month) {
-                    final dayPrefixedPayments =
-                        payments
-                            .map((payment) => (payment.timestamp.day, payment))
-                            .toList();
-                    for (int i = 1; i <= startDate.getMonthDayCount(); i++) {
-                      dateSortedData[i] =
-                          dayPrefixedPayments
-                              .where((payment) => payment.$1 == i)
-                              .map((payment) => payment.$2)
-                              .toList();
-                    }
-                  }
-                }
 
                 final isScreenWide =
                     MediaQuery.of(context).size.aspectRatio > 1;

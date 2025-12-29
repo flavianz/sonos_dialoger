@@ -303,6 +303,19 @@ class AdminSchedulePage extends ConsumerWidget {
                                           loading: loadingHandling,
                                         ),
                                   ),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        context.push(
+                                          "/coach/schedule/personnel_assignment/${coachScheduleDoc.id}",
+                                        );
+                                      },
+                                      child: Text(
+                                        "Jetzt Dialoger*innen einteilen",
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               );
                             } else {

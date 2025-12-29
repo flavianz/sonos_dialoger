@@ -2,6 +2,7 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/pages/admin/admin_schedule_page.dart';
 import 'package:sonos_dialoger/pages/admin/admin_settings_page.dart';
+import 'package:sonos_dialoger/pages/admin/dialoger_details_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_edit_page.dart';
 import 'package:sonos_dialoger/pages/admin/dialoger_page.dart';
 import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
@@ -36,6 +37,13 @@ final router = GoRouter(
         ),
         GoRoute(
           path: '/admin/dialog/:dialogerId',
+          builder: (context, state) {
+            final dialogerId = state.pathParameters['dialogerId']!;
+            return DialogerDetailsPage(dialogerId: dialogerId);
+          },
+        ),
+        GoRoute(
+          path: '/admin/dialog/:dialogerId/edit',
           builder: (context, state) {
             final dialogerId = state.pathParameters['dialogerId']!;
             return DialogerEditPage(userId: dialogerId);

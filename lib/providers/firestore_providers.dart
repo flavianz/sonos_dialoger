@@ -172,6 +172,22 @@ final locationPaymentsProvider = StreamProvider.family((
       .snapshots();
 });
 
+final dialogerPaymentsProvider = StreamProvider.family((
+  ref,
+  String dialogerId,
+) {
+  return FirebaseFirestore.instance
+      .collection("payments")
+      .where(
+        Filter.and(
+          ref.watch(paymentsDateFilterProvider),
+          Filter("dialoger", isEqualTo: dialogerId),
+        ),
+      )
+      .orderBy("timestamp", descending: true)
+      .snapshots();
+});
+
 final scheduleRequestsProvider =
     StreamProvider.autoDispose<QuerySnapshot<Map<String, dynamic>>>((ref) {
       return FirebaseFirestore.instance

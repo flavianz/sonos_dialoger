@@ -37,3 +37,12 @@ final dialogerProvider = FutureProvider.family.autoDispose<SonosUser, String>((
     await firestore.collection("users").doc(dialogerId).get(),
   );
 });
+
+final liveDialogerProvider = StreamProvider.family
+    .autoDispose<SonosUser, String>((ref, String dialogerId) {
+      return firestore
+          .collection("users")
+          .doc(dialogerId)
+          .snapshots()
+          .map(SonosUser.fromDoc);
+    });

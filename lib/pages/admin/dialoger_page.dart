@@ -45,7 +45,9 @@ class DialogerPage extends ConsumerWidget {
                     return Column(
                       children: [
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () {
+                            context.push("/admin/dialog/${dialoguer.id}");
+                          },
                           child: MouseRegion(
                             cursor: SystemMouseCursors.click,
                             child: Row(
@@ -65,7 +67,7 @@ class DialogerPage extends ConsumerWidget {
                                 IconButton(
                                   onPressed: () {
                                     context.push(
-                                      "/admin/dialog/${dialoguer.id}",
+                                      "/admin/dialog/${dialoguer.id}/edit",
                                     );
                                   },
                                   icon: Icon(Icons.edit),

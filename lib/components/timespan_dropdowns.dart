@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
 
 import '../providers/date_ranges.dart';
 import 'misc.dart';
@@ -84,6 +83,8 @@ class PaymentsTimespanBar extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final startDate = ref.watch(paymentsStartDateProvider);
     final timespan = ref.watch(paymentsTimespanProvider);
+    final String yearSuffix =
+        startDate.year == DateTime.now().year ? "" : " ${startDate.year}";
     return Row(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -107,10 +108,10 @@ class PaymentsTimespanBar extends ConsumerWidget {
         ),
         Text(switch (timespan) {
           Timespan.day =>
-            "${startDate.day}. ${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
-          Timespan.week => "KW ${startDate.weekOfYear}",
-          Timespan.month =>
-            "${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
+            "${startDate.day}. ${startDate.getMonthName()}$yearSuffix",
+          Timespan.week =>
+            "KW ${startDate.weekOfYear}${startDate.addDays(6).year == DateTime.now().year ? "" : " ${startDate.addDays(6).year}"}",
+          Timespan.month => "${startDate.getMonthName()}$yearSuffix",
         }),
         IconButton(
           onPressed: () {

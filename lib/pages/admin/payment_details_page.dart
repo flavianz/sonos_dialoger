@@ -180,7 +180,23 @@ class PaymentDetailsPage extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text("Zahlungsstatus"),
-                payment.getPaymentStatus().widget(context),
+                Row(
+                  spacing: 5,
+                  children: [
+                    payment.getPaymentStatus().widget(context),
+                    IconButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return PaymentStatusEditDialog(payment: payment);
+                          },
+                        );
+                      },
+                      icon: Icon(Icons.edit),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -224,6 +240,58 @@ class PaymentDetailsPage extends ConsumerWidget {
           ),
           Divider(),
         ],
+      ),
+    );
+  }
+}
+
+class PaymentStatusEditDialog extends StatefulWidget {
+  final Payment payment;
+
+  const PaymentStatusEditDialog({super.key, required this.payment});
+
+  @override
+  State<PaymentStatusEditDialog> createState() =>
+      _PaymentStatusEditDialogState();
+}
+
+class _PaymentStatusEditDialogState extends State<PaymentStatusEditDialog> {
+  late PaymentStatus newPaymentStatus;
+  bool hasBeenInit = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!hasBeenInit) {
+      newPaymentStatus = widget.payment.getPaymentStatus();
+      hasBeenInit = true;
+    }
+    return AlertDialog(
+      title: Text("Zahlungsstatus ändern"),
+      content: SingleChildScrollView(
+        child: RadioGroup(
+          groupValue: newPaymentStatus,
+          onChanged: (selected) {
+            setState(() {
+              newPaymentStatus = selected ?? newPaymentStatus;
+            });
+          },
+          child: Column(
+            children: <Widget>[
+              ListTile(
+                title: PaymentStatus.paid.widget(context),
+                leading: Radio<PaymentStatus>(value: PaymentStatus.paid),
+              ),
+              ListTile(
+                title: PaymentStatus.pending.widget(context),
+                leading: Radio<PaymentStatus>(value: PaymentStatus.pending),
+              ),
+              ListTile(
+                title: PaymentStatus.cancelled.widget(context),
+                leading: Radio<PaymentStatus>(value: PaymentStatus.cancelled),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -102,6 +102,7 @@ class LocationDetailsPage extends ConsumerWidget {
             ),
             SingleChildScrollView(
               child: Column(
+                spacing: 5,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 15),
@@ -130,7 +131,7 @@ class LocationDetailsPage extends ConsumerWidget {
                         link: "tel:${location.phone!}",
                         label: location.phone,
                       )
-                      : Text("Keine Email"),
+                      : Text("Keine Telefonnummer"),
                   Padding(
                     padding: EdgeInsets.only(left: 4, top: 12),
                     child: Text(

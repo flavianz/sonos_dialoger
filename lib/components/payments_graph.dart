@@ -20,7 +20,11 @@ class PaymentsGraph extends ConsumerStatefulWidget {
 class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
   @override
   Widget build(BuildContext context) {
-    BarChartGroupData generateGroupData(int millis, List<Payment> payments) {
+    BarChartGroupData generateGroupData(
+      int millis,
+      List<Payment> payments,
+      double width,
+    ) {
       final onceTwint = payments
           .where(
             (payment) =>
@@ -59,6 +63,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
           )
           .fold(0.0, (total, payment) => total + payment.amount);
       final double borderRadius = 4;
+
       return BarChartGroupData(
         x: millis,
         groupVertically: true,
@@ -87,13 +92,13 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
             fromY: 0,
             toY: onceTwint.toDouble(),
             color: Colors.lightBlue.shade600,
-            width: 15,
+            width: width,
           ),
           BarChartRodData(
             fromY: onceTwint,
             toY: onceTwint + onceSumup,
             color: Colors.lightBlue.shade200,
-            width: 15,
+            width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
                   onceTwint == 0 ? Radius.circular(borderRadius) : Radius.zero,
@@ -119,7 +124,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
             fromY: onceTwint + onceSumup,
             toY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
             color: Colors.lightGreen.shade800,
-            width: 15,
+            width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
                   onceTwint + onceSumup == 0
@@ -151,7 +156,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 repeatingWithFirstPaymentTwint +
                 repeatingWithFirstPaymentSumup,
             color: Colors.lightGreen.shade300,
-            width: 15,
+            width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
                   onceTwint + onceSumup + repeatingWithFirstPaymentTwint == 0
@@ -184,7 +189,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 repeatingWithFirstPaymentSumup +
                 repeatingWithoutFirstPayment,
             color: Colors.amberAccent.shade200,
-            width: 15,
+            width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
                   onceTwint +
@@ -294,6 +299,8 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
           columnLabelInterval = 1;
         }
 
+        final timespan = ref.watch(paymentsTimespanProvider);
+
         return Container(
           padding: EdgeInsets.all(18),
           constraints: BoxConstraints(maxHeight: 300),
@@ -324,13 +331,14 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                                 sideTitles: SideTitles(
                                   showTitles: true,
                                   getTitlesWidget: (titleData, _) {
-                                    return switch (ref.watch(
-                                      paymentsTimespanProvider,
-                                    )) {
-                                      Timespan.day => Text(
-                                        titleData.toString().padLeft(2, "0"),
-                                        style: TextStyle(fontSize: 13),
-                                      ),
+                                    return switch (timespan) {
+                                      Timespan.day =>
+                                        titleData % columnLabelInterval == 0
+                                            ? Text(
+                                              "${titleData.toInt().toString().padLeft(2, "0")}.",
+                                              style: TextStyle(fontSize: 13),
+                                            )
+                                            : SizedBox.shrink(),
                                       Timespan.week => Text(switch (titleData) {
                                         2 => "Di",
                                         3 => "Mi",
@@ -339,11 +347,11 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                                         6 => "Sa",
                                         7 => "So",
                                         1 || _ => "Mo",
-                                      }),
+                                      }, style: TextStyle(fontSize: 13)),
                                       Timespan.month =>
                                         titleData % columnLabelInterval == 0
                                             ? Text(
-                                              "${titleData.toString().padLeft(2, "0")}.",
+                                              "${titleData.toInt().toString().padLeft(2, "0")}.",
                                               style: TextStyle(fontSize: 13),
                                             )
                                             : SizedBox.shrink(),
@@ -359,6 +367,13 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                                       (entry) => generateGroupData(
                                         entry.key,
                                         entry.value,
+                                        (constraints.maxWidth - 20) /
+                                                (switch (timespan) {
+                                                  Timespan.day => 20,
+                                                  Timespan.week => 20,
+                                                  Timespan.month => 31,
+                                                }) -
+                                            3,
                                       ),
                                     )
                                     .toList(),

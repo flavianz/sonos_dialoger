@@ -68,10 +68,10 @@ class LocationsPage extends ConsumerWidget {
                                           builder:
                                               (context) => AlertDialog(
                                                 title: Text(
-                                                  "Leistung löschen?",
+                                                  "Standplatz löschen?",
                                                 ),
                                                 content: Text(
-                                                  "Dieser Schritt kann nicht rückgängig gemacht werden",
+                                                  "Dieser Schritt kann nicht rückgängig gemacht werden. Leistungen an diesem Standplatz werden mit keinem Standplatz verbunden sein.",
                                                 ),
                                                 actions: [
                                                   OutlinedButton(
@@ -85,7 +85,7 @@ class LocationsPage extends ConsumerWidget {
                                                       await FirebaseFirestore
                                                           .instance
                                                           .collection(
-                                                            "payments",
+                                                            "locations",
                                                           )
                                                           .doc(location.id)
                                                           .delete();
@@ -93,7 +93,7 @@ class LocationsPage extends ConsumerWidget {
                                                         context.pop();
                                                         showSnackBar(
                                                           context,
-                                                          "Leistung gelöscht!",
+                                                          "Standplatz gelöscht!",
                                                         );
                                                       }
                                                     },

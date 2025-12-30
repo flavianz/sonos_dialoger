@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/app.dart';
 
+import '../../components/misc.dart';
 import '../../core/user.dart';
 import '../../providers/firestore_providers/user_providers.dart';
 
@@ -74,7 +76,42 @@ class DialogerPage extends ConsumerWidget {
                                   tooltip: "Bearbeiten",
                                 ),
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (context) => AlertDialog(
+                                            title: Text("Dialoger löschen?"),
+                                            content: Text(
+                                              "Dieser Schritt kann nicht rückgängig gemacht werden. Leistungen von diesem Dialoger werden mit keinem Dialoger verbunden sein.",
+                                            ),
+                                            actions: [
+                                              OutlinedButton(
+                                                onPressed: () {
+                                                  context.pop();
+                                                },
+                                                child: Text("Abbrechen"),
+                                              ),
+                                              FilledButton(
+                                                onPressed: () async {
+                                                  await firestore
+                                                      .collection("users")
+                                                      .doc(dialoguer.id)
+                                                      .delete();
+                                                  if (context.mounted) {
+                                                    context.pop();
+                                                    showSnackBar(
+                                                      context,
+                                                      "Dialoger*in gelöscht!",
+                                                    );
+                                                  }
+                                                },
+                                                child: Text("Löschen"),
+                                              ),
+                                            ],
+                                          ),
+                                    );
+                                  },
                                   icon: Icon(Icons.delete),
                                   tooltip: "Löschen",
                                 ),

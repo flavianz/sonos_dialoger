@@ -12,23 +12,23 @@ final userProvider = StreamProvider<User?>(
   (ref) => FirebaseAuth.instance.authStateChanges(),
 );
 
-final userDataProvider = StreamProvider<DocumentSnapshot<Map<String, dynamic>>>(
-  (ref) {
-    final userStream = ref.watch(userProvider);
-    if (userStream.value != null) {
-      userStream.value!.getIdToken(true);
-    }
+final userDocProvider = StreamProvider<DocumentSnapshot<Map<String, dynamic>>>((
+  ref,
+) {
+  final userStream = ref.watch(userProvider);
+  if (userStream.value != null) {
+    userStream.value!.getIdToken(true);
+  }
 
-    var user = userStream.value;
+  var user = userStream.value;
 
-    if (user != null) {
-      var docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-      return docRef.snapshots();
-    } else {
-      return Stream.empty();
-    }
-  },
-);
+  if (user != null) {
+    var docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    return docRef.snapshots();
+  } else {
+    return Stream.empty();
+  }
+});
 
 class App extends ConsumerStatefulWidget {
   final Widget child;
@@ -44,7 +44,7 @@ class _AppState extends ConsumerState<App> {
 
   @override
   Widget build(BuildContext context) {
-    final userDataStream = ref.watch(userDataProvider);
+    final userDataStream = ref.watch(userDocProvider);
 
     if (userDataStream.isLoading) {
       return Center(child: CircularProgressIndicator());

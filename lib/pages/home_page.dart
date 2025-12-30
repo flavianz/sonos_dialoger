@@ -7,7 +7,7 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    final data = ref.watch(userDataProvider).value?.data() ?? {};
+    final data = ref.watch(userDocProvider).value?.data() ?? {};
     return Center(child: Text("${data["first"]} ${data["last"]}"));
   }
 }

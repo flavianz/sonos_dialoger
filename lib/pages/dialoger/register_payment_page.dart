@@ -378,7 +378,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                             }
                             final isCoach =
                                 ref
-                                    .watch(userDataProvider)
+                                    .watch(userDocProvider)
                                     .value
                                     ?.data()?["role"] ==
                                 "coach";

@@ -46,3 +46,19 @@ final liveDialogerProvider = StreamProvider.family
           .snapshots()
           .map(SonosUser.fromDoc);
     });
+
+final userDataProvider = StreamProvider<SonosUser>((ref) {
+  final userStream = ref.watch(userProvider);
+  if (userStream.value != null) {
+    userStream.value!.getIdToken(true);
+  }
+
+  var user = userStream.value;
+
+  if (user != null) {
+    var docRef = firestore.collection('users').doc(user.uid);
+    return docRef.snapshots().map((doc) => SonosUser.fromDoc(doc));
+  } else {
+    return Stream.empty();
+  }
+});

@@ -62,7 +62,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 payment is RepeatingPaymentWithoutFirstPayment,
           )
           .fold(0.0, (total, payment) => total + payment.amount);
-      final double borderRadius = 4;
+      final double borderRadius = width / 4;
 
       return BarChartGroupData(
         x: millis,
@@ -335,7 +335,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                                       Timespan.day =>
                                         titleData % columnLabelInterval == 0
                                             ? Text(
-                                              "${titleData.toInt().toString().padLeft(2, "0")}.",
+                                              "${titleData.toInt().toString().padLeft(2, "0")}h",
                                               style: TextStyle(fontSize: 13),
                                             )
                                             : SizedBox.shrink(),

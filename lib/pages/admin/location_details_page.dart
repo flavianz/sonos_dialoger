@@ -109,6 +109,19 @@ class LocationDetailsPage extends ConsumerWidget {
                   Padding(
                     padding: EdgeInsets.only(left: 4, top: 12),
                     child: Text(
+                      "Preis",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  Divider(),
+                  Text("${location.price} CHF pro Tag"),
+                  SizedBox(height: 15),
+                  Padding(
+                    padding: EdgeInsets.only(left: 4, top: 12),
+                    child: Text(
                       "Kontakt",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -158,7 +171,11 @@ class LocationDetailsPage extends ConsumerWidget {
                     ),
                   ),
                   Divider(),
-                  Text(location.notes ?? "Keine Notizen"),
+                  Text(
+                    (location.notes == null || location.notes!.isEmpty)
+                        ? "Keine Notizen"
+                        : location.notes!,
+                  ),
                 ],
               ),
             ),

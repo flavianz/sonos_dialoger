@@ -36,7 +36,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
   final notesController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
-  double price = 0;
+  num price = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +103,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                     nameController,
                     hint: "Name des Standplatzes",
                   ),
-                  InputBox.number("Preis pro Tag", price, (value) {
+                  InputBox.number("Preis pro Tag", price.toDouble(), (value) {
                     if (value != null) {
                       setState(() {
                         price = value;

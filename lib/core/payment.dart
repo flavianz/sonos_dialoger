@@ -40,10 +40,11 @@ class Payment {
 
   PaymentStatus getPaymentStatus() {
     if (this is OncePayment) {
-      return PaymentStatus.paid;
+      return (this as OncePayment).paymentStatus ?? PaymentStatus.paid;
     } else {
       if (this is RepeatingPaymentWithFirstPayment) {
-        return PaymentStatus.paid;
+        return (this as RepeatingPaymentWithFirstPayment).paymentStatus ??
+            PaymentStatus.paid;
       } else {
         return (this as RepeatingPaymentWithoutFirstPayment).paymentStatus;
       }
@@ -61,6 +62,12 @@ class Payment {
     String? first = map["first"] as String?;
     String? last = map["last"] as String?;
     String type = map["type"] as String;
+    PaymentStatus? paymentStatus = switch (map["payment_status"]) {
+      "paid" => PaymentStatus.paid,
+      "pending" => PaymentStatus.pending,
+      "cancelled" => PaymentStatus.cancelled,
+      _ => null,
+    };
 
     if (type == "once") {
       PaymentMethod paymentMethod = switch (map["method"]) {
@@ -78,6 +85,7 @@ class Payment {
         first,
         last,
         paymentMethod,
+        paymentStatus,
       );
     } else {
       bool hasFirstPayment = map["has_first_payment"] as bool;
@@ -107,15 +115,12 @@ class Payment {
           first,
           last,
           paymentMethod,
+          paymentStatus,
         );
       } else {
-        PaymentStatus paymentStatus = switch (map["payment_status"]) {
-          "paid" => PaymentStatus.paid,
-          "pending" => PaymentStatus.pending,
-          "cancelled" => PaymentStatus.cancelled,
-          _ =>
-            throw Exception("Invalid payment status ${map["payment_status"]}"),
-        };
+        if (paymentStatus == null) {
+          throw Exception("Invalid payment status ${map["payment_status"]}");
+        }
         return RepeatingPaymentWithoutFirstPayment(
           id,
           amount,
@@ -154,6 +159,7 @@ class OncePayment extends Payment {
   final String? first;
   final String? last;
   final PaymentMethod paymentMethod;
+  final PaymentStatus? paymentStatus;
 
   OncePayment(
     super.id,
@@ -165,6 +171,7 @@ class OncePayment extends Payment {
     this.first,
     this.last,
     this.paymentMethod,
+    this.paymentStatus,
   );
 }
 
@@ -188,6 +195,7 @@ class RepeatingPayment extends Payment {
 
 class RepeatingPaymentWithFirstPayment extends RepeatingPayment {
   final PaymentMethod paymentMethod;
+  final PaymentStatus? paymentStatus;
 
   RepeatingPaymentWithFirstPayment(
     super.id,
@@ -200,6 +208,7 @@ class RepeatingPaymentWithFirstPayment extends RepeatingPayment {
     super.first,
     super.last,
     this.paymentMethod,
+    this.paymentStatus,
   );
 }
 
@@ -224,11 +233,10 @@ extension PaymentsSum on Iterable<Payment> {
   num get sum {
     num sum = 0;
     for (var element in this) {
-      if (element is RepeatingPaymentWithoutFirstPayment) {
-        if (element.paymentStatus == PaymentStatus.cancelled) {
-          continue;
-        }
+      if (element.getPaymentStatus() == PaymentStatus.cancelled) {
+        continue;
       }
+
       sum += element.amount;
     }
     return sum;

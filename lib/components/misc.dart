@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:sonos_dialoger/pages/admin/location_details_page.dart';
 
 Widget getPill(String s, Color c, bool lightText) {
   return Container(

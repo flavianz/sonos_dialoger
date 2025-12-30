@@ -4,11 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/clickable_link.dart';
 import 'package:sonos_dialoger/components/payment_row.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
+import 'package:sonos_dialoger/components/payments_summary.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 
-import '../../components/misc.dart';
 import '../../components/timespan_dropdowns.dart';
-import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
 import '../../providers/firestore_providers/location_providers.dart';
 
@@ -64,60 +63,11 @@ class LocationDetailsPage extends ConsumerWidget {
                 final payments = paymentsData.docs.map(
                   (doc) => Payment.fromDoc(doc),
                 );
-                final startDate = ref.watch(paymentsStartDateProvider);
-                final timespan = ref.watch(paymentsTimespanProvider);
 
                 final isScreenWide =
                     MediaQuery.of(context).size.aspectRatio > 1;
 
-                final summaryCard = Card.outlined(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-                    constraints: BoxConstraints(maxHeight: 300),
-                    child: Column(
-                      mainAxisSize:
-                          isScreenWide ? MainAxisSize.max : MainAxisSize.min,
-                      crossAxisAlignment:
-                          isScreenWide
-                              ? CrossAxisAlignment.start
-                              : CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          "Einnahmen ${switch (timespan) {
-                            Timespan.day => "${startDate.day}. ${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
-                            Timespan.week => "KW ${startDate.weekOfYear}",
-                            Timespan.month => "${startDate.getMonthName()}${startDate.year == DateTime.now().year ? "" : " ${startDate.year}"}",
-                          }}",
-                          style: TextStyle(fontSize: 13),
-                        ),
-                        Text(
-                          "${payments.sum.toStringAsFixed(2)} CHF",
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          "+ -- % über dem Durchschnitt",
-                          style: TextStyle(fontSize: 13, color: Colors.green),
-                        ),
-                        SizedBox(height: 20),
-                        Text(
-                          "Nach DialogerInnen-Anteil",
-                          style: TextStyle(fontSize: 13),
-                        ),
-                        Text(
-                          "${payments.sumWithoutDialogerShare.toStringAsFixed(2)} CHF",
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                final summaryCard = PaymentsSummary(payments: payments);
                 final graph = Card.outlined(
                   child: PaymentsGraph(payments: payments.toList()),
                 );

@@ -62,7 +62,7 @@ class PaymentRow extends StatelessWidget {
                   child: Text((payment) {
                     if (payment is OncePayment) {
                       if (payment.last != null && payment.last!.isNotEmpty) {
-                        return "${payment.first} ${payment.last}";
+                        return payment.last!;
                       } else {
                         return "-";
                       }

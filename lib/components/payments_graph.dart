@@ -313,6 +313,29 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                         ? Center(child: Text("Keine Daten"))
                         : BarChart(
                           BarChartData(
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchTooltipData: BarTouchTooltipData(
+                                getTooltipItem: (
+                                  BarChartGroupData group,
+                                  int groupIndex,
+                                  BarChartRodData rod,
+                                  int rodIndex,
+                                ) {
+                                  final double ownValue = rod.toY - rod.fromY;
+
+                                  if (ownValue <= 0) return null;
+
+                                  return BarTooltipItem(
+                                    ownValue.toStringAsFixed(2),
+                                    const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                             titlesData: FlTitlesData(
                               leftTitles: AxisTitles(
                                 sideTitles: SideTitles(

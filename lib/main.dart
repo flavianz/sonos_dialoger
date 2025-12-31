@@ -73,14 +73,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       localizationsDelegates: [
-        // Creates an instance of FirebaseUILocalizationDelegate with overridden labels
         FirebaseUILocalizations.withDefaultOverrides(const DeLocalizations()),
 
-        // Delegates below take care of built-in flutter widgets
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
 
-        // This delegate is required to provide the labels that are not overridden by LabelOverrides
         FirebaseUILocalizations.delegate,
       ],
       routerConfig: activeRouter,

@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
+import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
 
 import '../../components/misc.dart';
+import '../../core/user.dart';
 import '../../providers/firestore_providers.dart';
 
 class RegisterPaymentPage extends ConsumerStatefulWidget {
@@ -392,11 +394,8 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                 commonData["location"] = myLocationId!;
                               }
                               final isCoach =
-                                  ref
-                                      .watch(userDocProvider)
-                                      .value
-                                      ?.data()?["role"] ==
-                                  "coach";
+                                  ref.watch(userDataProvider).value?.role ==
+                                  UserRole.coach;
                               if (type == "once") {
                                 final data = {
                                   ...commonData,

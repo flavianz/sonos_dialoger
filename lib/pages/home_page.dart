@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sonos_dialoger/app.dart';
+import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final data = ref.watch(userDocProvider).value?.data() ?? {};
-    return Center(child: Text("${data["first"]} ${data["last"]}"));
+    final data = ref.watch(userDataProvider).value;
+    return Center(child: Text("${data?.first ?? ""} ${data?.last ?? ""}"));
   }
 }

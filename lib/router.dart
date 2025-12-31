@@ -17,6 +17,7 @@ import 'package:sonos_dialoger/pages/coach/create_schedule_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_payments_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_schedule_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/dialoger_stats_page.dart';
+import 'package:sonos_dialoger/pages/dialoger/qr_code_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
 import 'package:sonos_dialoger/pages/home_page.dart';
 import 'package:sonos_dialoger/utils.dart';
@@ -153,6 +154,12 @@ final router = GoRouter(
           path: '/admin/settings',
           builder: (context, state) {
             return AdminSettingsPage();
+          },
+        ),
+        GoRoute(
+          path: '/dialog/qr',
+          builder: (context, state) {
+            return QrCodePage();
           },
         ),
         GoRoute(

@@ -488,22 +488,11 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                                                                         locationId,
                                                                   )
                                                                   .toList();
-                                                          if (filteredDocs
-                                                              .isEmpty) {
-                                                            return Card.outlined(
-                                                              child: Padding(
-                                                                padding:
-                                                                    EdgeInsets.all(
-                                                                      16,
-                                                                    ),
-                                                                child: Text(
-                                                                  "Unbekannter Standplatz",
-                                                                ),
-                                                              ),
-                                                            );
-                                                          }
                                                           final location =
-                                                              filteredDocs[0];
+                                                              filteredDocs
+                                                                      .isEmpty
+                                                                  ? null
+                                                                  : filteredDocs[0];
                                                           return Card.outlined(
                                                             child: Padding(
                                                               padding:
@@ -521,7 +510,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                                                                             .spaceBetween,
                                                                     children: [
                                                                       Text(
-                                                                        "${location.name}, ${location.town ?? "-"}",
+                                                                        "${location?.name ?? "Unbekannter Standplatz"}${location == null ? "" : ", "}${location == null ? "" : location.town ?? "-"}",
                                                                         style: TextStyle(
                                                                           fontWeight:
                                                                               FontWeight.bold,
@@ -560,7 +549,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                                                                                 CrossAxisAlignment.start,
                                                                             children: [
                                                                               Text(
-                                                                                "Unbekannt",
+                                                                                "Unbekannte*r Dialoger*in",
                                                                               ),
                                                                               Divider(),
                                                                             ],

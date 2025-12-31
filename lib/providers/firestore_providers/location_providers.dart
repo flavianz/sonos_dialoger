@@ -25,6 +25,7 @@ final personnelAssignedSchedulesLocationsProvider =
         return Stream.empty();
       }
       if (schedules.hasError) {
+        print(schedules.error);
         return Stream.error(schedules.error ?? "Unknown error");
       }
       final scheduleDocs = schedules.value!.docs;
@@ -45,6 +46,7 @@ final personnelAssignedSchedulesLocationsProvider =
         return Stream.empty();
       }
       if (locations.hasError) {
+        print(locations.error);
         return Stream.error(locations.error ?? "Unknown error");
       }
       return Stream.value(locations.value!.map((doc) => Location.fromDoc(doc)));

@@ -43,6 +43,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                   return Center(child: CircularProgressIndicator());
                 }
                 if (dialogerLocationDocs.hasError) {
+                  print("werwe");
                   print(dialogerLocationDocs.error);
                   print(dialogerLocationDocs.stackTrace);
                   return Center(
@@ -77,50 +78,62 @@ class DialogerSchedulePage extends ConsumerWidget {
                           .key;
                   final filteredLocations =
                       locations.where((doc) => doc.id == myLocationId).toList();
-                  if (filteredLocations.isEmpty) {
-                    return Center(
-                      child: Text("Ups, hier hat etwas nicht geklappt"),
-                    );
-                  }
-                  final myLocation = filteredLocations[0];
+                  final myLocation =
+                      filteredLocations.isEmpty ? null : filteredLocations[0];
                   return SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "${myLocation.name}, ${myLocation.town ?? "-"}",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          "${myLocation.street ?? "-"} ${myLocation.houseNumber ?? ""}",
-                        ),
-                        Text(
-                          "${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
-                        ),
-                        SizedBox(height: 5),
-                        (myLocation.link != null && myLocation.link!.isNotEmpty)
-                            ? ClickableLink(link: myLocation.link!)
-                            : SizedBox.shrink(),
-                        (myLocation.notes != null &&
-                                myLocation.notes!.isNotEmpty)
-                            ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 10),
-                                Text(
-                                  "Notizen",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  myLocation.notes!,
-                                  style: TextStyle(fontSize: 14),
-                                ),
-                              ],
+                        myLocation == null
+                            ? Text(
+                              "Unbekannter Standplatz",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             )
-                            : SizedBox.shrink(),
+                            : Column(
+                              children: [
+                                Text(
+                                  "${myLocation.name}, ${myLocation.town ?? "-"}",
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  "${myLocation.street ?? "-"} ${myLocation.houseNumber ?? ""}",
+                                ),
+                                Text(
+                                  "${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
+                                ),
+                                SizedBox(height: 5),
+                                (myLocation.link != null &&
+                                        myLocation.link!.isNotEmpty)
+                                    ? ClickableLink(link: myLocation.link!)
+                                    : SizedBox.shrink(),
+                                (myLocation.notes != null &&
+                                        myLocation.notes!.isNotEmpty)
+                                    ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(height: 10),
+                                        Text(
+                                          "Notizen",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          myLocation.notes!,
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    )
+                                    : SizedBox.shrink(),
+                              ],
+                            ),
                         SizedBox(height: 30),
                         Text(
                           "Mit dir eingeteilte Dialoger*innen",
@@ -321,7 +334,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                                               if (filteredLocations.isEmpty) {
                                                 return Center(
                                                   child: Text(
-                                                    "Ups, hier hat etwas nicht geklappt",
+                                                    "Unbekannter Standplatz",
                                                   ),
                                                 );
                                               }

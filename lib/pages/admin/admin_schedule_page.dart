@@ -12,11 +12,18 @@ import '../../providers/firestore_providers.dart';
 import '../../providers/firestore_providers/location_providers.dart';
 import '../dialoger/dialoger_schedule_page.dart';
 
-class AdminSchedulePage extends ConsumerWidget {
+class AdminSchedulePage extends ConsumerStatefulWidget {
   const AdminSchedulePage({super.key});
 
   @override
-  Widget build(BuildContext context, ref) {
+  ConsumerState<AdminSchedulePage> createState() => _AdminSchedulePageState();
+}
+
+class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
@@ -46,9 +53,9 @@ class AdminSchedulePage extends ConsumerWidget {
                   child: ref
                       .watch(schedulesProvider)
                       .when(
-                        data: (coachSchedulesDocs) {
+                        data: (schedulesDocs) {
                           if (scheduleTimespan == Timespan.day) {
-                            if (coachSchedulesDocs.docs.isEmpty) {
+                            if (schedulesDocs.docs.isEmpty) {
                               return Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -66,9 +73,9 @@ class AdminSchedulePage extends ConsumerWidget {
                                 ],
                               );
                             }
-                            final coachScheduleDoc = coachSchedulesDocs.docs[0];
-                            final coachScheduleData = coachScheduleDoc.data();
-                            if (coachScheduleData["reviewed"] != true) {
+                            final scheduleDoc = schedulesDocs.docs[0];
+                            final scheduleData = scheduleDoc.data();
+                            if (scheduleData["reviewed"] != true) {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
@@ -111,7 +118,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                       Text("Angefragt am"),
                                       Text(
                                         parseDateTimeFromTimestamp(
-                                          coachScheduleData["creation_timestamp"],
+                                          scheduleData["creation_timestamp"],
                                         ).toFormattedDateTimeString(),
                                       ),
                                     ],
@@ -135,7 +142,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                             return SingleChildScrollView(
                                               child: Column(
                                                 children:
-                                                    (coachScheduleData["requested_locations"]
+                                                    (scheduleData["requested_locations"]
                                                             as List)
                                                         .map((locationId) {
                                                           final filteredDocs =
@@ -183,17 +190,39 @@ class AdminSchedulePage extends ConsumerWidget {
                                     child: FilledButton(
                                       onPressed: () {
                                         context.push(
-                                          "/admin/schedule-review/${coachScheduleDoc.id}",
+                                          "/admin/schedule-review/${scheduleDoc.id}",
                                         );
                                       },
                                       child: Text("Jetzt Standplätze prüfen"),
                                     ),
                                   ),
+                                  SizedBox(height: 5),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton.tonalIcon(
+                                      onPressed: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        await FirebaseFirestore.instance
+                                            .collection("schedules")
+                                            .doc(scheduleDoc.id)
+                                            .delete();
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      },
+                                      label:
+                                          isLoading
+                                              ? CircularProgressIndicator()
+                                              : Text("Anfrage zurücknehmen"),
+                                      icon: isLoading ? null : Icon(Icons.undo),
+                                    ),
+                                  ),
                                 ],
                               );
-                            } else if (coachScheduleData["reviewed"] == true &&
-                                coachScheduleData["personnel_assigned"] !=
-                                    true) {
+                            } else if (scheduleData["reviewed"] == true &&
+                                scheduleData["personnel_assigned"] != true) {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
@@ -236,7 +265,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                       Text("Angefragt am"),
                                       Text(
                                         parseDateTimeFromTimestamp(
-                                          coachScheduleData["creation_timestamp"],
+                                          scheduleData["creation_timestamp"],
                                         ).toFormattedDateTimeString(),
                                       ),
                                     ],
@@ -260,7 +289,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                             return SingleChildScrollView(
                                               child: Column(
                                                 children:
-                                                    (coachScheduleData["confirmed_locations"]
+                                                    (scheduleData["confirmed_locations"]
                                                             as List)
                                                         .map((locationId) {
                                                           final filteredDocs =
@@ -308,12 +337,41 @@ class AdminSchedulePage extends ConsumerWidget {
                                     child: FilledButton(
                                       onPressed: () {
                                         context.push(
-                                          "/coach/schedule/personnel_assignment/${coachScheduleDoc.id}",
+                                          "/coach/schedule/personnel_assignment/${scheduleDoc.id}",
                                         );
                                       },
                                       child: Text(
                                         "Jetzt Dialoger*innen einteilen",
                                       ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton.tonalIcon(
+                                      onPressed: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        await FirebaseFirestore.instance
+                                            .collection("schedules")
+                                            .doc(scheduleDoc.id)
+                                            .update({
+                                              "reviewed": false,
+                                              "reviewed_at":
+                                                  FieldValue.delete(),
+                                            });
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      },
+                                      label:
+                                          isLoading
+                                              ? CircularProgressIndicator()
+                                              : Text(
+                                                "Bestätigung zurücknehmen",
+                                              ),
+                                      icon: isLoading ? null : Icon(Icons.undo),
                                     ),
                                   ),
                                 ],
@@ -361,7 +419,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                       Text("Angefragt am"),
                                       Text(
                                         parseDateTimeFromTimestamp(
-                                          coachScheduleData["creation_timestamp"],
+                                          scheduleData["creation_timestamp"],
                                         ).toFormattedDateTimeString(),
                                       ),
                                     ],
@@ -388,7 +446,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                                   queryKey: "users",
                                                   ids:
                                                       flatten(
-                                                        (coachScheduleData["personnel"]
+                                                        (scheduleData["personnel"]
                                                                 as Map)
                                                             .values,
                                                       ).toSet().toList(),
@@ -419,7 +477,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.stretch,
                                                 children:
-                                                    (coachScheduleData["confirmed_locations"]
+                                                    (scheduleData["confirmed_locations"]
                                                             as List)
                                                         .map((locationId) {
                                                           final filteredDocs =
@@ -470,7 +528,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                                                         ),
                                                                       ),
                                                                       Text(
-                                                                        (coachScheduleData["personnel"]?[locationId]
+                                                                        (scheduleData["personnel"]?[locationId]
                                                                                     as List? ??
                                                                                 [])
                                                                             .length
@@ -479,7 +537,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                                                     ],
                                                                   ),
                                                                   Divider(),
-                                                                  ...(coachScheduleData["personnel"]?[locationId]
+                                                                  ...(scheduleData["personnel"]?[locationId]
                                                                               as List? ??
                                                                           [])
                                                                       .map((
@@ -534,6 +592,31 @@ class AdminSchedulePage extends ConsumerWidget {
                                           loading: loadingHandling,
                                         ),
                                   ),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton.tonalIcon(
+                                      onPressed: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        await FirebaseFirestore.instance
+                                            .collection("schedules")
+                                            .doc(scheduleDoc.id)
+                                            .update({
+                                              "personnel_assigned": false,
+                                              "personnel": FieldValue.delete(),
+                                            });
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      },
+                                      label:
+                                          isLoading
+                                              ? CircularProgressIndicator()
+                                              : Text("Einteilung zurücknehmen"),
+                                      icon: isLoading ? null : Icon(Icons.undo),
+                                    ),
+                                  ),
                                 ],
                               );
                             }
@@ -565,7 +648,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                           index + 1,
                                         );
                                 final dateFilteredScheduleDocs =
-                                    coachSchedulesDocs.docs.where((doc) {
+                                    schedulesDocs.docs.where((doc) {
                                       final scheduleDate =
                                           parseDateTimeFromTimestamp(
                                             doc.data()["date"],

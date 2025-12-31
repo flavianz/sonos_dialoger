@@ -12,11 +12,18 @@ import '../../providers/firestore_providers.dart';
 import '../../providers/firestore_providers/location_providers.dart';
 import '../dialoger/dialoger_schedule_page.dart';
 
-class CoachSchedulePage extends ConsumerWidget {
+class CoachSchedulePage extends ConsumerStatefulWidget {
   const CoachSchedulePage({super.key});
 
   @override
-  Widget build(BuildContext context, ref) {
+  ConsumerState<CoachSchedulePage> createState() => _CoachSchedulePageState();
+}
+
+class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
@@ -126,55 +133,79 @@ class CoachSchedulePage extends ConsumerWidget {
                                   Divider(
                                     color: Theme.of(context).primaryColor,
                                   ),
-                                  ref
-                                      .watch(schedulesLocationsProvider)
-                                      .when(
-                                        data: (locations) {
-                                          return SingleChildScrollView(
-                                            child: Column(
-                                              children:
-                                                  (coachScheduleData["requested_locations"]
-                                                          as List)
-                                                      .map((locationId) {
-                                                        final filteredDocs =
-                                                            locations
-                                                                .where(
-                                                                  (doc) =>
-                                                                      doc.id ==
-                                                                      locationId,
-                                                                )
-                                                                .toList();
-                                                        if (filteredDocs
-                                                            .isEmpty) {
+                                  Expanded(
+                                    child: ref
+                                        .watch(schedulesLocationsProvider)
+                                        .when(
+                                          data: (locations) {
+                                            return SingleChildScrollView(
+                                              child: Column(
+                                                children:
+                                                    (coachScheduleData["requested_locations"]
+                                                            as List)
+                                                        .map((locationId) {
+                                                          final filteredDocs =
+                                                              locations
+                                                                  .where(
+                                                                    (doc) =>
+                                                                        doc.id ==
+                                                                        locationId,
+                                                                  )
+                                                                  .toList();
+                                                          if (filteredDocs
+                                                              .isEmpty) {
+                                                            return Column(
+                                                              children: [
+                                                                Text(
+                                                                  "Unbekannter Standplatz",
+                                                                ),
+                                                              ],
+                                                            );
+                                                          }
+                                                          final location =
+                                                              filteredDocs[0];
                                                           return Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
                                                             children: [
                                                               Text(
-                                                                "Unbekannter Standplatz",
+                                                                "${location.name}, ${location.town ?? "-"}",
                                                               ),
+                                                              Divider(),
                                                             ],
                                                           );
-                                                        }
-                                                        final location =
-                                                            filteredDocs[0];
-                                                        return Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Text(
-                                                              "${location.name}, ${location.town ?? "-"}",
-                                                            ),
-                                                            Divider(),
-                                                          ],
-                                                        );
-                                                      })
-                                                      .toList(),
-                                            ),
-                                          );
-                                        },
-                                        error: errorHandling,
-                                        loading: loadingHandling,
-                                      ),
+                                                        })
+                                                        .toList(),
+                                              ),
+                                            );
+                                          },
+                                          error: errorHandling,
+                                          loading: loadingHandling,
+                                        ),
+                                  ),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton.tonalIcon(
+                                      onPressed: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        await FirebaseFirestore.instance
+                                            .collection("schedules")
+                                            .doc(coachScheduleDoc.id)
+                                            .delete();
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      },
+                                      label:
+                                          isLoading
+                                              ? CircularProgressIndicator()
+                                              : Text("Anfrage zurücknehmen"),
+                                      icon: isLoading ? null : Icon(Icons.undo),
+                                    ),
+                                  ),
                                 ],
                               );
                             } else if (coachScheduleData["reviewed"] == true &&
@@ -519,6 +550,31 @@ class CoachSchedulePage extends ConsumerWidget {
                                           error: errorHandling,
                                           loading: loadingHandling,
                                         ),
+                                  ),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: 50),
+                                    child: FilledButton.tonalIcon(
+                                      onPressed: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        await FirebaseFirestore.instance
+                                            .collection("schedules")
+                                            .doc(coachScheduleDoc.id)
+                                            .update({
+                                              "personnel_assigned": false,
+                                              "personnel": FieldValue.delete(),
+                                            });
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      },
+                                      label:
+                                          isLoading
+                                              ? CircularProgressIndicator()
+                                              : Text("Einteilung zurücknehmen"),
+                                      icon: isLoading ? null : Icon(Icons.undo),
+                                    ),
                                   ),
                                 ],
                               );

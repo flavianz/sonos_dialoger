@@ -56,8 +56,6 @@ export async function exportDate(date: Date) {
     );
   });
 
-  await workbook.xlsx.writeFile(`export.xlsx`);
-
   return workbook;
 }
 
@@ -280,5 +278,3 @@ function buildSheet(
     fgColor: { argb: "B7DEE8" },
   };
 }
-
-exportDate(new Date());

@@ -5,13 +5,14 @@ import '../components/misc.dart';
 
 enum PaymentInterval { monthly, quarterly, semester, yearly }
 
-enum PaymentMethod { twint, sumup }
+enum PaymentMethod { twint, sumup, cash }
 
 extension PaymentMethodName on PaymentMethod {
   String paymentMethodName() {
     return switch (this) {
       PaymentMethod.twint => "Twint",
       PaymentMethod.sumup => "Sumup",
+      PaymentMethod.cash => "Bar",
     };
   }
 }
@@ -73,6 +74,7 @@ class Payment {
       PaymentMethod paymentMethod = switch (map["method"]) {
         "twint" => PaymentMethod.twint,
         "sumup" => PaymentMethod.sumup,
+        "cash" => PaymentMethod.cash,
         _ => throw Exception("Invalid payment method ${map["method"]}"),
       };
       return OncePayment(
@@ -102,6 +104,7 @@ class Payment {
         PaymentMethod paymentMethod = switch (map["method"]) {
           "twint" => PaymentMethod.twint,
           "sumup" => PaymentMethod.sumup,
+          "cash" => PaymentMethod.cash,
           _ => throw Exception("Invalid payment method ${map["method"]}"),
         };
         return RepeatingPaymentWithFirstPayment(

@@ -341,6 +341,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                       items: [
                         DropdownMenuItem(value: "sumup", child: Text("SumUp")),
                         DropdownMenuItem(value: "twint", child: Text("Twint")),
+                        DropdownMenuItem(value: "cash", child: Text("Bar")),
                       ],
                       onChanged:
                           (hasFirstPayment || type == "once")
@@ -389,10 +390,8 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                 "dialoger":
                                     ref.watch(userProvider).value?.uid ?? "",
                                 "timestamp": Timestamp.fromDate(DateTime.now()),
+                                "location": myLocationId,
                               };
-                              if (myLocationId != null) {
-                                commonData["location"] = myLocationId!;
-                              }
                               final isCoach =
                                   ref.watch(userDataProvider).value?.role ==
                                   UserRole.coach;

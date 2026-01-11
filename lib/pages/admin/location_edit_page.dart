@@ -28,6 +28,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
   bool isLoading = false;
 
   final nameController = TextEditingController();
+  final spaceController = TextEditingController();
   final streetController = TextEditingController();
   final houseNumberController = TextEditingController();
   final postalCodeController = TextEditingController();
@@ -69,6 +70,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
     if (!hasBeenInit) {
       setState(() {
         nameController.text = data["name"] ?? "";
+        spaceController.text = data["space"] ?? "";
         streetController.text = data["address"]["street"] ?? "";
         houseNumberController.text = data["address"]["house_number"] ?? "";
         postalCodeController.text = data["address"]["postal_code"] ?? "";
@@ -102,6 +104,11 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                     "Name",
                     nameController,
                     hint: "Name des Standplatzes",
+                  ),
+                  InputBox.textControlled(
+                    "Fläche",
+                    spaceController,
+                    hint: "Fläche",
                   ),
                   InputBox.number("Preis pro Tag", price.toDouble(), (value) {
                     if (value != null) {
@@ -204,6 +211,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                   onPressed: () {
                     setState(() {
                       nameController.text = data["name"] ?? "";
+                      spaceController.text = data["space"] ?? "";
                       linkController.text = data["link"] ?? "";
                       streetController.text = data["address"]["street"] ?? "";
                       houseNumberController.text =
@@ -231,6 +239,7 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                       final writeLocation = Location(
                         "" /*id irrelevant here*/,
                         nameController.text,
+                        spaceController.text,
                         townController.text,
                         postalCodeController.text,
                         streetController.text,

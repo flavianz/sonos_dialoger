@@ -51,6 +51,20 @@ class LocationsPage extends ConsumerWidget {
                                       flex: 2,
                                       child: Text(location.name),
                                     ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(location.space ?? ""),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        location.price == null
+                                            ? ""
+                                            : location.price!.toStringAsFixed(
+                                              0,
+                                            ),
+                                      ),
+                                    ),
                                     Expanded(child: Text(location.town ?? "-")),
                                     Expanded(child: Text("")),
                                     SizedBox(width: 5),

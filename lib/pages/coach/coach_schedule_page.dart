@@ -170,7 +170,8 @@ class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
                                                                     .start,
                                                             children: [
                                                               Text(
-                                                                "${location.name}, ${location.town ?? "-"}",
+                                                                location
+                                                                    .getName(),
                                                               ),
                                                               Divider(),
                                                             ],
@@ -306,7 +307,8 @@ class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
                                                                     .start,
                                                             children: [
                                                               Text(
-                                                                "${location.name}, ${location.town}",
+                                                                location
+                                                                    .getName(),
                                                               ),
                                                               Divider(),
                                                             ],
@@ -469,7 +471,7 @@ class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
                                                                             .spaceBetween,
                                                                     children: [
                                                                       Text(
-                                                                        "${location?.name ?? "Unbekannter Standplatz"}${location == null ? "" : ", "}${location == null ? "" : location.town ?? "-"}",
+                                                                        "${location?.name ?? "Unbekannter Standplatz"}${location == null ? "" : "${location.space != null ? ", Fläche ${location.space}" : ""}, ${location.town}"}",
                                                                         style: TextStyle(
                                                                           fontWeight:
                                                                               FontWeight.bold,

@@ -103,7 +103,7 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                           .spaceBetween,
                                                   children: [
                                                     Text(
-                                                      "${location.name}, ${location.town ?? "-"}",
+                                                      location.getName(),
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,

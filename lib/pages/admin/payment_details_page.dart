@@ -211,7 +211,7 @@ class PaymentDetailsPage extends ConsumerWidget {
                 locationDoc.when(
                   data:
                       (location) => Text(
-                        "${location.name}, ${location.town ?? "-"}",
+                        location.getName(),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                   error: errorHandling,

@@ -95,7 +95,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                             : Column(
                               children: [
                                 Text(
-                                  "${myLocation.name}, ${myLocation.town ?? "-"}",
+                                  myLocation.getName(),
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -345,7 +345,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    myLocation.name,
+                                                    myLocation.getName(),
                                                     style: TextStyle(
                                                       fontSize: 20,
                                                     ),

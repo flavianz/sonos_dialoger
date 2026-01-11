@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Location {
   String id;
   String name;
+  String? space;
 
   String? town;
   String? postalCode;
@@ -19,6 +20,7 @@ class Location {
   Location(
     this.id,
     this.name,
+    this.space,
     this.town,
     this.postalCode,
     this.street,
@@ -35,6 +37,7 @@ class Location {
     return Location(
       doc.id,
       data["name"] as String,
+      data["space"] as String?,
       data["address"]?["town"] as String?,
       data["address"]?["postal_code"] as String?,
       data["address"]?["street"] as String?,
@@ -50,6 +53,7 @@ class Location {
   Map<String, dynamic> toMap() {
     return {
       "name": name,
+      "space": space,
       "address": {
         "town": town,
         "postal_code": postalCode,
@@ -62,5 +66,9 @@ class Location {
       "price": price,
       "notes": notes,
     };
+  }
+
+  String getName() {
+    return "$name${space != null ? (", Fläche $space") : ""}, ${town ?? "-"}";
   }
 }

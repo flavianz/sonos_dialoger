@@ -23,7 +23,7 @@ class RegisterPaymentPage extends ConsumerStatefulWidget {
 
 class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
   String? type;
-  String? interval;
+  String? interval = "yearly";
   bool hasFirstPayment = false;
   String? paymentMethod;
   String? myLocationId;
@@ -113,7 +113,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
     void resetInputs() {
       setState(() {
         type = null;
-        interval = null;
+        interval = "yearly";
         amountController.text = "";
         firstController.text = "";
         lastController.text = "";

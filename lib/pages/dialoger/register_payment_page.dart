@@ -7,6 +7,7 @@ import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
 
 import '../../components/misc.dart';
+import '../../core/payment.dart';
 import '../../core/user.dart';
 import '../../providers/firestore_providers.dart';
 
@@ -57,6 +58,13 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
         return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
       }
       final data = paymentDoc.value!.data() ?? {};
+      final payment = Payment.fromDoc(paymentDoc.value!);
+      if (ref.watch(userDataProvider).value?.role != UserRole.admin &&
+          !payment.canDialogerStillEdit()) {
+        return Center(
+          child: Text("Du kannst diese Leistung nicht mehr bearbeiten"),
+        );
+      }
       type = data["type"];
       amountController.text = data["amount"].toString();
       firstController.text = data["first"] ?? "";
@@ -80,6 +88,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
         return Center(child: CircularProgressIndicator());
       }
       if (scheduleDocs.hasError) {
+        print(scheduleDocs.error);
         return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
       }
       if (scheduleDocs.value!.docs.isEmpty) {
@@ -124,7 +133,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Leistung erfassen"),
+        title: Text("Leistung ${widget.editing ? "bearbeiten" : "erfassen"}"),
         actions: [
           IconButton(
             onPressed: () {

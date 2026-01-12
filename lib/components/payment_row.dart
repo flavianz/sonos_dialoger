@@ -48,12 +48,16 @@ class PaymentRow extends StatelessWidget {
     } else {
       isPaidWidget = getPill("Keine Information", Colors.grey, true);
     }
+
     return Column(
       children: [
         Tappable(
-          onTap: () {
-            context.push("/admin/payment/${payment.id}");
-          },
+          onTap:
+              isAdmin
+                  ? () {
+                    context.push("/admin/payment/${payment.id}");
+                  }
+                  : null,
           child: Row(
             children: [
               Expanded(child: Text(datePrefix, style: TextStyle(fontSize: 15))),
@@ -91,46 +95,55 @@ class PaymentRow extends StatelessWidget {
                 SizedBox.shrink(),
               Expanded(child: isPaidWidget),
               IconButton(
-                onPressed: () {
-                  context.push("/dialoger/payment/${payment.id}/edit");
-                },
+                onPressed:
+                    isAdmin || payment.canDialogerStillEdit()
+                        ? () {
+                          context.push("/dialoger/payment/${payment.id}/edit");
+                        }
+                        : null,
                 icon: Icon(Icons.edit),
                 tooltip: "Bearbeiten",
               ),
               IconButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder:
-                        (context) => AlertDialog(
-                          title: Text("Leistung löschen?"),
-                          content: Text(
-                            "Dieser Schritt kann nicht rückgängig gemacht werden",
-                          ),
-                          actions: [
-                            OutlinedButton(
-                              onPressed: () {
-                                context.pop();
-                              },
-                              child: Text("Abbrechen"),
-                            ),
-                            FilledButton(
-                              onPressed: () async {
-                                await FirebaseFirestore.instance
-                                    .collection("payments")
-                                    .doc(payment.id)
-                                    .delete();
-                                if (context.mounted) {
-                                  context.pop();
-                                  showSnackBar(context, "Leistung gelöscht!");
-                                }
-                              },
-                              child: Text("Löschen"),
-                            ),
-                          ],
-                        ),
-                  );
-                },
+                onPressed:
+                    isAdmin || payment.canDialogerStillEdit()
+                        ? () {
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  title: Text("Leistung löschen?"),
+                                  content: Text(
+                                    "Dieser Schritt kann nicht rückgängig gemacht werden",
+                                  ),
+                                  actions: [
+                                    OutlinedButton(
+                                      onPressed: () {
+                                        context.pop();
+                                      },
+                                      child: Text("Abbrechen"),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () async {
+                                        await FirebaseFirestore.instance
+                                            .collection("payments")
+                                            .doc(payment.id)
+                                            .delete();
+                                        if (context.mounted) {
+                                          context.pop();
+                                          showSnackBar(
+                                            context,
+                                            "Leistung gelöscht!",
+                                          );
+                                        }
+                                      },
+                                      child: Text("Löschen"),
+                                    ),
+                                  ],
+                                ),
+                          );
+                        }
+                        : null,
                 icon: Icon(Icons.delete),
                 tooltip: "Löschen",
               ),

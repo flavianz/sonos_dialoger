@@ -6,8 +6,10 @@ import 'package:sonos_dialoger/components/payment_row.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/components/payments_summary.dart';
 import 'package:sonos_dialoger/core/payment.dart';
+import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
 
 import '../../components/timespan_dropdowns.dart';
+import '../../core/user.dart';
 import '../../providers/firestore_providers.dart';
 import '../../providers/firestore_providers/location_providers.dart';
 
@@ -71,6 +73,8 @@ class LocationDetailsPage extends ConsumerWidget {
                 final graph = Card.outlined(
                   child: PaymentsGraph(payments: payments.toList()),
                 );
+                final isAdmin =
+                    ref.watch(userDataProvider).value?.role == UserRole.admin;
 
                 return ListView(
                   children: [
@@ -83,8 +87,10 @@ class LocationDetailsPage extends ConsumerWidget {
                       children:
                           payments
                               .map(
-                                (payment) =>
-                                    PaymentRow(payment: payment, isAdmin: true),
+                                (payment) => PaymentRow(
+                                  payment: payment,
+                                  isAdmin: isAdmin,
+                                ),
                               )
                               .toList(),
                     ),

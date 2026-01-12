@@ -156,6 +156,12 @@ class Payment {
   bool isOncePayment() {
     return this is OncePayment;
   }
+
+  bool canDialogerStillEdit() {
+    return timestamp.isSameDate(DateTime.now()) ||
+        (timestamp.isSameDate(DateTime.now().addDays(1)) &&
+            DateTime.now().hour < 11);
+  }
 }
 
 class OncePayment extends Payment {

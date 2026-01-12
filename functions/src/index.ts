@@ -54,7 +54,7 @@ exports.assignUser = onCall(async (request) => {
 });
 
 exports.autoExportEmail = onSchedule(
-  { schedule: "0 10 * * *", timeZone: "Europe/Zurich" },
+  { schedule: "0 11 * * *", timeZone: "Europe/Zurich" },
   async (_) => {
     let workbook: Workbook | undefined;
     const today = new Date();

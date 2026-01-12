@@ -143,9 +143,9 @@ function buildSheet(
     } else {
       paymentInterval = "Einmalig";
     }
-
+    const date = data["timestamp"].toDate();
     sheet.addRow({
-      date: data["timestamp"].toDate().toLocaleDateString(),
+      date: `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`,
       dialoger: dialogers[data["dialoger"]] ?? "Unbekannt",
       location: locations[data["location"]] ?? "Unbekannt",
       amount: amount,

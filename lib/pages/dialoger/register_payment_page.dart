@@ -387,11 +387,15 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                 "amount": num.parse(amountController.text),
                                 "first": firstController.text,
                                 "last": lastController.text,
-                                "dialoger":
-                                    ref.watch(userProvider).value?.uid ?? "",
-                                "timestamp": Timestamp.fromDate(DateTime.now()),
-                                "location": myLocationId,
                               };
+                              if (!widget.editing) {
+                                commonData["location"] = myLocationId;
+                                commonData["timestamp"] = Timestamp.fromDate(
+                                  DateTime.now(),
+                                );
+                                commonData["dialoger"] =
+                                    ref.watch(userProvider).value!.uid;
+                              }
                               final isCoach =
                                   ref.watch(userDataProvider).value?.role ==
                                   UserRole.coach;
@@ -405,7 +409,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                   await FirebaseFirestore.instance
                                       .collection("payments")
                                       .doc(widget.id!)
-                                      .set(data);
+                                      .update(data);
                                 } else {
                                   await FirebaseFirestore.instance
                                       .collection("payments")
@@ -428,7 +432,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                   await FirebaseFirestore.instance
                                       .collection("payments")
                                       .doc(widget.id!)
-                                      .set(data);
+                                      .update(data);
                                 } else {
                                   await FirebaseFirestore.instance
                                       .collection("payments")

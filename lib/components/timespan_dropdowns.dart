@@ -47,7 +47,7 @@ class PaymentsTimespanDropdown extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final paymentsStartDate = ref.watch(paymentsStartDateProvider);
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 150),
+      constraints: BoxConstraints(maxWidth: 100),
       child: DropdownButtonFormField(
         initialValue: ref.watch(paymentsTimespanProvider),
         decoration: InputDecoration(

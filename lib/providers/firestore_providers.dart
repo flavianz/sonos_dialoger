@@ -196,3 +196,7 @@ final scheduleRequestsProvider =
           .orderBy("date")
           .snapshots();
     });
+
+final autoExportProvider = FutureProvider((ref) {
+  return firestore.collection("config").doc("autoexport").get();
+});

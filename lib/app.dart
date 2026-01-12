@@ -151,7 +151,7 @@ class _AppState extends ConsumerState<App> {
         {
           "icon": Icon(Icons.settings),
           "label": "Einstellungen",
-          "url": "/admin/settings",
+          "url": "/dialog/settings",
         },
       ];
     } else {
@@ -181,7 +181,7 @@ class _AppState extends ConsumerState<App> {
         {
           "icon": Icon(Icons.settings),
           "label": "Einstellungen",
-          "url": "/admin/settings",
+          "url": "/dialog/settings",
         },
       ];
     }

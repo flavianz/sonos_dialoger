@@ -20,6 +20,7 @@ import 'package:sonos_dialoger/pages/dialoger/dialoger_stats_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/qr_code_page.dart';
 import 'package:sonos_dialoger/pages/dialoger/register_payment_page.dart';
 import 'package:sonos_dialoger/pages/home_page.dart';
+import 'package:sonos_dialoger/pages/settings_page.dart';
 import 'package:sonos_dialoger/utils.dart';
 
 import 'app.dart';
@@ -154,6 +155,12 @@ final router = GoRouter(
           path: '/admin/settings',
           builder: (context, state) {
             return AdminSettingsPage();
+          },
+        ),
+        GoRoute(
+          path: '/dialog/settings',
+          builder: (context, state) {
+            return SettingsPage();
           },
         ),
         GoRoute(

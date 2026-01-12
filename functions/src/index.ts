@@ -53,7 +53,7 @@ exports.assignUser = onCall(async (request) => {
   return { result: true };
 });
 
-exports.autoExportEmail = onSchedule("every day 11:05", async (_) => {
+exports.autoExportEmail = onSchedule("0 12 * * *", async (_) => {
   let workbook: Workbook | undefined;
   const today = new Date();
   const dateToExport = new Date(

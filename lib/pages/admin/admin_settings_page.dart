@@ -40,7 +40,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Auto-Export", style: TextStyle(fontWeight: FontWeight.bold)),
+          Text("Export", style: TextStyle(fontWeight: FontWeight.bold)),
           Divider(),
           autoExport.when(
             data: (autoExportDoc) {

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/payment_row.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/components/payments_summary.dart';
 import 'package:sonos_dialoger/core/payment.dart';
 import '../../components/timespan_dropdowns.dart';
+import '../../providers/basic_providers.dart';
 import '../../providers/firestore_providers.dart';
 
 class PaymentsPage extends ConsumerWidget {
@@ -32,7 +35,18 @@ class PaymentsPage extends ConsumerWidget {
       appBar: AppBar(
         forceMaterialTransparency: true,
         title: Text("Leistungen"),
-        actions: [],
+        actions: [
+          FilledButton.icon(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => PaymentsExportDialog(),
+              );
+            },
+            icon: Icon(Icons.drive_folder_upload),
+            label: Text("Export"),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -85,6 +99,103 @@ class PaymentsPage extends ConsumerWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class PaymentsExportDialog extends ConsumerStatefulWidget {
+  const PaymentsExportDialog({super.key});
+
+  @override
+  ConsumerState<PaymentsExportDialog> createState() =>
+      _PaymentsExportDialogState();
+}
+
+class _PaymentsExportDialogState extends ConsumerState<PaymentsExportDialog> {
+  bool loading = false;
+  DateTimeRange? range;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Leistungen exportieren"),
+      content: SingleChildScrollView(
+        child: Column(
+          children: [
+            Text(
+              range?.start.toExtendedFormattedDateString() ?? "-",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            Text("bis"),
+            Text(
+              range?.end.toExtendedFormattedDateString() ?? "-",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            SizedBox(height: 20),
+            FilledButton.tonal(
+              onPressed: () async {
+                final newRange = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime(2200),
+                );
+                if (newRange != null) {
+                  setState(() {
+                    range = newRange;
+                  });
+                }
+              },
+              child: Text("Zeitraum wählen"),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        OutlinedButton(
+          onPressed: () {
+            context.pop();
+          },
+          child: Text("Abbrechen"),
+        ),
+        FilledButton(
+          onPressed:
+              range == null
+                  ? null
+                  : () async {
+                    setState(() {
+                      loading = true;
+                    });
+                    final result = await ref.read(
+                      callableProvider(
+                        CallableProviderArgs("exportPayments", {
+                          "start": range!.start.toIso8601String(),
+                          "end": range!.end.toIso8601String(),
+                        }),
+                      ).future,
+                    );
+                    setState(() {
+                      loading = false;
+                    });
+                    print("result ${result.data}");
+                    if (context.mounted) {
+                      if (result.data == true) {
+                        context.pop();
+                        showSnackBar(context, "Export-Email verschickt!");
+                      } else {
+                        showSnackBar(context, "Export fehlgeschlagen!");
+                      }
+                    }
+                  },
+          child:
+              loading
+                  ? SizedBox(
+                    height: 15,
+                    width: 15,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                  : Text("Exportieren"),
+        ),
+      ],
     );
   }
 }

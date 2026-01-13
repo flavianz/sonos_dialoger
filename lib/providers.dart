@@ -1,10 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:async/async.dart';
-
-import 'app.dart';
 
 @immutable
 class QueryByIdsArgs {
@@ -38,7 +35,7 @@ final queryByIdsProvider = StreamProvider.autoDispose
       }
 
       final streams = chunks.map((chunk) {
-        return firestore
+        return FirebaseFirestore.instance
             .collection(baseQuery)
             .where(FieldPath.documentId, whereIn: chunk)
             .snapshots()

@@ -6,16 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/core/user.dart';
 import 'package:sonos_dialoger/pages/assignment_page.dart';
 
-final firestore = FirebaseFirestore.instance;
-
 final userProvider = StreamProvider<User?>(
-  (ref) => FirebaseAuth.instance.authStateChanges().map((user) {
-    if (user != null) {
-      print("refreshed user token");
-      user.getIdToken(true);
-    }
-    return user;
-  }),
+  (ref) => FirebaseAuth.instance.authStateChanges(),
 );
 
 final userDocProvider = StreamProvider<DocumentSnapshot<Map<String, dynamic>>>((

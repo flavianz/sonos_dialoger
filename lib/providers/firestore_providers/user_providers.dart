@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app.dart';
@@ -8,7 +9,8 @@ import '../firestore_providers.dart';
 final nonAdminUsersProvider = StreamProvider.autoDispose<Iterable<SonosUser>>((
   ref,
 ) {
-  return firestore
+  ref.watch(userProvider);
+  return FirebaseFirestore.instance
       .collection("users")
       .where("role", isNotEqualTo: "admin")
       .orderBy("role")
@@ -21,11 +23,15 @@ final paymentDialogerProvider = FutureProvider.family((
   ref,
   String paymentId,
 ) async {
+  ref.watch(userProvider);
   final payment = Payment.fromDoc(
     await ref.watch(paymentProvider(paymentId).future),
   );
   return SonosUser.fromDoc(
-    await firestore.collection("users").doc(payment.dialoger).get(),
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(payment.dialoger)
+        .get(),
   );
 });
 
@@ -33,14 +39,16 @@ final dialogerProvider = FutureProvider.family.autoDispose<SonosUser, String>((
   ref,
   String dialogerId,
 ) async {
+  ref.watch(userProvider);
   return SonosUser.fromDoc(
-    await firestore.collection("users").doc(dialogerId).get(),
+    await FirebaseFirestore.instance.collection("users").doc(dialogerId).get(),
   );
 });
 
 final liveDialogerProvider = StreamProvider.family
     .autoDispose<SonosUser, String>((ref, String dialogerId) {
-      return firestore
+      ref.watch(userProvider);
+      return FirebaseFirestore.instance
           .collection("users")
           .doc(dialogerId)
           .snapshots()
@@ -56,7 +64,7 @@ final userDataProvider = StreamProvider<SonosUser>((ref) {
   var user = userStream.value;
 
   if (user != null) {
-    var docRef = firestore.collection('users').doc(user.uid);
+    var docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
     return docRef.snapshots().map((doc) => SonosUser.fromDoc(doc));
   } else {
     return Stream.empty();

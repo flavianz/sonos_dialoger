@@ -7,7 +7,8 @@ import 'date_ranges.dart';
 
 final confirmedSchedulesProvider =
     StreamProvider.autoDispose<QuerySnapshot<Map<String, dynamic>>>((ref) {
-      return firestore
+      ref.watch(userProvider);
+      return FirebaseFirestore.instance
           .collection("schedules")
           .where(
             Filter.and(
@@ -24,21 +25,29 @@ final scheduleProvider =
       ref,
       String scheduleId,
     ) {
-      return firestore.collection("schedules").doc(scheduleId).snapshots();
+      ref.watch(userProvider);
+      return FirebaseFirestore.instance
+          .collection("schedules")
+          .doc(scheduleId)
+          .snapshots();
     });
 
-final paymentProvider = FutureProvider.family(
-  (ref, String id) =>
-      FirebaseFirestore.instance.collection("payments").doc(id).get(),
-);
+final paymentProvider = FutureProvider.family((ref, String id) {
+  ref.watch(userProvider);
+  return FirebaseFirestore.instance.collection("payments").doc(id).get();
+});
 
-final livePaymentProvider =
-    StreamProvider.family<DocumentSnapshot<Map<String, dynamic>>, String>(
-      (ref, String id) => firestore.collection("payments").doc(id).snapshots(),
-    );
+final livePaymentProvider = StreamProvider.family<
+  DocumentSnapshot<Map<String, dynamic>>,
+  String
+>((ref, String id) {
+  ref.watch(userProvider);
+  return FirebaseFirestore.instance.collection("payments").doc(id).snapshots();
+});
 
 final todayScheduleProvider = StreamProvider((ref) {
-  return firestore
+  ref.watch(userProvider);
+  return FirebaseFirestore.instance
       .collection("schedules")
       .where(
         Filter.and(
@@ -78,6 +87,7 @@ final localDialogerPaymentsProvider =
     });
 
 final personnelAssignedSchedulesProvider = StreamProvider((ref) {
+  ref.watch(userProvider);
   final scheduleTimespan = ref.watch(scheduleTimespanProvider);
   final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
@@ -90,7 +100,7 @@ final personnelAssignedSchedulesProvider = StreamProvider((ref) {
     endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
   }
 
-  return firestore
+  return FirebaseFirestore.instance
       .collection("schedules")
       .where(
         Filter.and(
@@ -106,6 +116,7 @@ final personnelAssignedSchedulesProvider = StreamProvider((ref) {
 });
 
 final schedulesProvider = StreamProvider((ref) {
+  ref.watch(userProvider);
   final scheduleTimespan = ref.watch(scheduleTimespanProvider);
   final scheduleStartDate = ref.watch(scheduleStartDateProvider);
 
@@ -118,7 +129,7 @@ final schedulesProvider = StreamProvider((ref) {
     endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
   }
 
-  return firestore
+  return FirebaseFirestore.instance
       .collection("schedules")
       .where(
         Filter.and(
@@ -136,6 +147,7 @@ final scheduleLocationIdsProvider = Provider.family<List<dynamic>, String>((
   ref,
   scheduleId,
 ) {
+  ref.watch(userProvider);
   final scheduleAsyncValue = ref.watch(scheduleProvider(scheduleId));
   final data = scheduleAsyncValue.value?.data() ?? {};
 
@@ -149,6 +161,7 @@ final scheduleLocationIdsProvider = Provider.family<List<dynamic>, String>((
 final paymentsProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>((
   ref,
 ) {
+  ref.watch(userProvider);
   return FirebaseFirestore.instance
       .collection("payments")
       .where(ref.watch(paymentsDateFilterProvider))
@@ -160,6 +173,7 @@ final locationPaymentsProvider = StreamProvider.family((
   ref,
   String locationId,
 ) {
+  ref.watch(userProvider);
   return FirebaseFirestore.instance
       .collection("payments")
       .where(
@@ -176,6 +190,7 @@ final dialogerPaymentsProvider = StreamProvider.family((
   ref,
   String dialogerId,
 ) {
+  ref.watch(userProvider);
   return FirebaseFirestore.instance
       .collection("payments")
       .where(
@@ -190,6 +205,7 @@ final dialogerPaymentsProvider = StreamProvider.family((
 
 final scheduleRequestsProvider =
     StreamProvider.autoDispose<QuerySnapshot<Map<String, dynamic>>>((ref) {
+      ref.watch(userProvider);
       return FirebaseFirestore.instance
           .collection("schedules")
           .where("reviewed", isEqualTo: false)
@@ -198,5 +214,8 @@ final scheduleRequestsProvider =
     });
 
 final autoExportProvider = FutureProvider((ref) {
-  return firestore.collection("config").doc("autoexport").get();
+  return FirebaseFirestore.instance
+      .collection("config")
+      .doc("autoexport")
+      .get();
 });

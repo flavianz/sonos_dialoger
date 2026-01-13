@@ -1,7 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 
 import '../../core/payment.dart';
@@ -331,7 +331,7 @@ class _PaymentStatusEditDialogState extends State<PaymentStatusEditDialog> {
                     setState(() {
                       loading = true;
                     });
-                    await firestore
+                    await FirebaseFirestore.instance
                         .collection("payments")
                         .doc(widget.payment.id)
                         .update({

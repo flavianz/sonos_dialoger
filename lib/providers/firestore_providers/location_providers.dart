@@ -12,7 +12,8 @@ import '../firestore_providers.dart';
 final allLocationsProvider = StreamProvider.autoDispose<Iterable<Location>>((
   ref,
 ) {
-  return firestore
+  ref.watch(userProvider);
+  return FirebaseFirestore.instance
       .collection("locations")
       .snapshots()
       .map((doc) => doc.docs.map((doc) => Location.fromDoc(doc)));
@@ -20,6 +21,7 @@ final allLocationsProvider = StreamProvider.autoDispose<Iterable<Location>>((
 
 final personnelAssignedSchedulesLocationsProvider =
     StreamProvider<Iterable<Location>>((ref) {
+      ref.watch(userProvider);
       final schedules = ref.watch(personnelAssignedSchedulesProvider);
       if (schedules.isLoading) {
         return Stream.empty();
@@ -54,6 +56,7 @@ final personnelAssignedSchedulesLocationsProvider =
 
 final confirmedLocationsProvider =
     StreamProvider.family<Iterable<Location>, String>((ref, String scheduleId) {
+      ref.watch(userProvider);
       final schedule = ref.watch(scheduleProvider(scheduleId));
       if (schedule.hasError) {
         return Stream.error(schedule.error!);
@@ -66,7 +69,7 @@ final confirmedLocationsProvider =
 
       List<dynamic> confirmedLocations = scheduleData["confirmed_locations"];
 
-      return firestore
+      return FirebaseFirestore.instance
           .collection("locations")
           .where(FieldPath.documentId, whereIn: confirmedLocations)
           .snapshots()
@@ -74,6 +77,7 @@ final confirmedLocationsProvider =
     });
 
 final schedulesLocationsProvider = StreamProvider<Iterable<Location>>((ref) {
+  ref.watch(userProvider);
   final schedules = ref.watch(schedulesProvider);
   if (schedules.isLoading) {
     return Stream.empty();
@@ -107,6 +111,7 @@ final requestedLocationsProvider =
       ref,
       String scheduleId, // Changed from List to String
     ) {
+      ref.watch(userProvider);
       // Watch the new provider to get the list of IDs
       final locationIds = ref.watch(scheduleLocationIdsProvider(scheduleId));
 
@@ -119,7 +124,7 @@ final requestedLocationsProvider =
         throw ErrorDescription("Too many locations provided (>30)");
       }
 
-      return firestore
+      return FirebaseFirestore.instance
           .collection("locations")
           .where(FieldPath.documentId, whereIn: locationIds)
           .snapshots()
@@ -130,6 +135,7 @@ final paymentLocationProvider = FutureProvider.family((
   ref,
   String paymentId,
 ) async {
+  ref.watch(userProvider);
   final payment = Payment.fromDoc(
     await ref.watch(paymentProvider(paymentId).future),
   );
@@ -142,7 +148,8 @@ final paymentLocationProvider = FutureProvider.family((
 });
 
 final locationProvider = StreamProvider.family((ref, String locationId) {
-  return firestore
+  ref.watch(userProvider);
+  return FirebaseFirestore.instance
       .collection("locations")
       .doc(locationId)
       .snapshots()

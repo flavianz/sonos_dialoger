@@ -102,6 +102,7 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
           Divider(),
           Center(
             child: Text(
+              textAlign: TextAlign.center,
               "Achtung! Bestehende Einteilungen in diesem Zeitraum werden überschrieben.",
               style: TextStyle(fontSize: 12),
             ),

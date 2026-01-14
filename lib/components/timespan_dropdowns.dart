@@ -11,7 +11,7 @@ class ScheduleTimespanDropdown extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 150),
+      constraints: BoxConstraints(maxWidth: 100),
       child: DropdownButtonFormField(
         initialValue: ref.watch(scheduleTimespanProvider),
         decoration: InputDecoration(
@@ -83,8 +83,9 @@ class PaymentsTimespanBar extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final startDate = ref.watch(paymentsStartDateProvider);
     final timespan = ref.watch(paymentsTimespanProvider);
-    final String yearSuffix =
-        startDate.year == DateTime.now().year ? "" : " ${startDate.year}";
+    final String yearSuffix = startDate.year == DateTime.now().year
+        ? ""
+        : " ${startDate.year}";
     return Row(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,

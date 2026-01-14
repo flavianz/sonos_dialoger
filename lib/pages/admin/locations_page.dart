@@ -49,24 +49,17 @@ class LocationsPage extends ConsumerWidget {
                                   children: [
                                     Expanded(
                                       flex: 2,
-                                      child: Text(location.name),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(location.space ?? ""),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
                                       child: Text(
-                                        location.price == null
-                                            ? ""
-                                            : location.price!.toStringAsFixed(
-                                              0,
-                                            ),
+                                        location.name +
+                                            (location.space != null
+                                                ? ", ${location.space}"
+                                                : ""),
                                       ),
                                     ),
-                                    Expanded(child: Text(location.town ?? "-")),
-                                    Expanded(child: Text("")),
+                                    Expanded(
+                                      child: Text(location.town ?? "-"),
+                                      flex: 2,
+                                    ),
                                     SizedBox(width: 5),
                                     IconButton(
                                       onPressed: () {

@@ -48,7 +48,7 @@ class LocationsPage extends ConsumerWidget {
                                 child: Row(
                                   children: [
                                     Expanded(
-                                      flex: 2,
+                                      flex: 3,
                                       child: Text(
                                         location.name +
                                             (location.space != null
@@ -57,8 +57,8 @@ class LocationsPage extends ConsumerWidget {
                                       ),
                                     ),
                                     Expanded(
-                                      child: Text(location.town ?? "-"),
                                       flex: 2,
+                                      child: Text(location.town ?? "-"),
                                     ),
                                     SizedBox(width: 5),
                                     IconButton(

@@ -38,7 +38,18 @@ class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
               Tab(icon: Icon(Icons.new_releases_outlined), text: "Bestätigt"),
             ],
           ),
-          actions: [ScheduleTimespanDropdown()],
+          actions: [
+            ScheduleTimespanDropdown(),
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: IconButton.filled(
+                onPressed: () {
+                  context.push("/coach/schedules/new");
+                },
+                icon: Icon(Icons.add, color: Colors.white),
+              ),
+            ),
+          ],
         ),
         body: TabBarView(
           children: [

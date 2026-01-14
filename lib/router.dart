@@ -92,7 +92,17 @@ final router = GoRouter(
             final day =
                 int.tryParse(state.pathParameters['day'] ?? "") ??
                 DateTime.now().day;
-            return CreateSchedulePage(date: DateTime(year, month, day));
+
+            return CreateSchedulePage(
+              startDate: DateTime(year, month, day),
+              endDate: DateTime(year, month, day),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/coach/schedules/new',
+          builder: (context, state) {
+            return CreateSchedulePage(startDate: null, endDate: null);
           },
         ),
         GoRoute(

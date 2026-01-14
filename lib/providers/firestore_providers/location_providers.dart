@@ -69,6 +69,10 @@ final confirmedLocationsProvider =
 
       List<dynamic> confirmedLocations = scheduleData["confirmed_locations"];
 
+      if (confirmedLocations.isEmpty) {
+        return Stream.value([]);
+      }
+
       return FirebaseFirestore.instance
           .collection("locations")
           .where(FieldPath.documentId, whereIn: confirmedLocations)
@@ -107,17 +111,12 @@ final schedulesLocationsProvider = StreamProvider<Iterable<Location>>((ref) {
 });
 
 final requestedLocationsProvider =
-    StreamProvider.family<Iterable<Location>, String>((
-      ref,
-      String scheduleId, // Changed from List to String
-    ) {
+    StreamProvider.family<Iterable<Location>, String>((ref, String scheduleId) {
       ref.watch(userProvider);
-      // Watch the new provider to get the list of IDs
       final locationIds = ref.watch(scheduleLocationIdsProvider(scheduleId));
 
-      // If there are no IDs, return an empty stream to avoid an error
       if (locationIds.isEmpty) {
-        return Stream.empty();
+        return Stream.value([]);
       }
 
       if (locationIds.length > 30) {

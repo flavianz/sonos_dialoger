@@ -70,6 +70,8 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
 
     final bool reviewed = scheduleData["reviewed"] == true;
 
+    final isGroupSchedule = scheduleData["group_id"] != null;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -279,64 +281,132 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
             ),
           ),
           SizedBox(height: 10),
-          ConstrainedBox(
-            constraints: BoxConstraints(minHeight: 50),
-            child:
-                reviewed
-                    ? FilledButton.tonalIcon(
-                      onPressed: () async {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        await FirebaseFirestore.instance
-                            .collection("schedules")
-                            .doc(widget.scheduleId)
-                            .update({
-                              "reviewed": false,
-                              "reviewed_at": FieldValue.delete(),
-                            });
-                        setState(() {
-                          isLoading = false;
-                        });
-                      },
-                      label:
-                          isLoading
-                              ? CircularProgressIndicator()
-                              : Text("Bestätigung zurücknehmen"),
-                      icon: isLoading ? null : Icon(Icons.undo),
-                    )
-                    : FilledButton.icon(
-                      icon: isLoading ? null : Icon(Icons.check),
-                      onPressed: () async {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        final finalLocations = {
-                          ...requestedLocationIds,
-                          ...addedLocationIds,
-                        }..removeAll(removedLocationIds);
+          isGroupSchedule
+              ? ConstrainedBox(
+                constraints: BoxConstraints(minHeight: 50),
+                child: FilledButton.tonalIcon(
+                  icon: isLoading ? null : Icon(Icons.check),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final finalLocations = {
+                      ...requestedLocationIds,
+                      ...addedLocationIds,
+                    }..removeAll(removedLocationIds);
 
+                    await FirebaseFirestore.instance
+                        .collection("schedules")
+                        .doc(widget.scheduleId)
+                        .update({
+                          "reviewed": true,
+                          "removed_locations": removedLocationIds,
+                          "added_locations": addedLocationIds,
+                          "reviewed_at": FieldValue.serverTimestamp(),
+                          "confirmed_locations": finalLocations.toList(),
+                          "personnel_assigned": false,
+                        });
+                    setState(() {
+                      isLoading = false;
+                    });
+                    if (context.mounted) {
+                      context.pop();
+                    }
+                  },
+                  label:
+                      isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text("Diese Einteilung bestätigen"),
+                ),
+              )
+              : SizedBox.shrink(),
+          SizedBox(height: 10),
+          isGroupSchedule
+              ? ConstrainedBox(
+                constraints: BoxConstraints(minHeight: 50),
+                child: FilledButton.icon(
+                  icon: isLoading ? null : Icon(Icons.check_circle_outline),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final finalLocations = {
+                      ...requestedLocationIds,
+                      ...addedLocationIds,
+                    }..removeAll(removedLocationIds);
+
+                    final docs =
                         await FirebaseFirestore.instance
                             .collection("schedules")
-                            .doc(widget.scheduleId)
-                            .update({
-                              "reviewed": true,
-                              "removed_locations": removedLocationIds,
-                              "added_locations": addedLocationIds,
-                              "reviewed_at": FieldValue.serverTimestamp(),
-                              "confirmed_locations": finalLocations.toList(),
-                              "personnel_assigned": false,
-                            });
-                        setState(() {
-                          isLoading = false;
+                            .where(
+                              "group_id",
+                              isEqualTo: scheduleData["group_id"],
+                            )
+                            .get();
+                    final batch = FirebaseFirestore.instance.batch();
+
+                    for (final doc in docs.docs) {
+                      batch.update(doc.reference, {
+                        "reviewed": true,
+                        "removed_locations": removedLocationIds,
+                        "added_locations": addedLocationIds,
+                        "reviewed_at": FieldValue.serverTimestamp(),
+                        "confirmed_locations": finalLocations.toList(),
+                        "personnel_assigned": false,
+                      });
+                    }
+                    await batch.commit();
+
+                    setState(() {
+                      isLoading = false;
+                    });
+                    if (context.mounted) {
+                      context.pop();
+                    }
+                  },
+                  label:
+                      isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text("Einteilungs-Gruppe bestätigen"),
+                ),
+              )
+              : ConstrainedBox(
+                constraints: BoxConstraints(minHeight: 50),
+                child: FilledButton.icon(
+                  icon: isLoading ? null : Icon(Icons.check),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final finalLocations = {
+                      ...requestedLocationIds,
+                      ...addedLocationIds,
+                    }..removeAll(removedLocationIds);
+
+                    await FirebaseFirestore.instance
+                        .collection("schedules")
+                        .doc(widget.scheduleId)
+                        .update({
+                          "reviewed": true,
+                          "removed_locations": removedLocationIds,
+                          "added_locations": addedLocationIds,
+                          "reviewed_at": FieldValue.serverTimestamp(),
+                          "confirmed_locations": finalLocations.toList(),
+                          "personnel_assigned": false,
                         });
-                      },
-                      label:
-                          isLoading
-                              ? CircularProgressIndicator(color: Colors.white)
-                              : Text("Einteilung bestätigen"),
-                    ),
-          ),
+                    setState(() {
+                      isLoading = false;
+                    });
+                    if (context.mounted) {
+                      context.pop();
+                    }
+                  },
+                  label:
+                      isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text("Einteilung bestätigen"),
+                ),
+              ),
         ],
       ),
     );

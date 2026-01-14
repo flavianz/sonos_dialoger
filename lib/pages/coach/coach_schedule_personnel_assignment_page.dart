@@ -35,6 +35,7 @@ class _CoachSchedulePersonnelAssignmentPageState
     final alreadyAssignedDialoguers = [
       for (var sublist in assignedDialoguers.values) ...sublist,
     ];
+
     return ref
         .watch(scheduleProvider(widget.scheduleId))
         .when(
@@ -62,6 +63,8 @@ class _CoachSchedulePersonnelAssignmentPageState
                     assignedDialoguers.values
                         .where((sublist) => sublist.isEmpty)
                         .isNotEmpty);
+
+            final isGroupSchedule = scheduleData["group_id"] != null;
 
             return Scaffold(
               appBar: AppBar(
@@ -308,51 +311,172 @@ class _CoachSchedulePersonnelAssignmentPageState
                           ),
                     ),
                   ),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: 50),
-                    child: FilledButton(
-                      onPressed:
-                          isNotSubmittable
-                              ? null
-                              : () async {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                await FirebaseFirestore.instance
-                                    .collection("schedules")
-                                    .doc(widget.scheduleId)
-                                    .update({
-                                      "personnel_assigned": true,
-                                      "personnel": Map.fromEntries(
-                                        assignedDialoguers.entries.map(
-                                          (entry) => MapEntry(
-                                            entry.key,
-                                            entry.value.map((doc) => doc.id),
+                  isGroupSchedule
+                      ? ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: 50),
+                        child: FilledButton.tonalIcon(
+                          icon: isLoading ? null : Icon(Icons.send),
+                          onPressed:
+                              isNotSubmittable
+                                  ? null
+                                  : () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    await FirebaseFirestore.instance
+                                        .collection("schedules")
+                                        .doc(widget.scheduleId)
+                                        .update({
+                                          "personnel_assigned": true,
+                                          "personnel": Map.fromEntries(
+                                            assignedDialoguers.entries.map(
+                                              (entry) => MapEntry(
+                                                entry.key,
+                                                entry.value.map(
+                                                  (doc) => doc.id,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        });
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                    if (context.mounted) {
+                                      showSnackBar(
+                                        context,
+                                        "Einteilung abgeschickt",
+                                      );
+                                      context.pop();
+                                    }
+                                  },
+                          label:
+                              isLoading
+                                  ? CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                  : Text(
+                                    isNotSubmittable
+                                        ? "Nicht alle Standplätze belegt"
+                                        : "Diese Einteilung abschicken",
+                                  ),
+                        ),
+                      )
+                      : SizedBox.shrink(),
+                  SizedBox(height: 10),
+                  isGroupSchedule
+                      ? ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: 50),
+                        child: FilledButton.icon(
+                          icon: isLoading ? null : Icon(Icons.send),
+                          onPressed:
+                              isNotSubmittable
+                                  ? null
+                                  : () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+
+                                    final docs =
+                                        await FirebaseFirestore.instance
+                                            .collection("schedules")
+                                            .where(
+                                              "group_id",
+                                              isEqualTo:
+                                                  scheduleData["group_id"],
+                                            )
+                                            .get();
+                                    final batch =
+                                        FirebaseFirestore.instance.batch();
+
+                                    for (final doc in docs.docs) {
+                                      batch.update(doc.reference, {
+                                        "personnel_assigned": true,
+                                        "personnel": Map.fromEntries(
+                                          assignedDialoguers.entries.map(
+                                            (entry) => MapEntry(
+                                              entry.key,
+                                              entry.value.map((doc) => doc.id),
+                                            ),
                                           ),
                                         ),
-                                      ),
+                                      });
+                                    }
+                                    await batch.commit();
+
+                                    setState(() {
+                                      isLoading = false;
                                     });
-                                setState(() {
-                                  isLoading = false;
-                                });
-                                if (context.mounted) {
-                                  showSnackBar(
-                                    context,
-                                    "Einteilung abgeschickt",
-                                  );
-                                  context.pop();
-                                }
-                              },
-                      child:
-                          isLoading
-                              ? CircularProgressIndicator(color: Colors.white)
-                              : Text(
-                                isNotSubmittable
-                                    ? "Nicht alle Standplätze belegt"
-                                    : "Einteilung abschicken",
-                              ),
-                    ),
-                  ),
+                                    if (context.mounted) {
+                                      showSnackBar(
+                                        context,
+                                        "Einteilung abgeschickt",
+                                      );
+                                      context.pop();
+                                    }
+                                  },
+                          label:
+                              isLoading
+                                  ? CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                  : Text(
+                                    isNotSubmittable
+                                        ? "Nicht alle Standplätze belegt"
+                                        : "Einteilungs-Gruppe abschicken",
+                                  ),
+                        ),
+                      )
+                      : ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: 50),
+                        child: FilledButton.icon(
+                          icon: isLoading ? null : Icon(Icons.send),
+                          onPressed:
+                              isNotSubmittable
+                                  ? null
+                                  : () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    await FirebaseFirestore.instance
+                                        .collection("schedules")
+                                        .doc(widget.scheduleId)
+                                        .update({
+                                          "personnel_assigned": true,
+                                          "personnel": Map.fromEntries(
+                                            assignedDialoguers.entries.map(
+                                              (entry) => MapEntry(
+                                                entry.key,
+                                                entry.value.map(
+                                                  (doc) => doc.id,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        });
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                    if (context.mounted) {
+                                      showSnackBar(
+                                        context,
+                                        "Einteilung abgeschickt",
+                                      );
+                                      context.pop();
+                                    }
+                                  },
+                          label:
+                              isLoading
+                                  ? CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                  : Text(
+                                    isNotSubmittable
+                                        ? "Nicht alle Standplätze belegt"
+                                        : "Einteilung abschicken",
+                                  ),
+                        ),
+                      ),
                 ],
               ),
             );

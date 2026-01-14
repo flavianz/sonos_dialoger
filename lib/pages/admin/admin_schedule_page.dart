@@ -39,7 +39,18 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
               Tab(text: "Anfragen", icon: Icon(Icons.new_releases_outlined)),
             ],
           ),
-          actions: [ScheduleTimespanDropdown()],
+          actions: [
+            ScheduleTimespanDropdown(),
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: IconButton.filled(
+                onPressed: () {
+                  context.push("/coach/schedules/new");
+                },
+                icon: Icon(Icons.add, color: Colors.white),
+              ),
+            ),
+          ],
         ),
         body: TabBarView(
           children: [

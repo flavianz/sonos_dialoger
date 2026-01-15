@@ -25,28 +25,21 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
       List<Payment> payments,
       double width,
     ) {
-      final double onceTwint = payments
+      final onceTwint = payments
           .where(
             (payment) =>
                 payment is OncePayment &&
                 payment.paymentMethod == PaymentMethod.twint,
           )
           .fold(0.0, (total, payment) => total + payment.amount);
-      final double onceSumup = payments
+      final onceSumup = payments
           .where(
             (payment) =>
                 payment is OncePayment &&
                 payment.paymentMethod == PaymentMethod.sumup,
           )
           .fold(0.0, (total, payment) => total + payment.amount);
-      final double onceCash = payments
-          .where(
-            (payment) =>
-                payment is OncePayment &&
-                payment.paymentMethod == PaymentMethod.cash,
-          )
-          .fold(0.0, (total, payment) => total + payment.amount);
-      final double repeatingWithFirstPaymentTwint = payments
+      final repeatingWithFirstPaymentTwint = payments
           .where(
             (payment) =>
                 payment is RepeatingPayment &&
@@ -54,7 +47,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 payment.paymentMethod == PaymentMethod.twint,
           )
           .fold(0.0, (total, payment) => total + payment.amount);
-      final double repeatingWithFirstPaymentSumup = payments
+      final repeatingWithFirstPaymentSumup = payments
           .where(
             (payment) =>
                 payment is RepeatingPayment &&
@@ -62,15 +55,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                 payment.paymentMethod == PaymentMethod.sumup,
           )
           .fold(0.0, (total, payment) => total + payment.amount);
-      final double repeatingWithFirstPaymentCash = payments
-          .where(
-            (payment) =>
-                payment is RepeatingPayment &&
-                payment is RepeatingPaymentWithFirstPayment &&
-                payment.paymentMethod == PaymentMethod.cash,
-          )
-          .fold(0.0, (total, payment) => total + payment.amount);
-      final double repeatingWithoutFirstPayment = payments
+      final repeatingWithoutFirstPayment = payments
           .where(
             (payment) =>
                 payment is RepeatingPayment &&
@@ -88,79 +73,40 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
               bottomLeft: Radius.circular(borderRadius),
               bottomRight: Radius.circular(borderRadius),
               topRight:
-                  onceTwint +
-                              onceSumup +
+                  onceSumup +
                               repeatingWithFirstPaymentTwint +
                               repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentCash +
                               repeatingWithoutFirstPayment ==
                           0
                       ? Radius.circular(borderRadius)
                       : Radius.zero,
               topLeft:
-                  onceTwint +
-                              onceSumup +
+                  onceSumup +
                               repeatingWithFirstPaymentTwint +
                               repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentCash +
                               repeatingWithoutFirstPayment ==
                           0
                       ? Radius.circular(borderRadius)
                       : Radius.zero,
             ),
             fromY: 0,
-            toY: onceCash.toDouble(),
-            color: Colors.lightBlue.shade800,
-            width: width,
-          ),
-          BarChartRodData(
-            borderRadius: BorderRadius.only(
-              bottomLeft:
-                  onceCash == 0 ? Radius.circular(borderRadius) : Radius.zero,
-              bottomRight:
-                  onceCash == 0 ? Radius.circular(borderRadius) : Radius.zero,
-              topRight:
-                  onceSumup +
-                              repeatingWithFirstPaymentTwint +
-                              repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentCash +
-                              repeatingWithoutFirstPayment ==
-                          0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
-              topLeft:
-                  onceSumup +
-                              repeatingWithFirstPaymentTwint +
-                              repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentCash +
-                              repeatingWithoutFirstPayment ==
-                          0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
-            ),
-            fromY: onceCash,
-            toY: onceCash + onceTwint,
+            toY: onceTwint.toDouble(),
             color: Colors.lightBlue.shade600,
             width: width,
           ),
           BarChartRodData(
-            fromY: onceCash + onceTwint,
-            toY: onceCash + onceTwint + onceSumup,
+            fromY: onceTwint,
+            toY: onceTwint + onceSumup,
             color: Colors.lightBlue.shade200,
             width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
-                  onceCash + onceTwint == 0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
+                  onceTwint == 0 ? Radius.circular(borderRadius) : Radius.zero,
               bottomRight:
-                  onceCash + onceTwint == 0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
+                  onceTwint == 0 ? Radius.circular(borderRadius) : Radius.zero,
               topRight:
                   repeatingWithFirstPaymentTwint +
                               repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentCash +
                               repeatingWithoutFirstPayment ==
                           0
                       ? Radius.circular(borderRadius)
@@ -168,7 +114,6 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
               topLeft:
                   repeatingWithFirstPaymentTwint +
                               repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentCash +
                               repeatingWithoutFirstPayment ==
                           0
                       ? Radius.circular(borderRadius)
@@ -176,68 +121,17 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
             ),
           ),
           BarChartRodData(
-            fromY: onceCash + onceTwint + onceSumup,
-            toY:
-                onceCash +
-                onceTwint +
-                onceSumup +
-                repeatingWithFirstPaymentCash,
+            fromY: onceTwint + onceSumup,
+            toY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
             color: Colors.lightGreen.shade800,
             width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
-                  onceCash + onceTwint + onceSumup == 0
+                  onceTwint + onceSumup == 0
                       ? Radius.circular(borderRadius)
                       : Radius.zero,
               bottomRight:
-                  onceCash + onceTwint + onceSumup == 0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
-              topRight:
-                  repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentTwint +
-                              repeatingWithoutFirstPayment ==
-                          0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
-              topLeft:
-                  repeatingWithFirstPaymentSumup +
-                              repeatingWithFirstPaymentTwint +
-                              repeatingWithoutFirstPayment ==
-                          0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
-            ),
-          ),
-          BarChartRodData(
-            fromY:
-                onceCash +
-                onceTwint +
-                onceSumup +
-                repeatingWithFirstPaymentCash,
-            toY:
-                onceCash +
-                onceTwint +
-                onceSumup +
-                repeatingWithFirstPaymentCash +
-                repeatingWithFirstPaymentTwint,
-            color: Colors.lightGreen.shade600,
-            width: width,
-            borderRadius: BorderRadius.only(
-              bottomLeft:
-                  onceCash +
-                              onceTwint +
-                              onceSumup +
-                              repeatingWithFirstPaymentCash ==
-                          0
-                      ? Radius.circular(borderRadius)
-                      : Radius.zero,
-              bottomRight:
-                  onceCash +
-                              onceTwint +
-                              onceSumup +
-                              repeatingWithFirstPaymentCash ==
-                          0
+                  onceTwint + onceSumup == 0
                       ? Radius.circular(borderRadius)
                       : Radius.zero,
               topRight:
@@ -255,38 +149,21 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
             ),
           ),
           BarChartRodData(
-            fromY:
-                onceCash +
-                onceTwint +
-                onceSumup +
-                repeatingWithFirstPaymentCash +
-                repeatingWithFirstPaymentTwint,
+            fromY: onceTwint + onceSumup + repeatingWithFirstPaymentTwint,
             toY:
-                onceCash +
                 onceTwint +
                 onceSumup +
-                repeatingWithFirstPaymentCash +
                 repeatingWithFirstPaymentTwint +
                 repeatingWithFirstPaymentSumup,
             color: Colors.lightGreen.shade300,
             width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
-                  onceCash +
-                              onceTwint +
-                              onceSumup +
-                              repeatingWithFirstPaymentCash +
-                              repeatingWithFirstPaymentTwint ==
-                          0
+                  onceTwint + onceSumup + repeatingWithFirstPaymentTwint == 0
                       ? Radius.circular(borderRadius)
                       : Radius.zero,
               bottomRight:
-                  onceCash +
-                              onceTwint +
-                              onceSumup +
-                              repeatingWithFirstPaymentCash +
-                              repeatingWithFirstPaymentTwint ==
-                          0
+                  onceTwint + onceSumup + repeatingWithFirstPaymentTwint == 0
                       ? Radius.circular(borderRadius)
                       : Radius.zero,
               topRight:
@@ -301,39 +178,31 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
           ),
           BarChartRodData(
             fromY:
-                onceCash +
                 onceTwint +
                 onceSumup +
                 repeatingWithFirstPaymentTwint +
-                repeatingWithFirstPaymentCash +
                 repeatingWithFirstPaymentSumup,
             toY:
-                onceCash +
                 onceTwint +
                 onceSumup +
                 repeatingWithFirstPaymentTwint +
-                repeatingWithFirstPaymentCash +
                 repeatingWithFirstPaymentSumup +
                 repeatingWithoutFirstPayment,
             color: Colors.amberAccent.shade200,
             width: width,
             borderRadius: BorderRadius.only(
               bottomLeft:
-                  onceCash +
-                              onceTwint +
+                  onceTwint +
                               onceSumup +
                               repeatingWithFirstPaymentTwint +
-                              repeatingWithFirstPaymentCash +
                               repeatingWithFirstPaymentSumup ==
                           0
                       ? Radius.circular(borderRadius)
                       : Radius.zero,
               bottomRight:
-                  onceCash +
-                              onceTwint +
+                  onceTwint +
                               onceSumup +
                               repeatingWithFirstPaymentTwint +
-                              repeatingWithFirstPaymentCash +
                               repeatingWithFirstPaymentSumup ==
                           0
                       ? Radius.circular(borderRadius)
@@ -581,7 +450,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(50),
-                                  color: Colors.lightGreen.shade200,
+                                  color: Colors.lightGreen.shade300,
                                 ),
                                 height: 12,
                                 width: 12,
@@ -601,7 +470,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(50),
-                                  color: Colors.lightGreen.shade500,
+                                  color: Colors.lightGreen.shade800,
                                 ),
                                 height: 12,
                                 width: 12,
@@ -610,26 +479,6 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                                 message: "LSV mit Erstzahlung via Twint",
                                 child: Text(
                                   "LSV mit Twint",
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            spacing: 3,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(50),
-                                  color: Colors.lightGreen.shade800,
-                                ),
-                                height: 12,
-                                width: 12,
-                              ),
-                              Tooltip(
-                                message: "LSV mit Erstzahlung in Bar",
-                                child: Text(
-                                  "LSV in Bar",
                                   style: TextStyle(fontSize: 13),
                                 ),
                               ),
@@ -646,7 +495,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(50),
-                                  color: Colors.lightBlue.shade100,
+                                  color: Colors.lightBlue.shade200,
                                 ),
                                 height: 12,
                                 width: 12,
@@ -666,7 +515,7 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(50),
-                                  color: Colors.lightBlue.shade400,
+                                  color: Colors.lightBlue.shade700,
                                 ),
                                 height: 12,
                                 width: 12,
@@ -675,26 +524,6 @@ class _PaymentsGraphState extends ConsumerState<PaymentsGraph> {
                                 message: "Einmalige Zahlung via Twint",
                                 child: Text(
                                   "Einmalig mit Twint",
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            spacing: 3,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(50),
-                                  color: Colors.lightBlue.shade800,
-                                ),
-                                height: 12,
-                                width: 12,
-                              ),
-                              Tooltip(
-                                message: "Einmalige Zahlung in Bar",
-                                child: Text(
-                                  "Einmalig in Bar",
                                   style: TextStyle(fontSize: 13),
                                 ),
                               ),

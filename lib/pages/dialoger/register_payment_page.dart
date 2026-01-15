@@ -350,7 +350,6 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                       items: [
                         DropdownMenuItem(value: "sumup", child: Text("SumUp")),
                         DropdownMenuItem(value: "twint", child: Text("Twint")),
-                        DropdownMenuItem(value: "cash", child: Text("Bar")),
                       ],
                       onChanged:
                           (hasFirstPayment || type == "once")

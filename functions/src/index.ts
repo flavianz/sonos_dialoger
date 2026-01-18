@@ -9,6 +9,10 @@ import { Workbook } from "exceljs";
 import "dotenv/config";
 import { onSchedule } from "firebase-functions/scheduler";
 import { sendEmailWithExcel } from "./email";
+import {
+    onDocumentDeleted,
+    onDocumentUpdated,
+} from "firebase-functions/v2/firestore";
 
 initializeApp();
 setGlobalOptions({ region: "europe-west3" });
@@ -45,6 +49,50 @@ exports.assignUser = onCall(async (request) => {
     logger.log(`Assigned ${request.auth.uid} to user`);
 
     return { result: true };
+});
+
+exports.updateRole = onDocumentUpdated("/users/{userId}", async (change) => {
+    const userId = change.params.userId;
+    if (
+        change.data?.after.data()["role"] &&
+        change.data?.before.data()["role"] === change.data?.after.data()["role"]
+    ) {
+        return;
+    }
+    if (change.data?.after.data()["linked"] !== true) {
+        return;
+    }
+
+    try {
+        await auth.setCustomUserClaims(userId, {
+            role: change.data?.after.data()["role"],
+        });
+    } catch (e) {
+        logger.log(
+            `User doc ${userId} was updated but no user with this uid exist.`,
+        );
+        return;
+    }
+
+    logger.log(
+        `Updated role of user ${userId} to ${change.data?.after.data()["role"]}`,
+    );
+});
+
+exports.deleteRole = onDocumentDeleted("/users/{userId}", async (change) => {
+    if (change.data?.data()["linked"] !== true) {
+        return;
+    }
+    const userId = change.params.userId;
+    try {
+        await auth.setCustomUserClaims(userId, { role: undefined });
+    } catch (e) {
+        logger.log(
+            `User doc ${userId} was deleted but no user with this uid exist.`,
+        );
+        return;
+    }
+    logger.log(`Deleted role of user ${userId}`);
 });
 
 exports.autoExportEmail = onSchedule(

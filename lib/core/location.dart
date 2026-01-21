@@ -17,6 +17,10 @@ class Location {
   num? price;
   String? notes;
 
+  String? areaOverview;
+  String? usageRights;
+  String? contract;
+
   Location(
     this.id,
     this.name,
@@ -30,6 +34,9 @@ class Location {
     this.link,
     this.price,
     this.notes,
+    this.areaOverview,
+    this.usageRights,
+    this.contract,
   );
 
   factory Location.fromDoc(DocumentSnapshot doc) {
@@ -47,6 +54,9 @@ class Location {
       data["link"] as String?,
       data["price"] as num?,
       data["notes"] as String?,
+      data["area_overview"] as String?,
+      data["usage_rights"] as String?,
+      data["contract"] as String?,
     );
   }
 
@@ -65,6 +75,9 @@ class Location {
       "link": link,
       "price": price,
       "notes": notes,
+      "area_overview": areaOverview,
+      "usage_rights": usageRights,
+      "contract": contract,
     };
   }
 

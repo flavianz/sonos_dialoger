@@ -38,6 +38,9 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
   final notesController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
+  final areaOverviewController = TextEditingController();
+  final usageRightsController = TextEditingController();
+  final contractController = TextEditingController();
   num price = 0;
 
   @override
@@ -80,6 +83,9 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
         notesController.text = data["notes"] ?? "";
         emailController.text = data["email"] ?? "";
         phoneController.text = data["phone"] ?? "";
+        areaOverviewController.text = data["area_overview"] ?? "";
+        usageRightsController.text = data["usage_rights"] ?? "";
+        contractController.text = data["contract"] ?? "";
         price = data["price"] ?? 0;
         hasBeenInit = true;
       });
@@ -163,7 +169,6 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                   InputBox.textControlled(
                     "Hausnummmer",
                     houseNumberController,
-
                     hint: "Adresse: Hausnummer",
                   ),
                   InputBox.textControlled(
@@ -175,6 +180,32 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                     "Gemeinde",
                     townController,
                     hint: "Adresse: Gemeinde",
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 4, top: 12),
+                    child: Text(
+                      "Dokumente",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  Divider(),
+                  InputBox.textControlled(
+                    "Flächenübersicht",
+                    areaOverviewController,
+                    hint: "Flächenübersicht: Link",
+                  ),
+                  InputBox.textControlled(
+                    "Nutzungsrechte",
+                    usageRightsController,
+                    hint: "Nutzungsrechte: Link",
+                  ),
+                  InputBox.textControlled(
+                    "Vertrag",
+                    contractController,
+                    hint: "Vertrag: Link",
                   ),
                   Padding(
                     padding: EdgeInsets.only(left: 4, top: 12),
@@ -223,6 +254,9 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                       notesController.text = data["notes"] ?? "";
                       emailController.text = data["email"] ?? "";
                       phoneController.text = data["phone"] ?? "";
+                      areaOverviewController.text = data["area_overview"] ?? "";
+                      usageRightsController.text = data["usage_rights"] ?? "";
+                      contractController.text = data["contract"] ?? "";
                       price = data["price"] ?? 0;
                     });
                   },
@@ -250,6 +284,9 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                         linkController.text,
                         price,
                         notesController.text,
+                        areaOverviewController.text,
+                        usageRightsController.text,
+                        contractController.text,
                       );
 
                       if (widget.isCreate) {

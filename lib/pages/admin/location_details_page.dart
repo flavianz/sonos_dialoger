@@ -136,19 +136,21 @@ class LocationDetailsPage extends ConsumerWidget {
                     ),
                   ),
                   Divider(),
-                  location.link != null
+                  (location.link != null && location.link!.isNotEmpty)
                       ? ClickableLink(link: location.link!)
                       : Text("Kein Link"),
-                  location.email != null
+                  (location.email != null && location.email!.isNotEmpty)
                       ? ClickableLink(
                         link: "mailto:${location.email!}",
                         label: location.email!,
+                        icon: Icons.mail_outline,
                       )
                       : Text("Keine Email"),
-                  location.phone != null
+                  (location.phone != null && location.phone!.isNotEmpty)
                       ? ClickableLink(
                         link: "tel:${location.phone!}",
                         label: location.phone,
+                        icon: Icons.phone,
                       )
                       : Text("Keine Telefonnummer"),
                   Padding(
@@ -166,6 +168,40 @@ class LocationDetailsPage extends ConsumerWidget {
                     "${location.street ?? "-"} ${location.houseNumber ?? ""}",
                   ),
                   Text("${location.postalCode ?? ""} ${location.town ?? "-"}"),
+                  Padding(
+                    padding: EdgeInsets.only(left: 4, top: 12),
+                    child: Text(
+                      "Dokumente",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  Divider(),
+                  (location.areaOverview != null &&
+                          location.areaOverview!.isNotEmpty)
+                      ? ClickableLink(
+                        link: location.areaOverview!,
+                        icon: Icons.description_outlined,
+                        label: "Flächenübersicht",
+                      )
+                      : Text("Keine Flächenübersicht"),
+                  (location.usageRights != null &&
+                          location.usageRights!.isNotEmpty)
+                      ? ClickableLink(
+                        link: location.usageRights!,
+                        icon: Icons.description_outlined,
+                        label: "Nutzungsrechte",
+                      )
+                      : Text("Keine Nutzungsrechte"),
+                  (location.contract != null && location.contract!.isNotEmpty)
+                      ? ClickableLink(
+                        link: location.contract!,
+                        icon: Icons.description_outlined,
+                        label: "Vertrag",
+                      )
+                      : Text("Kein Vertrag"),
                   Padding(
                     padding: EdgeInsets.only(left: 4, top: 12),
                     child: Text(

@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
-import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -23,13 +22,7 @@ Future<void> main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  FirebaseUIAuth.configureProviders([
-    EmailAuthProvider(),
-    GoogleProvider(
-      clientId:
-          "378625854578-o7t4pvcol1pf90sskp8e7n75jn7vv8gt.apps.googleusercontent.com",
-    ),
-  ]);
+  FirebaseUIAuth.configureProviders([EmailAuthProvider()]);
 
   runApp(ProviderScope(child: MyApp()));
 }

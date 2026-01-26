@@ -4,7 +4,6 @@ cloud_firestore_platform_interface
 firebase_ui_auth
 firebase_ui_localizations
 firebase_ui_oauth
-firebase_ui_oauth_google
 firebase_ui_shared
 
 Copyright 2017, the Chromium project authors. All rights reserved.
@@ -5809,12 +5808,6 @@ SOFTWARE.
 --------------------------------------------------------------------------------
 flutter_lints
 go_router
-google_identity_services_web
-google_sign_in
-google_sign_in_android
-google_sign_in_ios
-google_sign_in_platform_interface
-google_sign_in_web
 plugin_platform_interface
 url_launcher
 url_launcher_linux

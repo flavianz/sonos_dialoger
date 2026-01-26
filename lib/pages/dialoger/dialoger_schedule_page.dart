@@ -93,6 +93,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                               ),
                             )
                             : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   myLocation.getName(),
@@ -107,31 +108,60 @@ class DialogerSchedulePage extends ConsumerWidget {
                                 Text(
                                   "${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
                                 ),
-                                SizedBox(height: 5),
+                                Divider(),
                                 (myLocation.link != null &&
                                         myLocation.link!.isNotEmpty)
                                     ? ClickableLink(link: myLocation.link!)
                                     : SizedBox.shrink(),
+                                (myLocation.email != null &&
+                                        myLocation.email!.isNotEmpty)
+                                    ? ClickableLink(
+                                      link: "mailto:${myLocation.email!}",
+                                      label: myLocation.email!,
+                                      icon: Icons.mail_outline,
+                                    )
+                                    : Text("Keine Email"),
+                                (myLocation.phone != null &&
+                                        myLocation.phone!.isNotEmpty)
+                                    ? ClickableLink(
+                                      link: "tel:${myLocation.phone!}",
+                                      label: myLocation.phone,
+                                      icon: Icons.phone,
+                                    )
+                                    : Text("Keine Telefonnummer"),
+                                Divider(),
+                                (myLocation.areaOverview != null &&
+                                        myLocation.areaOverview!.isNotEmpty)
+                                    ? ClickableLink(
+                                      link: myLocation.areaOverview!,
+                                      icon: Icons.description_outlined,
+                                      label: "Flächenübersicht",
+                                    )
+                                    : Text("Keine Flächenübersicht"),
+                                (myLocation.usageRights != null &&
+                                        myLocation.usageRights!.isNotEmpty)
+                                    ? ClickableLink(
+                                      link: myLocation.usageRights!,
+                                      icon: Icons.description_outlined,
+                                      label: "Nutzungsrechte",
+                                    )
+                                    : Text("Keine Nutzungsrechte"),
+                                (myLocation.contract != null &&
+                                        myLocation.contract!.isNotEmpty)
+                                    ? ClickableLink(
+                                      link: myLocation.contract!,
+                                      icon: Icons.description_outlined,
+                                      label: "Vertrag",
+                                    )
+                                    : Text("Kein Vertrag"),
+                                Divider(),
                                 (myLocation.notes != null &&
                                         myLocation.notes!.isNotEmpty)
-                                    ? Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SizedBox(height: 10),
-                                        Text(
-                                          "Notizen",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Text(
-                                          myLocation.notes!,
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                      ],
+                                    ? Text(
+                                      myLocation.notes!,
+                                      style: TextStyle(fontSize: 14),
                                     )
-                                    : SizedBox.shrink(),
+                                    : Text("Keine Notizen"),
                               ],
                             ),
                         SizedBox(height: 30),

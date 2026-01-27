@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/providers/firestore_providers.dart';
 import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../components/input_box.dart';
 import '../../components/misc.dart';
@@ -40,111 +42,168 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Export", style: TextStyle(fontWeight: FontWeight.bold)),
-          Divider(),
-          autoExport.when(
-            data: (autoExportDoc) {
-              if (autoExportDoc.data()?["email"] == null) {
-                return Text("Ups, hier hat etwas nicht geklappt");
-              }
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Export", style: TextStyle(fontWeight: FontWeight.bold)),
+                Divider(),
+                autoExport.when(
+                  data: (autoExportDoc) {
+                    if (autoExportDoc.data()?["email"] == null) {
+                      return Text("Ups, hier hat etwas nicht geklappt");
+                    }
 
-              if (!hasBeenInit) {
-                setState(() {
-                  autoExportEmail = autoExportDoc.data()?["email"]!;
-                  originalEmail = autoExportEmail;
-                  hasBeenInit = true;
-                });
-              }
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                spacing: 15,
-                children: [
-                  Expanded(
-                    child: InputBox.text("Email", autoExportEmail, (value) {
+                    if (!hasBeenInit) {
                       setState(() {
-                        autoExportEmail = value ?? "";
+                        autoExportEmail = autoExportDoc.data()?["email"]!;
+                        originalEmail = autoExportEmail;
+                        hasBeenInit = true;
                       });
-                    }),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 15),
-                    child: FilledButton(
-                      onPressed:
-                          autoExportEmail == originalEmail
-                              ? null
-                              : () async {
-                                setState(() {
-                                  isEmailLoading = true;
-                                });
-                                await autoExportDoc.reference.update({
-                                  "email": autoExportEmail,
-                                });
-                                setState(() {
-                                  originalEmail = autoExportEmail;
-                                  isEmailLoading = false;
-                                });
-                                if (context.mounted) {
-                                  showSnackBar(context, "Email aktualisiert");
-                                }
-                              },
-                      child:
-                          isEmailLoading
-                              ? SizedBox(
-                                height: 15,
-                                width: 15,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                ),
-                              )
-                              : Text("Speichern"),
-                    ),
-                  ),
-                ],
-              );
-            },
-            error: errorHandling,
-            loading:
-                () => Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 15),
-                    child: CircularProgressIndicator(),
-                  ),
+                    }
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      spacing: 15,
+                      children: [
+                        Expanded(
+                          child: InputBox.text("Email", autoExportEmail, (
+                            value,
+                          ) {
+                            setState(() {
+                              autoExportEmail = value ?? "";
+                            });
+                          }),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 15),
+                          child: FilledButton(
+                            onPressed:
+                                autoExportEmail == originalEmail
+                                    ? null
+                                    : () async {
+                                      setState(() {
+                                        isEmailLoading = true;
+                                      });
+                                      await autoExportDoc.reference.update({
+                                        "email": autoExportEmail,
+                                      });
+                                      setState(() {
+                                        originalEmail = autoExportEmail;
+                                        isEmailLoading = false;
+                                      });
+                                      if (context.mounted) {
+                                        showSnackBar(
+                                          context,
+                                          "Email aktualisiert",
+                                        );
+                                      }
+                                    },
+                            child:
+                                isEmailLoading
+                                    ? SizedBox(
+                                      height: 15,
+                                      width: 15,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : Text("Speichern"),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  error: errorHandling,
+                  loading:
+                      () => Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 15),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
                 ),
+                SizedBox(height: 15),
+                Text("Account", style: TextStyle(fontWeight: FontWeight.bold)),
+                Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Eingeloggt als "),
+                    Text(
+                      user.value!.email ?? "unbekannt",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Deine Rolle"),
+                    Text(switch (userData.value!.role) {
+                      UserRole.admin => "Admin",
+                      UserRole.coach => "Coach",
+                      UserRole.dialog => "Dialoger",
+                      _ => "Keine Rolle",
+                    }, style: TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 10,
+                  children: [
+                    FilledButton(
+                      onPressed: () {
+                        FirebaseAuth.instance.signOut();
+                      },
+                      child: Text("Abmelden"),
+                    ),
+                    FilledButton.tonal(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (context) => AlertDialog(
+                                title: Text("Account löschen?"),
+                                content: Text(
+                                  "Dies kann nicht rückgängig gemacht werden",
+                                ),
+                                actions: [
+                                  OutlinedButton(
+                                    onPressed: () => context.pop(),
+                                    child: Text("Abbrechen"),
+                                  ),
+                                  FilledButton(
+                                    onPressed:
+                                        () =>
+                                            FirebaseAuth.instance.currentUser!
+                                                .delete(),
+                                    child: Text("Account löschen"),
+                                  ),
+                                ],
+                              ),
+                        );
+                      },
+                      child: Text("Account löschen"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: 15),
-          Text("Account", style: TextStyle(fontWeight: FontWeight.bold)),
-          Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Eingeloggt als "),
-              Text(
-                user.value!.email ?? "unbekannt",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Deine Rolle"),
-              Text(switch (userData.value!.role) {
-                UserRole.admin => "Admin",
-                UserRole.coach => "Coach",
-                UserRole.dialog => "Dialoger",
-                _ => "Keine Rolle",
-              }, style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          SizedBox(height: 20),
           Center(
-            child: FilledButton(
+            child: TextButton(
               onPressed: () {
-                FirebaseAuth.instance.signOut();
+                launchUrl(
+                  Uri.parse(
+                    "https://www.freeprivacypolicy.com/live/92d9391b-19b7-4c30-8ab5-1040fb401caa",
+                  ),
+                  mode: LaunchMode.externalApplication,
+                );
               },
-              child: Text("Abmelden"),
+              child: Text("Datenschutz-Erklärung"),
             ),
           ),
         ],

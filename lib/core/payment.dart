@@ -54,6 +54,18 @@ class Payment {
     }
   }
 
+  PaymentMethod? getPaymentMethod() {
+    if (this is OncePayment) {
+      return (this as OncePayment).paymentMethod;
+    } else {
+      if (this is RepeatingPaymentWithFirstPayment) {
+        return (this as RepeatingPaymentWithFirstPayment).paymentMethod;
+      } else {
+        return null;
+      }
+    }
+  }
+
   factory Payment.fromDoc(DocumentSnapshot doc) {
     final map = doc.data() as Map<String, dynamic>;
     String id = doc.id;

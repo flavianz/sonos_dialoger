@@ -134,6 +134,20 @@ class PaymentDetailsPage extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Text("Zeit der Erfassung"),
+                Text(
+                  "${payment.timestamp.hour.toString().padLeft(2, "0")}:${payment.timestamp.minute.toString().padLeft(2, "0")}",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          Divider(),
+          Padding(
+            padding: EdgeInsetsGeometry.symmetric(vertical: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Text("Zahlungsrhytmus"),
                 Text(
                   payment.isOncePayment()
@@ -161,14 +175,9 @@ class PaymentDetailsPage extends ConsumerWidget {
                       : "Erstzahlungsmittel",
                 ),
                 Text(
-                  payment.isOncePayment()
-                      ? (payment as OncePayment).paymentMethod
-                          .paymentMethodName()
-                      : (payment is RepeatingPaymentWithoutFirstPayment)
-                      ? "Ohne Erstzahlung"
-                      : (payment as RepeatingPaymentWithFirstPayment)
-                          .paymentMethod
-                          .paymentMethodName(),
+                  payment is RepeatingTwintPayment
+                      ? "Twint-Abo"
+                      : payment.getPaymentMethod()?.paymentMethodName() ?? "-",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],

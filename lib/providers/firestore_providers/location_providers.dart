@@ -15,6 +15,7 @@ final allLocationsProvider = StreamProvider.autoDispose<Iterable<Location>>((
   ref.watch(userProvider);
   return FirebaseFirestore.instance
       .collection("locations")
+      .orderBy("name")
       .snapshots()
       .map((doc) => doc.docs.map((doc) => Location.fromDoc(doc)));
 });

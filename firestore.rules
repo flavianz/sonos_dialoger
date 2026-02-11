@@ -2,49 +2,75 @@ rules_version = '2';
 
 service cloud.firestore {
     match /databases/{database}/documents {
+    allow read, write;
         function isAdmin(auth) {
             return auth.token.role == "admin";
         }
-        match /users/{userId} {
-            function containsAllAndOnlyRequiredFields(data) {
-                let keys = ["first", "last", "role", "linked"];
-                return data.keys().hasOnly(keys) && data.keys().hasAll(["first", "last", "role", "linked"])
-                    && data.first is string && data.last is string && data.linked is bool
-                    && data["role"] in ["admin", "coach", "dialog"];
-            }
-            allow get: if resource == null || request.auth.uid == userId || isAdmin(request.auth);
-            allow list: if isAdmin(request.auth);
-            allow write: if isAdmin(request.auth) && containsAllAndOnlyRequiredFields(request.resource.data);
+        function isCoach(auth) {
+            return auth.token.role == "coach";
         }
+        function isOrg(auth) {
+        		return isAdmin(auth) || isCoach(auth);
+        }
+        function isUser(auth) {
+        		return auth.token.role == "admin" || auth.token.role == "coach" || auth.token.role == "dialog";
+        }
+
+        match /users/{userId} {
+            allow create: if isAdmin(request.auth);
+            allow update: if isAdmin(request.auth);
+            allow delete: if isAdmin(request.auth);
+
+            allow get;
+            allow list: if isUser(request.auth);
+        }
+
         match /payments/{paymentId} {
-            function isValidOncePayment(request) {
-                let data = request.resource.data;
-                return data.keys().hasOnly(["amount", "dialoger", "method", "timestamp", "type", "first", "last"])
-                    && data.keys().hasAll(["method"])
-                    && data.type == "once" && data.method in ["twint", "twint-slow", "sumup"]
-                    && data.first is string && data.last is string;
-            }
+        		function isOwnPayment(resource, auth) {
+        				return isUser(auth) && resource.data.dialoger == request.auth.uid;
+        		}
+        		function isOwnPaymentCreated(request) {
+        				return isUser(request.auth) && request.resource.data.dialoger == request.auth.uid;
+        		}
 
-            function isValidRepeatingPayment(request) {
-                let data = request.resource.data;
-                return data.keys().hasOnly(["amount", "dialoger", "method", "timestamp", "type", "interval", "first", "last", "has_first_payment"])
-                    && data.keys().hasAll(["interval", "first", "last", "has_first_payment"])
-                    && data.interval in ["monthly", "quarterly", "semester", "yearly"]
-                    && data.has_first_payment is bool && data.first is string && data.last is string
-                    && ((data.has_first_payment == true && data.method in ["twint", "twint-slow", "sumup"])
-                        || (data.has_first_payment == false)) && data.type == "repeating";
-            }
+        		allow create: if isAdmin(request.auth) || isOwnPaymentCreated(request);
+            allow update: if isAdmin(request.auth) || isOwnPayment(resource, request.auth);
+            allow delete: if isUser(request.auth);
 
-            function isValidPayment(request) {
-                let data = request.resource.data;
-                let meetsBasicPattern = data.keys().hasAll(["amount", "dialoger", "timestamp", "type",])
-                    && data.amount is number && data.dialoger is string && data.timestamp is timestamp
-                    && data.type in ["repeating", "once"];
-                return meetsBasicPattern && (isValidOncePayment(request) || isValidRepeatingPayment(request));
-            }
+            allow read: if isOrg(request.auth) || isOwnPayment(resource, request.auth);
+        }
 
-            allow create: if request.auth.token.role in ["dialog", "coach", "admin"] && isValidPayment(request);
-            allow read: if request.auth.token.role == "admin" || (request.auth.token.role in ["coach", "dialog"] && resource.data.dialoger == request.auth.uid);
+        match /locations/{locationId} {
+            allow create: if isOrg(request.auth);
+            allow update: if isOrg(request.auth);
+            allow delete: if isAdmin(request.auth);
+
+            allow read: if isUser(request.auth);
+        }
+
+        match /schedules/{scheduleId} {
+        	function didNotChangeReviewedStatus(request) {
+          	return request.resource.data.reviewed == resource.data.reviewed ;
+          }
+          function didNotAssignPersonnelWithoutReview(request, resource) {
+          	return !(resource.data.reviewed != true && request.resource.data.personnel_assigned == true);
+          }
+
+
+        	allow create: if isAdmin(request.auth) || (isCoach(request.auth) && request.resource.data.reviewed != true);
+        	allow update: if isAdmin(request.auth) || (isCoach(request.auth)
+              && didNotChangeReviewedStatus(request) && didNotAssignPersonnelWithoutReview(request, resource));
+          allow delete: if isAdmin(request.auth) || (isCoach(request.auth) && resource.data.reviewed != true);
+
+          allow read: if isUser(request.auth);
+        }
+
+        match /config/{configId} {
+            allow create: if false;
+            allow update: if isAdmin(request.auth);
+            allow delete: if false;
+
+            allow read: if isAdmin(request.auth);
         }
     }
 }

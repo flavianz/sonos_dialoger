@@ -45,6 +45,9 @@ class Payment {
       if (this is RepeatingPaymentWithFirstPayment) {
         return (this as RepeatingPaymentWithFirstPayment).paymentStatus ??
             PaymentStatus.paid;
+      } else if (this is RepeatingTwintPayment) {
+        return (this as RepeatingTwintPayment).paymentStatus ??
+            PaymentStatus.paid;
       } else {
         return (this as RepeatingPaymentWithoutFirstPayment).paymentStatus;
       }
@@ -85,6 +88,28 @@ class Payment {
         first,
         last,
         paymentMethod,
+        paymentStatus,
+      );
+    } else if (type == "twintabo") {
+      PaymentInterval interval = switch (map["interval"]) {
+        "monthly" => PaymentInterval.monthly,
+        "quarterly" => PaymentInterval.quarterly,
+        "semester" => PaymentInterval.semester,
+        "yearly" => PaymentInterval.yearly,
+        _ => throw Exception("Invalid payment interval ${map["interval"]}"),
+      };
+      first = map["first"] as String;
+      last = map["last"] as String;
+      return RepeatingTwintPayment(
+        id,
+        amount,
+        dialoger,
+        dialogerShare,
+        location,
+        timestamp,
+        interval,
+        first,
+        last,
         paymentStatus,
       );
     } else {
@@ -196,6 +221,23 @@ class RepeatingPayment extends Payment {
     this.paymentInterval,
     this.first,
     this.last,
+  );
+}
+
+class RepeatingTwintPayment extends RepeatingPayment {
+  final PaymentStatus? paymentStatus;
+
+  RepeatingTwintPayment(
+    super.id,
+    super.amount,
+    super.dialoger,
+    super.dialogerShare,
+    super.location,
+    super.timestamp,
+    super.paymentInterval,
+    super.first,
+    super.last,
+    this.paymentStatus,
   );
 }
 

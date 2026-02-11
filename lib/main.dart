@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -16,6 +18,10 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  if (!kReleaseMode) {
+    await connectToFirebaseEmulators();
+  }
 
   FirebaseFirestore.instance.settings = Settings(
     persistenceEnabled: true,
@@ -83,4 +89,22 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+}
+
+Future<void> connectToFirebaseEmulators() async {
+  final host =
+      kIsWeb
+          ? 'localhost'
+          : defaultTargetPlatform == TargetPlatform.android
+          ? '10.0.2.2'
+          : 'localhost';
+
+  // Auth
+  await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+
+  // Firestore
+  FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+
+  // Functions
+  FirebaseFunctions.instance.useFunctionsEmulator(host, 5001);
 }

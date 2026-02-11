@@ -71,6 +71,8 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
       lastController.text = data["last"] ?? "";
       if (type == "once") {
         paymentMethod = data["method"];
+      } else if (type == "twintabo") {
+        interval = data["interval"];
       } else {
         interval = data["interval"];
         hasFirstPayment = data["has_first_payment"];
@@ -111,14 +113,21 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
       final myAssignment = assignments[0];
       myLocationId = myAssignment.key;
     }
-    final isInfoComplete =
-        amountController.text.isNotEmpty &&
-        (type == "once"
-            ? paymentMethod != null
-            : firstController.text.isNotEmpty &&
-                lastController.text.isNotEmpty &&
-                interval != null &&
-                (!hasFirstPayment || paymentMethod != null));
+    late final bool isInfoComplete;
+    if (type == "once") {
+      isInfoComplete = amountController.text.isNotEmpty;
+    } else if (type == "repeating") {
+      isInfoComplete =
+          firstController.text.isNotEmpty &&
+          lastController.text.isNotEmpty &&
+          interval != null &&
+          (!hasFirstPayment || paymentMethod != null);
+    } else {
+      isInfoComplete =
+          firstController.text.isNotEmpty &&
+          lastController.text.isNotEmpty &&
+          interval != null;
+    }
     void resetInputs() {
       setState(() {
         type = null;
@@ -155,7 +164,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                     Row(
                       spacing: 15,
                       children:
-                          type == "repeating"
+                          type == "repeating" || type == "twintabo"
                               ? [
                                 Expanded(
                                   child: DropdownButtonFormField(
@@ -176,7 +185,11 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                       ),
                                       DropdownMenuItem(
                                         value: "repeating",
-                                        child: Text("Wiederholend"),
+                                        child: Text("LSV"),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: "twintabo",
+                                        child: Text("Twint-Abo"),
                                       ),
                                     ],
                                     onChanged: (value) {
@@ -244,7 +257,11 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                       ),
                                       DropdownMenuItem(
                                         value: "repeating",
-                                        child: Text("Wiederholend"),
+                                        child: Text("LSV"),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: "twintabo",
+                                        child: Text("Twint-Abo"),
                                       ),
                                     ],
                                     onChanged: (value) {
@@ -294,7 +311,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                             controller: firstController,
                             decoration: InputDecoration(
                               hintText:
-                                  type == "repeating"
+                                  type == "repeating" || type == "twintabo"
                                       ? "Vorname"
                                       : "Vorname (optional)",
                               border: OutlineInputBorder(
@@ -310,7 +327,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                             controller: lastController,
                             decoration: InputDecoration(
                               hintText:
-                                  type == "repeating"
+                                  type == "repeating" || type == "twintabo"
                                       ? "Nachname"
                                       : "Nachname (optional)",
                               border: OutlineInputBorder(
@@ -352,7 +369,8 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                         DropdownMenuItem(value: "twint", child: Text("Twint")),
                       ],
                       onChanged:
-                          (hasFirstPayment || type == "once")
+                          ((hasFirstPayment && type == "repeating") ||
+                                  type == "once")
                               ? ((value) => setState(
                                 () => paymentMethod = value as String?,
                               ))
@@ -412,6 +430,23 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                   ...commonData,
                                   "method": paymentMethod,
                                   "dialoger_share": isCoach ? 0.35 : 0.3333,
+                                };
+                                if (widget.editing) {
+                                  await FirebaseFirestore.instance
+                                      .collection("payments")
+                                      .doc(widget.id!)
+                                      .update(data);
+                                } else {
+                                  await FirebaseFirestore.instance
+                                      .collection("payments")
+                                      .add(data);
+                                }
+                              } else if (type == "twintabo") {
+                                final data = {
+                                  ...commonData,
+                                  "interval": interval,
+                                  "dialoger_share": isCoach ? 0.5 : 0.46,
+                                  "payment_status": "paid",
                                 };
                                 if (widget.editing) {
                                   await FirebaseFirestore.instance

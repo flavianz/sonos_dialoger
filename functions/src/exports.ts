@@ -153,7 +153,7 @@ function buildSheet(
         );
         sheet.addRow({
             date: `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`,
-            time: `${date.getUTCHours()}:${date.getUTCMinutes()}`,
+            time: `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`,
             dialoger: dialogers[data["dialoger"]] ?? "Unbekannt",
             location: locations[data["location"]] ?? "Unbekannt",
             amount: amount,

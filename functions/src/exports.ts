@@ -84,6 +84,8 @@ function buildSheet(
     let lsvMitCount = 0;
     let lsvOhneSum = 0;
     let lsvOhneCount = 0;
+    let twintaboSum = 0;
+    let twintaboCount = 0;
 
     let totalSum = 0;
     let totalDialogerSum = 0;
@@ -110,8 +112,10 @@ function buildSheet(
                 lsvOhneCount++;
                 paymentMethod = "LSV ohne Erstzahlung";
             }
-        } else if(data["type"] == "twintabo") {
-
+        } else if (data["type"] == "twintabo") {
+            twintaboSum += amount;
+            twintaboCount++;
+            paymentMethod = "Twint-Abo";
         } else {
             onceSum += amount;
             onceCount++;
@@ -232,6 +236,18 @@ function buildSheet(
                     },
                 },
             },
+            {
+                priority: 1,
+                type: "expression",
+                formulae: ['G2="Twint-Abo"'],
+                style: {
+                    fill: {
+                        type: "pattern",
+                        pattern: "solid",
+                        bgColor: { argb: "e19b9b" },
+                    },
+                },
+            },
         ],
     });
 
@@ -300,5 +316,23 @@ function buildSheet(
         fgColor: { argb: "B7DEE8" },
     };
     const lsvOhneCountCell = sheet.getCell(`F${docs.length + 7}`);
-    lsvOhneCountCell.value = lsvOhneCount; /*hannes.egli@hoerbehindert.ch*/
+    lsvOhneCountCell.value = lsvOhneCount;
+
+    const twintAboCell = sheet.getCell(`D${docs.length + 8}`);
+    twintAboCell.value = "Twint-Abo";
+    twintAboCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "e19b9b" },
+    };
+
+    const twintAboValueCell = sheet.getCell(`E${docs.length + 8}`);
+    twintAboValueCell.value = twintaboSum;
+    twintAboValueCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "e19b9b" },
+    };
+    const twintAboCountCell = sheet.getCell(`F${docs.length + 8}`);
+    twintAboCountCell.value = twintaboCount;
 }

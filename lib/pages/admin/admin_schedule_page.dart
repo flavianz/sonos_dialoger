@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
+import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
 
 import '../../app.dart';
 import '../../providers.dart';
@@ -26,6 +27,8 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
   Widget build(BuildContext context) {
     final scheduleTimespan = ref.watch(scheduleTimespanProvider);
     final scheduleStartDate = ref.watch(scheduleStartDateProvider);
+    final locations = ref.watch(allLocationsProvider);
+    final users = ref.watch(nonAdminUsersProvider);
 
     return DefaultTabController(
       length: 2,
@@ -870,11 +873,88 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                                                           CrossAxisAlignment
                                                               .start,
                                                       children: [
+                                                        Text(() {
+                                                          final locationIds =
+                                                              ((scheduleData["confirmed_locations"]
+                                                                      as List?) ??
+                                                                  []);
+                                                          if (locationIds
+                                                              .isEmpty) {
+                                                            return "Keine Standplätze";
+                                                          }
+                                                          if (locations
+                                                              .isLoading) {
+                                                            return "Laden...";
+                                                          }
+                                                          if (locations
+                                                              .hasError) {
+                                                            return "Fehler";
+                                                          }
+                                                          return locationIds
+                                                              .map((
+                                                                locationId,
+                                                              ) {
+                                                                final location = locations
+                                                                    .value!
+                                                                    .where(
+                                                                      (
+                                                                        location,
+                                                                      ) =>
+                                                                          location
+                                                                              .id ==
+                                                                          locationId,
+                                                                    );
+                                                                if (location
+                                                                    .isEmpty) {
+                                                                  return "Unbekannter Standplatz";
+                                                                }
+                                                                return location
+                                                                    .first
+                                                                    .name;
+                                                              })
+                                                              .join(", ");
+                                                        }()),
                                                         Text(
-                                                          "Einteilung abgeschlossen",
-                                                        ),
-                                                        Text(
-                                                          "${flatten(((scheduleData["personnel"] as Map?) ?? {}).values).length} Dialoger*innen in ${((scheduleData["confirmed_locations"] as List?) ?? []).length} Standplätze eingeteilt",
+                                                          () {
+                                                            final userIds = flatten(
+                                                              ((scheduleData["personnel"]
+                                                                          as Map?) ??
+                                                                      {})
+                                                                  .values,
+                                                            );
+                                                            if (userIds
+                                                                .isEmpty) {
+                                                              return "Keine Dialoger";
+                                                            }
+                                                            if (users
+                                                                .isLoading) {
+                                                              return "Laden...";
+                                                            }
+                                                            if (users
+                                                                .hasError) {
+                                                              return "Fehler";
+                                                            }
+                                                            return userIds
+                                                                .map((
+                                                                  locationId,
+                                                                ) {
+                                                                  final user = users
+                                                                      .value!
+                                                                      .where(
+                                                                        (
+                                                                          user,
+                                                                        ) =>
+                                                                            user.id ==
+                                                                            locationId,
+                                                                      );
+                                                                  if (user
+                                                                      .isEmpty) {
+                                                                    return "Unbekannter Dialoger";
+                                                                  }
+                                                                  return "${user.first.first} ${user.first.last}";
+                                                                })
+                                                                .join(", ");
+                                                          }(),
                                                           style: TextStyle(
                                                             fontSize: 15,
                                                           ),

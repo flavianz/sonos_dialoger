@@ -110,6 +110,8 @@ function buildSheet(
                 lsvOhneCount++;
                 paymentMethod = "LSV ohne Erstzahlung";
             }
+        } else if(data["type"] == "twintabo") {
+
         } else {
             onceSum += amount;
             onceCount++;
@@ -132,7 +134,7 @@ function buildSheet(
         }
 
         let paymentInterval;
-        if (data["type"] === "repeating") {
+        if (data["type"] === "repeating" || data["type"] == "twintabo") {
             if (data["interval"] === "monthly") {
                 paymentInterval = "Monatlich";
             } else if (data["interval"] === "quarterly") {

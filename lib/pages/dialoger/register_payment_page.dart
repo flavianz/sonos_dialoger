@@ -445,7 +445,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                 final data = {
                                   ...commonData,
                                   "interval": interval,
-                                  "dialoger_share": isCoach ? 0.5 : 0.46,
+                                  "dialoger_share": isCoach ? 0.5 : 0.45,
                                   "payment_status": "paid",
                                 };
                                 if (widget.editing) {

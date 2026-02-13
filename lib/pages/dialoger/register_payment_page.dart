@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,12 +37,64 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
   final amountController = TextEditingController();
   final firstController = TextEditingController();
   final lastController = TextEditingController();
+  final hourController = TextEditingController(
+    text: DateTime.now().hour.toString().padLeft(2, "0"),
+  );
+  final minuteController = TextEditingController(
+    text: DateTime.now().minute.toString().padLeft(2, "0"),
+  );
+
+  Payment? editPayment;
+
+  Timer? timer;
+
+  @override
+  void initState() {
+    super.initState();
+    scheduleMinuteUpdates();
+  }
+
+  void scheduleMinuteUpdates() {
+    final now = DateTime.now();
+
+    final nextMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute + 1,
+    );
+
+    final delay = nextMinute.difference(now);
+
+    Future.delayed(delay, () {
+      updateTimeText();
+
+      timer = Timer.periodic(const Duration(minutes: 1), (_) {
+        updateTimeText();
+      });
+    });
+  }
+
+  void updateTimeText() {
+    final now = DateTime.now();
+    if (minuteController.text == (now.minute - 1).toString() ||
+        (now.minute == 0 &&
+            minuteController.text == "59" &&
+            hourController.text == (now.hour - 1).toString())) {
+      hourController.text = now.hour.toString().padLeft(2, "0");
+      minuteController.text = now.minute.toString().padLeft(2, "0");
+    }
+  }
 
   @override
   void dispose() {
+    timer?.cancel();
     amountController.dispose();
     firstController.dispose();
     lastController.dispose();
+    hourController.dispose();
+    minuteController.dispose();
     super.dispose();
   }
 
@@ -58,17 +112,21 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
         return Center(child: Text("Ups, hier hat etwas nicht geklappt"));
       }
       final data = paymentDoc.value!.data() ?? {};
-      final payment = Payment.fromDoc(paymentDoc.value!);
+      editPayment = Payment.fromDoc(paymentDoc.value!);
       if (ref.watch(userDataProvider).value?.role != UserRole.admin &&
-          !payment.canDialogerStillEdit()) {
+          !editPayment!.canDialogerStillEdit()) {
         return Center(
           child: Text("Du kannst diese Leistung nicht mehr bearbeiten"),
         );
       }
+      final date =
+          ((data["timestamp"] as Timestamp?) ?? Timestamp.now()).toDate();
       type = data["type"];
       amountController.text = data["amount"].toString();
       firstController.text = data["first"] ?? "";
       lastController.text = data["last"] ?? "";
+      hourController.text = date.hour.toString();
+      minuteController.text = date.minute.toString();
       if (type == "once") {
         paymentMethod = data["method"];
       } else if (type == "twintabo") {
@@ -113,17 +171,26 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
       final myAssignment = assignments[0];
       myLocationId = myAssignment.key;
     }
+    final isTimeComplete =
+        int.tryParse(hourController.text) != null &&
+        int.tryParse(hourController.text)! >= 0 &&
+        int.tryParse(hourController.text)! <= 23 &&
+        int.tryParse(minuteController.text) != null &&
+        int.tryParse(minuteController.text)! >= 0 &&
+        int.tryParse(minuteController.text)! <= 59;
     late final bool isInfoComplete;
     if (type == "once") {
-      isInfoComplete = amountController.text.isNotEmpty;
+      isInfoComplete = isTimeComplete && amountController.text.isNotEmpty;
     } else if (type == "repeating") {
       isInfoComplete =
+          isTimeComplete &&
           firstController.text.isNotEmpty &&
           lastController.text.isNotEmpty &&
           interval != null &&
           (!hasFirstPayment || paymentMethod != null);
     } else {
       isInfoComplete =
+          isTimeComplete &&
           firstController.text.isNotEmpty &&
           lastController.text.isNotEmpty &&
           interval != null;
@@ -135,6 +202,11 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
         amountController.text = "";
         firstController.text = "";
         lastController.text = "";
+        hourController.text = DateTime.now().hour.toString().padLeft(2, "0");
+        minuteController.text = DateTime.now().minute.toString().padLeft(
+          2,
+          "0",
+        );
         hasFirstPayment = false;
         paymentMethod = null;
       });
@@ -161,6 +233,44 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                 child: ListView(
                   shrinkWrap: true,
                   children: [
+                    Row(
+                      spacing: 15,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            onChanged: (_) => setState(() {}),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 19),
+                            controller: hourController,
+                            decoration: InputDecoration(
+                              hintText: "Stunde",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          ":",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            onChanged: (_) => setState(() {}),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 19),
+                            controller: minuteController,
+                            decoration: InputDecoration(
+                              hintText: "Minute",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 15),
                     Row(
                       spacing: 15,
                       children:
@@ -416,11 +526,44 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                               };
                               if (!widget.editing) {
                                 commonData["location"] = myLocationId;
-                                commonData["timestamp"] = Timestamp.fromDate(
-                                  DateTime.now(),
-                                );
                                 commonData["dialoger"] =
                                     ref.watch(userProvider).value!.uid;
+
+                                commonData["timestamp"] = Timestamp.fromDate(
+                                  DateTime(
+                                    DateTime.now().year,
+                                    DateTime.now().month,
+                                    DateTime.now().day,
+                                    int.tryParse(hourController.text) ??
+                                        DateTime.now().hour,
+                                    int.tryParse(minuteController.text) ??
+                                        DateTime.now().minute,
+                                  ),
+                                );
+                                if (hourController.text !=
+                                        DateTime.now().hour.toString() ||
+                                    minuteController.text !=
+                                        DateTime.now().minute.toString()) {
+                                  commonData["edited_time"] = true;
+                                }
+                              } else {
+                                if (editPayment!.timestamp.hour !=
+                                        int.tryParse(hourController.text) ||
+                                    editPayment!.timestamp.minute !=
+                                        int.tryParse(minuteController.text)) {
+                                  commonData["timestamp"] = Timestamp.fromDate(
+                                    DateTime(
+                                      DateTime.now().year,
+                                      DateTime.now().month,
+                                      DateTime.now().day,
+                                      int.tryParse(hourController.text) ??
+                                          DateTime.now().hour,
+                                      int.tryParse(minuteController.text) ??
+                                          DateTime.now().minute,
+                                    ),
+                                  );
+                                  commonData["edited_time"] = true;
+                                }
                               }
                               final isCoach =
                                   ref.watch(userDataProvider).value?.role ==

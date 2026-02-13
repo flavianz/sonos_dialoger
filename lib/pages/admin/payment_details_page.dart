@@ -136,7 +136,7 @@ class PaymentDetailsPage extends ConsumerWidget {
               children: [
                 Text("Zeit der Erfassung"),
                 Text(
-                  "${payment.timestamp.hour.toString().padLeft(2, "0")}:${payment.timestamp.minute.toString().padLeft(2, "0")}",
+                  "${payment.timestamp.hour.toString().padLeft(2, "0")}:${payment.timestamp.minute.toString().padLeft(2, "0")}${payment.wasTimeEdited ? " (manuell)" : ""}",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],

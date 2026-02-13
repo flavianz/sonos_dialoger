@@ -37,6 +37,7 @@ class Payment {
   final num dialogerShare;
   final String location;
   final DateTime timestamp;
+  final bool wasTimeEdited;
 
   PaymentStatus getPaymentStatus() {
     if (this is OncePayment) {
@@ -83,6 +84,7 @@ class Payment {
       "cancelled" => PaymentStatus.cancelled,
       _ => null,
     };
+    bool wasTimeEdited = (map["edited_time"] as bool?) ?? false;
 
     if (type == "once") {
       PaymentMethod paymentMethod = switch (map["method"]) {
@@ -97,6 +99,7 @@ class Payment {
         dialogerShare,
         location,
         timestamp,
+        wasTimeEdited,
         first,
         last,
         paymentMethod,
@@ -119,6 +122,7 @@ class Payment {
         dialogerShare,
         location,
         timestamp,
+        wasTimeEdited,
         interval,
         first,
         last,
@@ -148,6 +152,7 @@ class Payment {
           dialogerShare,
           location,
           timestamp,
+          wasTimeEdited,
           interval,
           first,
           last,
@@ -165,6 +170,7 @@ class Payment {
           dialogerShare,
           location,
           timestamp,
+          wasTimeEdited,
           interval,
           first,
           last,
@@ -181,6 +187,7 @@ class Payment {
     this.dialogerShare,
     this.location,
     this.timestamp,
+    this.wasTimeEdited,
   );
 
   bool isRepeatingPayment() {
@@ -211,6 +218,7 @@ class OncePayment extends Payment {
     super.dialogerShare,
     super.location,
     super.timestamp,
+    super.wasTimeEdited,
     this.first,
     this.last,
     this.paymentMethod,
@@ -230,6 +238,7 @@ class RepeatingPayment extends Payment {
     super.dialogerShare,
     super.location,
     super.timestamp,
+    super.wasTimeEdited,
     this.paymentInterval,
     this.first,
     this.last,
@@ -246,6 +255,7 @@ class RepeatingTwintPayment extends RepeatingPayment {
     super.dialogerShare,
     super.location,
     super.timestamp,
+    super.wasTimeEdited,
     super.paymentInterval,
     super.first,
     super.last,
@@ -264,6 +274,7 @@ class RepeatingPaymentWithFirstPayment extends RepeatingPayment {
     super.dialogerShare,
     super.location,
     super.timestamp,
+    super.wasTimeEdited,
     super.paymentInterval,
     super.first,
     super.last,
@@ -282,6 +293,7 @@ class RepeatingPaymentWithoutFirstPayment extends RepeatingPayment {
     super.dialogerShare,
     super.location,
     super.timestamp,
+    super.wasTimeEdited,
     super.paymentInterval,
     super.first,
     super.last,

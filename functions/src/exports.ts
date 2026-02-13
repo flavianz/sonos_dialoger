@@ -61,7 +61,7 @@ function buildSheet(
 ) {
     sheet.columns = [
         { header: "Datum", key: "date", width: 11 },
-        { header: "Zeit", key: "time", width: 11 },
+        { header: "Zeit", key: "time", width: 19 },
         { header: "Dialoger", key: "dialoger", width: 20 },
         { header: "Standplatz", key: "location", width: 30 },
         {

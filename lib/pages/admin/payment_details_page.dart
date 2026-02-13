@@ -134,9 +134,23 @@ class PaymentDetailsPage extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Zeit der Erfassung"),
+                Text("Zeit"),
                 Text(
-                  "${payment.timestamp.hour.toString().padLeft(2, "0")}:${payment.timestamp.minute.toString().padLeft(2, "0")}${payment.wasTimeEdited ? " (manuell)" : ""}",
+                  "${payment.timestamp.hour.toString().padLeft(2, "0")}:${payment.timestamp.minute.toString().padLeft(2, "0")}",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          Divider(),
+          Padding(
+            padding: EdgeInsetsGeometry.symmetric(vertical: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Zeit der Erstellung"),
+                Text(
+                  "${payment.creationTimestamp.hour.toString().padLeft(2, "0")}:${payment.creationTimestamp.minute.toString().padLeft(2, "0")}",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],

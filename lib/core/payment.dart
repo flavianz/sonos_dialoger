@@ -37,7 +37,7 @@ class Payment {
   final num dialogerShare;
   final String location;
   final DateTime timestamp;
-  final bool wasTimeEdited;
+  final DateTime creationTimestamp;
 
   PaymentStatus getPaymentStatus() {
     if (this is OncePayment) {
@@ -84,7 +84,12 @@ class Payment {
       "cancelled" => PaymentStatus.cancelled,
       _ => null,
     };
-    bool wasTimeEdited = (map["edited_time"] as bool?) ?? false;
+    late DateTime creationTimestamp;
+    if (map["creation_timestamp"] != null) {
+      creationTimestamp = (map["creation_timestamp"] as Timestamp).toDate();
+    } else {
+      creationTimestamp = timestamp;
+    }
 
     if (type == "once") {
       PaymentMethod paymentMethod = switch (map["method"]) {
@@ -99,7 +104,7 @@ class Payment {
         dialogerShare,
         location,
         timestamp,
-        wasTimeEdited,
+        creationTimestamp,
         first,
         last,
         paymentMethod,
@@ -122,7 +127,7 @@ class Payment {
         dialogerShare,
         location,
         timestamp,
-        wasTimeEdited,
+        creationTimestamp,
         interval,
         first,
         last,
@@ -152,7 +157,7 @@ class Payment {
           dialogerShare,
           location,
           timestamp,
-          wasTimeEdited,
+          creationTimestamp,
           interval,
           first,
           last,
@@ -170,7 +175,7 @@ class Payment {
           dialogerShare,
           location,
           timestamp,
-          wasTimeEdited,
+          creationTimestamp,
           interval,
           first,
           last,
@@ -187,7 +192,7 @@ class Payment {
     this.dialogerShare,
     this.location,
     this.timestamp,
-    this.wasTimeEdited,
+    this.creationTimestamp,
   );
 
   bool isRepeatingPayment() {
@@ -218,7 +223,7 @@ class OncePayment extends Payment {
     super.dialogerShare,
     super.location,
     super.timestamp,
-    super.wasTimeEdited,
+    super.creationTimestamp,
     this.first,
     this.last,
     this.paymentMethod,
@@ -238,7 +243,7 @@ class RepeatingPayment extends Payment {
     super.dialogerShare,
     super.location,
     super.timestamp,
-    super.wasTimeEdited,
+    super.creationTimestamp,
     this.paymentInterval,
     this.first,
     this.last,
@@ -255,7 +260,7 @@ class RepeatingTwintPayment extends RepeatingPayment {
     super.dialogerShare,
     super.location,
     super.timestamp,
-    super.wasTimeEdited,
+    super.creationTimestamp,
     super.paymentInterval,
     super.first,
     super.last,
@@ -274,7 +279,7 @@ class RepeatingPaymentWithFirstPayment extends RepeatingPayment {
     super.dialogerShare,
     super.location,
     super.timestamp,
-    super.wasTimeEdited,
+    super.creationTimestamp,
     super.paymentInterval,
     super.first,
     super.last,
@@ -293,7 +298,7 @@ class RepeatingPaymentWithoutFirstPayment extends RepeatingPayment {
     super.dialogerShare,
     super.location,
     super.timestamp,
-    super.wasTimeEdited,
+    super.creationTimestamp,
     super.paymentInterval,
     super.first,
     super.last,

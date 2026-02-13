@@ -523,13 +523,7 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                 "amount": num.parse(amountController.text),
                                 "first": firstController.text,
                                 "last": lastController.text,
-                              };
-                              if (!widget.editing) {
-                                commonData["location"] = myLocationId;
-                                commonData["dialoger"] =
-                                    ref.watch(userProvider).value!.uid;
-
-                                commonData["timestamp"] = Timestamp.fromDate(
+                                "timestamp": Timestamp.fromDate(
                                   DateTime(
                                     DateTime.now().year,
                                     DateTime.now().month,
@@ -539,32 +533,16 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                     int.tryParse(minuteController.text) ??
                                         DateTime.now().minute,
                                   ),
-                                );
-                                if (hourController.text !=
-                                        DateTime.now().hour.toString() ||
-                                    minuteController.text !=
-                                        DateTime.now().minute.toString()) {
-                                  commonData["edited_time"] = true;
-                                }
-                              } else {
-                                if (editPayment!.timestamp.hour !=
-                                        int.tryParse(hourController.text) ||
-                                    editPayment!.timestamp.minute !=
-                                        int.tryParse(minuteController.text)) {
-                                  commonData["timestamp"] = Timestamp.fromDate(
-                                    DateTime(
-                                      DateTime.now().year,
-                                      DateTime.now().month,
-                                      DateTime.now().day,
-                                      int.tryParse(hourController.text) ??
-                                          DateTime.now().hour,
-                                      int.tryParse(minuteController.text) ??
-                                          DateTime.now().minute,
-                                    ),
-                                  );
-                                  commonData["edited_time"] = true;
-                                }
+                                ),
+                              };
+                              if (!widget.editing) {
+                                commonData["location"] = myLocationId;
+                                commonData["dialoger"] =
+                                    ref.watch(userProvider).value!.uid;
+                                commonData["creation_timestamp"] =
+                                    Timestamp.now();
                               }
+
                               final isCoach =
                                   ref.watch(userDataProvider).value?.role ==
                                   UserRole.coach;

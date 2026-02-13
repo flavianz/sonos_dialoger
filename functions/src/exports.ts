@@ -159,7 +159,7 @@ function buildSheet(
         );
         sheet.addRow({
             date: `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`,
-            time: `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`,
+            time: `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}${data["edited_time"] == true ? " (manuell)" : ""}`,
             dialoger: dialogers[data["dialoger"]] ?? "Unbekannt",
             location: locations[data["location"]] ?? "Unbekannt",
             amount: amount,

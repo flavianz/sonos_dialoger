@@ -35,7 +35,7 @@ class DialogerDetailsPage extends ConsumerWidget {
       );
     }
     final dialoger = dialogerDoc.value!;
-    final dialogerPaymentDocs = ref.watch(localDialogerPaymentsProvider);
+    final dialogerPaymentDocs = ref.watch(dialogerPaymentsProvider(dialogerId));
 
     return DefaultTabController(
       length: 2,

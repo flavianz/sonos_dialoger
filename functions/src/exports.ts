@@ -61,7 +61,8 @@ function buildSheet(
 ) {
     sheet.columns = [
         { header: "Datum", key: "date", width: 11 },
-        { header: "Zeit", key: "time", width: 19 },
+        { header: "Zeit", key: "time", width: 11 },
+        { header: "Zeit der Erstellung", key: "creation_time", width: 18 },
         { header: "Dialoger", key: "dialoger", width: 20 },
         { header: "Standplatz", key: "location", width: 30 },
         {
@@ -157,9 +158,20 @@ function buildSheet(
         const date = new Date(
             utcDate.toLocaleString("en-US", { timeZone: "Europe/Zurich" }),
         );
+        let creationDate;
+        if (data["creation_timestamp"] != null) {
+            creationDate = new Date(
+                (data["creation_timestamp"] as Timestamp)
+                    .toDate()
+                    .toLocaleString("en-US", { timeZone: "Europe/Zurich" }),
+            );
+        } else {
+            creationDate = date;
+        }
         sheet.addRow({
             date: `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`,
-            time: `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}${data["edited_time"] == true ? " (manuell)" : ""}`,
+            time: `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`,
+            creation_time: `${creationDate.getHours().toString().padStart(2, "0")}:${creationDate.getMinutes().toString().padStart(2, "0")}`,
             dialoger: dialogers[data["dialoger"]] ?? "Unbekannt",
             location: locations[data["location"]] ?? "Unbekannt",
             amount: amount,
@@ -174,12 +186,12 @@ function buildSheet(
     });
 
     sheet.addConditionalFormatting({
-        ref: `E2:E${docs.length + 1}`,
+        ref: `F2:F${docs.length + 1}`,
         rules: [
             {
                 priority: 1,
                 type: "expression",
-                formulae: ['G2="SumUp"'],
+                formulae: ['H2="SumUp"'],
                 style: {
                     fill: {
                         type: "pattern",
@@ -191,7 +203,7 @@ function buildSheet(
             {
                 priority: 1,
                 type: "expression",
-                formulae: ['G2="Twint"'],
+                formulae: ['H2="Twint"'],
                 style: {
                     fill: {
                         type: "pattern",
@@ -203,7 +215,7 @@ function buildSheet(
             {
                 priority: 1,
                 type: "expression",
-                formulae: ['G2="LSV + SumUp"'],
+                formulae: ['H2="LSV + SumUp"'],
                 style: {
                     fill: {
                         type: "pattern",
@@ -215,7 +227,7 @@ function buildSheet(
             {
                 priority: 1,
                 type: "expression",
-                formulae: ['G2="LSV + Twint"'],
+                formulae: ['H2="LSV + Twint"'],
                 style: {
                     fill: {
                         type: "pattern",
@@ -227,7 +239,7 @@ function buildSheet(
             {
                 priority: 1,
                 type: "expression",
-                formulae: ['G2="LSV ohne Erstzahlung"'],
+                formulae: ['H2="LSV ohne Erstzahlung"'],
                 style: {
                     fill: {
                         type: "pattern",
@@ -239,7 +251,7 @@ function buildSheet(
             {
                 priority: 1,
                 type: "expression",
-                formulae: ['G2="Twint-Abo"'],
+                formulae: ['H2="Twint-Abo"'],
                 style: {
                     fill: {
                         type: "pattern",
@@ -251,20 +263,20 @@ function buildSheet(
         ],
     });
 
-    const totalSumCell = sheet.getCell(`E${docs.length + 2}`);
+    const totalSumCell = sheet.getCell(`F${docs.length + 2}`);
     totalSumCell.value = totalSum;
-    const totalDialogerSumCell = sheet.getCell(`F${docs.length + 2}`);
+    const totalDialogerSumCell = sheet.getCell(`G${docs.length + 2}`);
     totalDialogerSumCell.value = totalDialogerSum;
 
-    const abschlussCell = sheet.getCell(`C${docs.length + 5}`);
+    const abschlussCell = sheet.getCell(`D${docs.length + 5}`);
     abschlussCell.value = "Abschluss:";
 
-    const betragCell = sheet.getCell(`E${docs.length + 4}`);
+    const betragCell = sheet.getCell(`F${docs.length + 4}`);
     betragCell.value = "Betrag";
-    const anzahlCell = sheet.getCell(`F${docs.length + 4}`);
+    const anzahlCell = sheet.getCell(`G${docs.length + 4}`);
     anzahlCell.value = "Anzahl";
 
-    const einmalzahlungsCell = sheet.getCell(`D${docs.length + 5}`);
+    const einmalzahlungsCell = sheet.getCell(`E${docs.length + 5}`);
     einmalzahlungsCell.value = "Einmalzahlung";
     einmalzahlungsCell.fill = {
         type: "pattern",
@@ -272,17 +284,17 @@ function buildSheet(
         fgColor: { argb: "92D050" },
     };
 
-    const einmalzahlungsValueCell = sheet.getCell(`E${docs.length + 5}`);
+    const einmalzahlungsValueCell = sheet.getCell(`F${docs.length + 5}`);
     einmalzahlungsValueCell.value = onceSum;
     einmalzahlungsValueCell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "92D050" },
     };
-    const einmalzahlungsCountCell = sheet.getCell(`F${docs.length + 5}`);
+    const einmalzahlungsCountCell = sheet.getCell(`G${docs.length + 5}`);
     einmalzahlungsCountCell.value = onceCount;
 
-    const lsvMitCell = sheet.getCell(`D${docs.length + 6}`);
+    const lsvMitCell = sheet.getCell(`E${docs.length + 6}`);
     lsvMitCell.value = "LSV mit EZ";
     lsvMitCell.fill = {
         type: "pattern",
@@ -290,17 +302,17 @@ function buildSheet(
         fgColor: { argb: "95B3D7" },
     };
 
-    const lsvMitValueCell = sheet.getCell(`E${docs.length + 6}`);
+    const lsvMitValueCell = sheet.getCell(`F${docs.length + 6}`);
     lsvMitValueCell.value = lsvMitSum;
     lsvMitValueCell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "95B3D7" },
     };
-    const lsvMitCountCell = sheet.getCell(`F${docs.length + 6}`);
+    const lsvMitCountCell = sheet.getCell(`G${docs.length + 6}`);
     lsvMitCountCell.value = lsvMitCount;
 
-    const lsvOhneCell = sheet.getCell(`D${docs.length + 7}`);
+    const lsvOhneCell = sheet.getCell(`E${docs.length + 7}`);
     lsvOhneCell.value = "LSV ohne EZ";
     lsvOhneCell.fill = {
         type: "pattern",
@@ -308,17 +320,17 @@ function buildSheet(
         fgColor: { argb: "B7DEE8" },
     };
 
-    const lsvOhneValueCell = sheet.getCell(`E${docs.length + 7}`);
+    const lsvOhneValueCell = sheet.getCell(`F${docs.length + 7}`);
     lsvOhneValueCell.value = lsvOhneSum;
     lsvOhneValueCell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "B7DEE8" },
     };
-    const lsvOhneCountCell = sheet.getCell(`F${docs.length + 7}`);
+    const lsvOhneCountCell = sheet.getCell(`G${docs.length + 7}`);
     lsvOhneCountCell.value = lsvOhneCount;
 
-    const twintAboCell = sheet.getCell(`D${docs.length + 8}`);
+    const twintAboCell = sheet.getCell(`E${docs.length + 8}`);
     twintAboCell.value = "Twint-Abo";
     twintAboCell.fill = {
         type: "pattern",
@@ -326,13 +338,13 @@ function buildSheet(
         fgColor: { argb: "e19b9b" },
     };
 
-    const twintAboValueCell = sheet.getCell(`E${docs.length + 8}`);
+    const twintAboValueCell = sheet.getCell(`F${docs.length + 8}`);
     twintAboValueCell.value = twintaboSum;
     twintAboValueCell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "e19b9b" },
     };
-    const twintAboCountCell = sheet.getCell(`F${docs.length + 8}`);
+    const twintAboCountCell = sheet.getCell(`G${docs.length + 8}`);
     twintAboCountCell.value = twintaboCount;
 }

@@ -106,7 +106,8 @@ class _CoachSchedulePersonnelAssignmentPageState
                                                           .spaceBetween,
                                                   children: [
                                                     Text(
-                                                      location.getName(),
+                                                      location
+                                                          .getDetailedName(),
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,

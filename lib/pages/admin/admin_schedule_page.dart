@@ -186,7 +186,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                                                             children: [
                                                               Text(
                                                                 location
-                                                                    .getName(),
+                                                                    .getDetailedName(),
                                                               ),
                                                               Divider(),
                                                             ],
@@ -334,7 +334,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                                                             children: [
                                                               Text(
                                                                 location
-                                                                    .getName(),
+                                                                    .getDetailedName(),
                                                               ),
                                                               Divider(),
                                                             ],
@@ -910,7 +910,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                                                                 }
                                                                 return location
                                                                     .first
-                                                                    .name;
+                                                                    .getName();
                                                               })
                                                               .join(", ");
                                                         }()),

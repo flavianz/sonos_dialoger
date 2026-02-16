@@ -42,7 +42,7 @@ class LocationDetailsPage extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           forceMaterialTransparency: true,
-          title: Text(location.getName()),
+          title: Text(location.getDetailedName()),
           actions: [
             IconButton(
               icon: Icon(Icons.edit),

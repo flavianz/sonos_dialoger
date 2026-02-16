@@ -234,7 +234,7 @@ class PaymentDetailsPage extends ConsumerWidget {
                 locationDoc.when(
                   data:
                       (location) => Text(
-                        location.getName(),
+                        location.getDetailedName(),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                   error: errorHandling,

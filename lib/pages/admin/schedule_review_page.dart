@@ -131,7 +131,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                     child: Text(
                                       location == null
                                           ? "Standplatz gelöscht"
-                                          : location.getName(),
+                                          : location.getDetailedName(),
                                       style: TextStyle(
                                         decoration:
                                             wasRemoved
@@ -208,7 +208,7 @@ class _ScheduleReviewPageState extends ConsumerState<ScheduleReviewPage> {
                                     child: Text(
                                       location == null
                                           ? "Standplatz gelöscht"
-                                          : location.getName(),
+                                          : location.getDetailedName(),
                                       style: TextStyle(
                                         decoration:
                                             wasRemoved
@@ -475,7 +475,7 @@ class _LocationAdderDialogState extends ConsumerState<LocationAdderDialog> {
                                       });
                                     },
                                   ),
-                                  Text(location.getName()),
+                                  Text(location.getDetailedName()),
                                 ],
                               ),
                             ),

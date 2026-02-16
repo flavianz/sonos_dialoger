@@ -72,7 +72,9 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 3),
                         child: Row(
-                          children: [Expanded(child: Text(location.getName()))],
+                          children: [
+                            Expanded(child: Text(location.getDetailedName())),
+                          ],
                         ),
                       ),
                       Divider(),

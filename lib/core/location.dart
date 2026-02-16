@@ -81,7 +81,11 @@ class Location {
     };
   }
 
+  String getDetailedName() {
+    return "$name${(space != null && space!.isNotEmpty) ? (", Fläche $space") : ""}, ${town ?? "-"}";
+  }
+
   String getName() {
-    return "$name${space != null ? (", Fläche $space") : ""}, ${town ?? "-"}";
+    return "$name, ${town ?? "-"}";
   }
 }

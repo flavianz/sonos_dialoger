@@ -96,7 +96,7 @@ class DialogerSchedulePage extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  myLocation.getName(),
+                                  myLocation.getDetailedName(),
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -375,7 +375,8 @@ class DialogerSchedulePage extends ConsumerWidget {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    myLocation.getName(),
+                                                    myLocation
+                                                        .getDetailedName(),
                                                     style: TextStyle(
                                                       fontSize: 20,
                                                     ),

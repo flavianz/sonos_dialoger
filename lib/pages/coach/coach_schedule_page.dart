@@ -185,7 +185,7 @@ class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
                                                             children: [
                                                               Text(
                                                                 location
-                                                                    .getName(),
+                                                                    .getDetailedName(),
                                                               ),
                                                               Divider(),
                                                             ],
@@ -322,7 +322,7 @@ class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
                                                             children: [
                                                               Text(
                                                                 location
-                                                                    .getName(),
+                                                                    .getDetailedName(),
                                                               ),
                                                               Divider(),
                                                             ],
@@ -870,7 +870,7 @@ class _CoachSchedulePageState extends ConsumerState<CoachSchedulePage> {
                                                                 }
                                                                 return location
                                                                     .first
-                                                                    .name;
+                                                                    .getName();
                                                               })
                                                               .join(", ");
                                                         }()),

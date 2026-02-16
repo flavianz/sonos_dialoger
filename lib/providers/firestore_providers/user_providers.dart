@@ -19,6 +19,19 @@ final nonAdminUsersProvider = StreamProvider.autoDispose<Iterable<SonosUser>>((
       .map((docs) => docs.docs.map(SonosUser.fromDoc));
 });
 
+final nonAdminLinkedUsersProvider =
+    StreamProvider.autoDispose<Iterable<SonosUser>>((ref) {
+      ref.watch(userProvider);
+      return FirebaseFirestore.instance
+          .collection("users")
+          .where("role", isNotEqualTo: "admin")
+          .where("linked", isEqualTo: true)
+          .orderBy("role")
+          .orderBy("first")
+          .snapshots()
+          .map((docs) => docs.docs.map(SonosUser.fromDoc));
+    });
+
 final paymentDialogerProvider = FutureProvider.family((
   ref,
   String paymentId,

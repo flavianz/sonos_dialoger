@@ -31,7 +31,7 @@ class _CoachSchedulePersonnelAssignmentPageState
 
   @override
   Widget build(BuildContext context) {
-    final dialoguersDocs = ref.watch(nonAdminUsersProvider);
+    final dialoguersDocs = ref.watch(nonAdminLinkedUsersProvider);
     final alreadyAssignedDialoguers = [
       for (var sublist in assignedDialoguers.values) ...sublist,
     ];

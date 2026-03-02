@@ -69,6 +69,22 @@ final todayScheduleProvider = StreamProvider((ref) {
       .snapshots();
 });
 
+final locationScheduleProvider = StreamProvider.family((
+  ref,
+  String locationId,
+) {
+  ref.watch(userProvider);
+  return FirebaseFirestore.instance
+      .collection("schedules")
+      .where(
+        Filter.and(
+          Filter("location", isEqualTo: locationId),
+          Filter("personnel_assigned", isEqualTo: true),
+        ),
+      )
+      .snapshots();
+});
+
 final localDialogerPaymentsProvider =
     StreamProvider<QuerySnapshot<Map<String, dynamic>>>((ref) {
       return FirebaseFirestore.instance

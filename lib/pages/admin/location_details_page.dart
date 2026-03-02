@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -222,22 +223,78 @@ class LocationDetailsPage extends ConsumerWidget {
                 ],
               ),
             ),
-            DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  TabBar(tabs: [Tab(text: "Vergangen"), Tab(text: "Kommend")]),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        Center(child: Text("Vergangene Buchungen")),
-                        Center(child: Text("Kommende Buchungen")),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ref
+                .watch(locationScheduleProvider(locationId))
+                .when(
+                  data: (schedules) {
+                    final orderedSchedules =
+                        schedules.docs.map((doc) => doc.data()).toList();
+                    orderedSchedules.sort(
+                      (a, b) => (a["date"] as Timestamp).compareTo(
+                        b["date"] as Timestamp,
+                      ),
+                    );
+
+                    final series = [];
+                    Timestamp? startDate;
+                    Timestamp? lastDayOfSeries;
+                    for (final schedule in orderedSchedules) {
+                      final currentDate = schedule["date"] as Timestamp;
+                      if (startDate == null || lastDayOfSeries == null) {
+                        startDate = currentDate;
+                        lastDayOfSeries = currentDate;
+                        continue;
+                      }
+                      if (currentDate
+                              .toDate()
+                              .difference(lastDayOfSeries.toDate())
+                              .inDays ==
+                          1) {
+                        lastDayOfSeries = currentDate;
+                      } else {
+                        series.add(
+                          DateTimeRange(
+                            start: startDate.toDate(),
+                            end: lastDayOfSeries.toDate(),
+                          ),
+                        );
+                        startDate = null;
+                        lastDayOfSeries = null;
+                      }
+                    }
+
+                    return DefaultTabController(
+                      length: 2,
+                      initialIndex: 1,
+                      child: Column(
+                        children: [
+                          TabBar(
+                            tabs: [
+                              Tab(text: "Vergangen"),
+                              Tab(text: "Kommend"),
+                            ],
+                          ),
+                          Expanded(
+                            child: TabBarView(
+                              children: [
+                                Center(child: Text("Vergangene Buchungen")),
+                                Center(child: Text("Kommende Buchungen")),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  error: (object, stackTrace) {
+                    print(object);
+                    print(stackTrace);
+                    return Center(
+                      child: Text("Ups, hier hat etwas nicht geklappt"),
+                    );
+                  },
+                  loading: () => Center(child: CircularProgressIndicator()),
+                ),
           ],
         ),
       ),

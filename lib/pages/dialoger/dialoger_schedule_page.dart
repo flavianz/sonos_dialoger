@@ -10,6 +10,7 @@ import 'package:sonos_dialoger/providers.dart';
 import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
 import '../../providers/firestore_providers/location_providers.dart';
+import '../../providers/firestore_providers/user_providers.dart';
 
 class DialogerSchedulePage extends ConsumerWidget {
   const DialogerSchedulePage({super.key});
@@ -23,6 +24,7 @@ class DialogerSchedulePage extends ConsumerWidget {
     final dialogerLocationDocs = ref.watch(
       personnelAssignedSchedulesLocationsProvider,
     );
+    final users = ref.watch(nonAdminUsersProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -375,15 +377,48 @@ class DialogerSchedulePage extends ConsumerWidget {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    myLocation
-                                                        .getDetailedName(),
+                                                    myLocation.getName(),
                                                     style: TextStyle(
                                                       fontSize: 20,
                                                     ),
                                                   ),
 
                                                   Text(
-                                                    "${myLocation.street ?? "-"} ${myLocation.houseNumber ?? ""}, ${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
+                                                    () {
+                                                      final userIds = flatten(
+                                                        ((scheduleData["personnel"]
+                                                                    as Map?) ??
+                                                                {})
+                                                            .values,
+                                                      );
+                                                      if (userIds.isEmpty) {
+                                                        return "Keine Dialoger";
+                                                      }
+                                                      if (users.isLoading) {
+                                                        return "Laden...";
+                                                      }
+                                                      if (users.hasError) {
+                                                        return "Fehler";
+                                                      }
+                                                      return userIds
+                                                          .map((locationId) {
+                                                            final user = users
+                                                                .value!
+                                                                .where(
+                                                                  (user) =>
+                                                                      user.id ==
+                                                                      locationId,
+                                                                );
+                                                            if (user.isEmpty) {
+                                                              return "Unbekannter Dialoger";
+                                                            }
+                                                            return "${user.first.first} ${user.first.last}";
+                                                          })
+                                                          .join(", ");
+                                                    }(),
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                    ),
                                                   ),
                                                 ],
                                               );

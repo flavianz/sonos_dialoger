@@ -38,7 +38,7 @@ class LocationDetailsPage extends ConsumerWidget {
     final locationPaymentDocs = ref.watch(locationPaymentsProvider(locationId));
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           forceMaterialTransparency: true,
@@ -55,6 +55,7 @@ class LocationDetailsPage extends ConsumerWidget {
             tabs: [
               Tab(text: "Leistungen", icon: Icon(Icons.request_page)),
               Tab(text: "Infos", icon: Icon(Icons.info_outline)),
+              Tab(text: "Buchungen", icon: Icon(Icons.assignment)),
             ],
           ),
         ),
@@ -217,6 +218,22 @@ class LocationDetailsPage extends ConsumerWidget {
                     (location.notes == null || location.notes!.isEmpty)
                         ? "Keine Notizen"
                         : location.notes!,
+                  ),
+                ],
+              ),
+            ),
+            DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(tabs: [Tab(text: "Vergangen"), Tab(text: "Kommend")]),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        Center(child: Text("Vergangene Buchungen")),
+                        Center(child: Text("Kommende Buchungen")),
+                      ],
+                    ),
                   ),
                 ],
               ),

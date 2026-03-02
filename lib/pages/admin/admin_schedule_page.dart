@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
+import 'package:sonos_dialoger/components/today_location_info.dart';
 import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
 
 import '../../app.dart';
@@ -31,7 +32,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
     final users = ref.watch(nonAdminUsersProvider);
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text("Einteilung"),
@@ -39,6 +40,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
           bottom: TabBar(
             tabs: [
               Tab(text: "Kalender", icon: Icon(Icons.calendar_month)),
+              Tab(text: "Heutige Infos", icon: Icon(Icons.info_outline)),
               Tab(text: "Anfragen", icon: Icon(Icons.new_releases_outlined)),
             ],
           ),
@@ -1008,6 +1010,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
                 ),
               ],
             ),
+            TodayLocationInfo(isAdmin: true),
             ref
                 .watch(scheduleRequestsProvider)
                 .when(

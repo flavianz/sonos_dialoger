@@ -39,7 +39,7 @@ class LocationDetailsPage extends ConsumerWidget {
     final locationPaymentDocs = ref.watch(locationPaymentsProvider(locationId));
 
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           forceMaterialTransparency: true,
@@ -55,7 +55,7 @@ class LocationDetailsPage extends ConsumerWidget {
           bottom: TabBar(
             tabs: [
               Tab(text: "Leistungen", icon: Icon(Icons.request_page)),
-              Tab(text: "Infos", icon: Icon(Icons.info_outline)),
+              /*Tab(text: "Infos", icon: Icon(Icons.info_outline)),*/
               Tab(text: "Buchungen", icon: Icon(Icons.assignment)),
             ],
           ),
@@ -223,7 +223,7 @@ class LocationDetailsPage extends ConsumerWidget {
                 ],
               ),
             ),
-            ref
+            /*ref
                 .watch(locationScheduleProvider(locationId))
                 .when(
                   data: (schedules) {
@@ -294,7 +294,7 @@ class LocationDetailsPage extends ConsumerWidget {
                     );
                   },
                   loading: () => Center(child: CircularProgressIndicator()),
-                ),
+                ),*/
           ],
         ),
       ),

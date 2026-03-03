@@ -19,7 +19,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  if (!kReleaseMode) {
+  if (!kReleaseMode && false) {
     await connectToFirebaseEmulators();
   }
 

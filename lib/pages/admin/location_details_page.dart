@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sonos_dialoger/app.dart';
 import 'package:sonos_dialoger/components/clickable_link.dart';
+import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/payment_row.dart';
 import 'package:sonos_dialoger/components/payments_graph.dart';
 import 'package:sonos_dialoger/components/payments_summary.dart';
@@ -11,6 +13,7 @@ import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart
 
 import '../../components/timespan_dropdowns.dart';
 import '../../core/user.dart';
+import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
 import '../../providers/firestore_providers/location_providers.dart';
 
@@ -39,7 +42,7 @@ class LocationDetailsPage extends ConsumerWidget {
     final locationPaymentDocs = ref.watch(locationPaymentsProvider(locationId));
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           forceMaterialTransparency: true,
@@ -55,7 +58,7 @@ class LocationDetailsPage extends ConsumerWidget {
           bottom: TabBar(
             tabs: [
               Tab(text: "Leistungen", icon: Icon(Icons.request_page)),
-              /*Tab(text: "Infos", icon: Icon(Icons.info_outline)),*/
+              Tab(text: "Infos", icon: Icon(Icons.info_outline)),
               Tab(text: "Buchungen", icon: Icon(Icons.assignment)),
             ],
           ),
@@ -223,7 +226,7 @@ class LocationDetailsPage extends ConsumerWidget {
                 ],
               ),
             ),
-            /*ref
+            ref
                 .watch(locationScheduleProvider(locationId))
                 .when(
                   data: (schedules) {
@@ -235,7 +238,7 @@ class LocationDetailsPage extends ConsumerWidget {
                       ),
                     );
 
-                    final series = [];
+                    final Map<dynamic, DateTimeRange> series = {};
                     Timestamp? startDate;
                     Timestamp? lastDayOfSeries;
                     for (final schedule in orderedSchedules) {
@@ -252,15 +255,85 @@ class LocationDetailsPage extends ConsumerWidget {
                           1) {
                         lastDayOfSeries = currentDate;
                       } else {
-                        series.add(
-                          DateTimeRange(
-                            start: startDate.toDate(),
-                            end: lastDayOfSeries.toDate(),
-                          ),
+                        series[schedule] = DateTimeRange(
+                          start: startDate.toDate(),
+                          end: lastDayOfSeries.toDate(),
                         );
                         startDate = null;
                         lastDayOfSeries = null;
                       }
+                    }
+                    if (startDate != null && lastDayOfSeries != null) {
+                      series[orderedSchedules[orderedSchedules.length -
+                          1]] = DateTimeRange(
+                        start: startDate.toDate(),
+                        end: lastDayOfSeries.toDate(),
+                      );
+                    }
+
+                    Widget getBookingsList(
+                      Iterable<MapEntry<dynamic, DateTimeRange>> series,
+                    ) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children:
+                              series.map((entry) {
+                                return Tappable(
+                                  onTap: () {
+                                    final currentTimespan = ref.read(
+                                      scheduleTimespanProvider,
+                                    );
+                                    final currentStartDate = ref.read(
+                                      scheduleStartDateProvider,
+                                    );
+                                    ref
+                                        .read(scheduleTimespanProvider.notifier)
+                                        .state = Timespan.week;
+                                    ref
+                                        .read(
+                                          scheduleStartDateProvider.notifier,
+                                        )
+                                        .state = entry.value.start
+                                            .getDayStart();
+                                    context
+                                        .push(
+                                          ref
+                                                      .read(userDataProvider)
+                                                      .value!
+                                                      .role ==
+                                                  UserRole.admin
+                                              ? "/admin/schedules"
+                                              : "/coach/schedules",
+                                        )
+                                        .then((_) {
+                                          ref
+                                              .read(
+                                                scheduleTimespanProvider
+                                                    .notifier,
+                                              )
+                                              .state = currentTimespan;
+                                          ref
+                                              .read(
+                                                scheduleStartDateProvider
+                                                    .notifier,
+                                              )
+                                              .state = currentStartDate;
+                                        });
+                                  },
+                                  child: Card.outlined(
+                                    child: Container(
+                                      padding: EdgeInsets.all(16),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "${entry.value.start.toExtendedFormattedDateString()} ${entry.value.start.year == entry.value.end.year ? "" : entry.value.start.year} - ${entry.value.end.toExtendedFormattedDateString()} ${entry.value.end.year}",
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      );
                     }
 
                     return DefaultTabController(
@@ -277,8 +350,19 @@ class LocationDetailsPage extends ConsumerWidget {
                           Expanded(
                             child: TabBarView(
                               children: [
-                                Center(child: Text("Vergangene Buchungen")),
-                                Center(child: Text("Kommende Buchungen")),
+                                getBookingsList(
+                                  series.entries.where(
+                                    (entry) => entry.value.start.isBefore(
+                                      DateTime.now(),
+                                    ),
+                                  ),
+                                ),
+                                getBookingsList(
+                                  series.entries.where(
+                                    (entry) =>
+                                        entry.value.end.isAfter(DateTime.now()),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -294,7 +378,7 @@ class LocationDetailsPage extends ConsumerWidget {
                     );
                   },
                   loading: () => Center(child: CircularProgressIndicator()),
-                ),*/
+                ),
           ],
         ),
       ),

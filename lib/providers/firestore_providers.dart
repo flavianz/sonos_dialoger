@@ -73,12 +73,13 @@ final locationScheduleProvider = StreamProvider.family((
   ref,
   String locationId,
 ) {
+  print(locationId);
   ref.watch(userProvider);
   return FirebaseFirestore.instance
       .collection("schedules")
       .where(
         Filter.and(
-          Filter("location", isEqualTo: locationId),
+          Filter("confirmed_locations", arrayContains: locationId),
           Filter("personnel_assigned", isEqualTo: true),
         ),
       )

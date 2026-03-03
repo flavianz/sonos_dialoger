@@ -180,7 +180,10 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
         int.tryParse(minuteController.text)! <= 59;
     late final bool isInfoComplete;
     if (type == "once") {
-      isInfoComplete = isTimeComplete && amountController.text.isNotEmpty;
+      isInfoComplete =
+          isTimeComplete &&
+          amountController.text.isNotEmpty &&
+          paymentMethod != null;
     } else if (type == "repeating") {
       isInfoComplete =
           isTimeComplete &&
@@ -188,12 +191,14 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
           lastController.text.isNotEmpty &&
           interval != null &&
           (!hasFirstPayment || paymentMethod != null);
-    } else {
+    } else if (type == "twintabo") {
       isInfoComplete =
           isTimeComplete &&
           firstController.text.isNotEmpty &&
           lastController.text.isNotEmpty &&
           interval != null;
+    } else {
+      isInfoComplete = false;
     }
     void resetInputs() {
       setState(() {

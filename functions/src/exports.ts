@@ -87,6 +87,8 @@ function buildSheet(
     let lsvOhneCount = 0;
     let twintaboSum = 0;
     let twintaboCount = 0;
+    let twintSum = 0;
+    let twintCount = 0;
 
     let totalSum = 0;
     let totalDialogerSum = 0;
@@ -103,6 +105,8 @@ function buildSheet(
             if (data["has_first_payment"] == true) {
                 if (data["method"] === "twint") {
                     paymentMethod = "LSV + Twint";
+                    twintSum += amount;
+                    twintCount++;
                 } else {
                     paymentMethod = "LSV + SumUp";
                 }
@@ -122,6 +126,8 @@ function buildSheet(
             onceCount++;
             if (data["method"] === "twint") {
                 paymentMethod = "Twint";
+                twintCount++;
+                twintSum += amount;
             } else {
                 paymentMethod = "SumUp";
             }
@@ -343,8 +349,25 @@ function buildSheet(
     twintAboValueCell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "e19b9b" },
+        fgColor: { argb: "#e19b9b" },
     };
     const twintAboCountCell = sheet.getCell(`G${docs.length + 8}`);
     twintAboCountCell.value = twintaboCount;
+
+    const twintCell = sheet.getCell(`E${docs.length + 9}`);
+    twintCell.value = "Twint-Zahlungen";
+    twintCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "eae5a3" },
+    };
+    const twintValueCell = sheet.getCell(`F${docs.length + 9}`);
+    twintValueCell.value = twintSum;
+    twintValueCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "eae5a3" },
+    };
+    const twintCountCell = sheet.getCell(`G${docs.length + 9}`);
+    twintCountCell.value = twintCount;
 }

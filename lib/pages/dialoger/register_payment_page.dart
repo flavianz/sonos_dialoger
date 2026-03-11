@@ -546,11 +546,45 @@ class _RegisterPaymentPageState extends ConsumerState<RegisterPaymentPage> {
                                     ref.watch(userProvider).value!.uid;
                                 commonData["creation_timestamp"] =
                                     Timestamp.now();
+                                commonData["timestamp"] = Timestamp.fromDate(
+                                  DateTime(
+                                    DateTime.now().year,
+                                    DateTime.now().month,
+                                    DateTime.now().day,
+                                    int.tryParse(hourController.text) ??
+                                        DateTime.now().hour,
+                                    int.tryParse(minuteController.text) ??
+                                        DateTime.now().minute,
+                                  ),
+                                );
+                              } else {
+                                final creationTimestamp =
+                                    editPayment!.creationTimestamp;
+                                commonData["timestamp"] = Timestamp.fromDate(
+                                  DateTime(
+                                    creationTimestamp.year,
+                                    creationTimestamp.month,
+                                    creationTimestamp.day,
+                                    int.tryParse(hourController.text) ??
+                                        DateTime.now().hour,
+                                    int.tryParse(minuteController.text) ??
+                                        DateTime.now().minute,
+                                  ),
+                                );
                               }
 
                               final isCoach =
                                   ref.watch(userDataProvider).value?.role ==
-                                  UserRole.coach;
+                                      UserRole.coach ||
+                                  (widget.editing &&
+                                      ((editPayment?.dialogerShare == 0.5 &&
+                                              editPayment
+                                                  is RepeatingTwintPayment) ||
+                                          (editPayment?.dialogerShare == 0.6 &&
+                                              editPayment
+                                                  is RepeatingPayment) ||
+                                          (editPayment?.dialogerShare == 0.35 &&
+                                              editPayment is OncePayment)));
                               if (type == "once") {
                                 final data = {
                                   ...commonData,

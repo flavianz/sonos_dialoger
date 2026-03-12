@@ -1,18 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/core/payment.dart';
+import 'package:sonos_dialoger/core/user.dart';
 
+import '../providers/firestore_providers/user_providers.dart';
 import 'misc.dart';
 
-class PaymentRow extends StatelessWidget {
+class PaymentRow extends ConsumerWidget {
   final Payment payment;
   final bool isAdmin;
 
   const PaymentRow({super.key, required this.payment, required this.isAdmin});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ref) {
+    final users = ref.watch(nonAdminUsersProvider);
+
     late String datePrefix;
     final today = DateTime.now();
     final yesterday = DateTime.fromMicrosecondsSinceEpoch(
@@ -93,7 +98,32 @@ class PaymentRow extends StatelessWidget {
                 )
               else
                 SizedBox.shrink(),
-              Expanded(child: isPaidWidget),
+              if (isAdmin)
+                Expanded(
+                  child: Text(() {
+                    if (users.isLoading) {
+                      return "Laden...";
+                    }
+                    if (users.hasError || !users.hasValue) {
+                      return "Fehler";
+                    }
+                    final user = users.value!.firstWhere(
+                      (element) => element.id == payment.dialoger,
+                      orElse:
+                          () => SonosUser(
+                            "id",
+                            "Unbekannter",
+                            "Dialoger",
+                            false,
+                            UserRole.dialog,
+                            null,
+                          ),
+                    );
+                    return "${user.first} ${user.last}";
+                  }()),
+                )
+              else
+                Expanded(child: isPaidWidget),
               IconButton(
                 onPressed:
                     isAdmin || payment.canDialogerStillEdit()

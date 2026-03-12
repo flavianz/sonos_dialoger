@@ -204,8 +204,8 @@ class Payment {
   }
 
   bool canDialogerStillEdit() {
-    return timestamp.isSameDate(DateTime.now()) ||
-        (timestamp.isSameDate(DateTime.now().addDays(1)) &&
+    return creationTimestamp.isSameDate(DateTime.now()) ||
+        (creationTimestamp.addDays(1).isSameDate(DateTime.now()) &&
             DateTime.now().hour < 11);
   }
 }

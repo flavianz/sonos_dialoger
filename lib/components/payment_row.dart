@@ -107,19 +107,21 @@ class PaymentRow extends ConsumerWidget {
                     if (users.hasError || !users.hasValue) {
                       return "Fehler";
                     }
-                    final user = users.value!.firstWhere(
-                      (element) => element.id == payment.dialoger,
-                      orElse:
-                          () => SonosUser(
-                            "id",
-                            "Unbekannter",
-                            "Dialoger",
-                            false,
-                            UserRole.dialog,
-                            null,
-                          ),
-                    );
-                    return "${user.first} ${user.last}";
+
+                    return users.value!
+                        .firstWhere(
+                          (element) => element.id == payment.dialoger,
+                          orElse:
+                              () => SonosUser(
+                                "id",
+                                "Unbekannter",
+                                "Dialoger",
+                                false,
+                                UserRole.dialog,
+                                null,
+                              ),
+                        )
+                        .first;
                   }()),
                 )
               else

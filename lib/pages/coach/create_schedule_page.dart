@@ -175,7 +175,7 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
               onPressed:
                   startDate == null ||
                           endDate == null ||
-                          endDate!.difference(startDate!).inDays >= 7
+                          endDate!.difference(startDate!).inDays >= 14
                       ? null
                       : () async {
                         setState(() {
@@ -244,8 +244,8 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
                       : Text(
                         (startDate == null || endDate == null)
                             ? "Zeitraum wählen"
-                            : (endDate!.difference(startDate!).inDays >= 7
-                                ? "Maximal 7 Tage"
+                            : (endDate!.difference(startDate!).inDays >= 14
+                                ? "Maximal 14 Tage"
                                 : "Anfrage einreichen"),
                       ),
             ),

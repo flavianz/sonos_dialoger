@@ -121536,11 +121536,11 @@ j=A.ay(e,15,e)
 k=f.z
 h=k!=null
 if(h){g=f.Q
-g=g==null||B.e.cG(g.hF(k).a,d)>=7}else g=!0
+g=g==null||B.e.cG(g.hF(k).a,d)>=14}else g=!0
 g=g?e:new A.aO9(f,a)
 if(f.x)k=A.c8(B.p,e,e)
 else{if(!h||f.Q==null)k="Zeitraum w\xe4hlen"
-else k=B.e.cG(f.Q.hF(k).a,d)>=7?"Maximal 7 Tage":"Anfrage einreichen"
+else k=B.e.cG(f.Q.hF(k).a,d)>=14?"Maximal 14 Tage":"Anfrage einreichen"
 k=A.k(k,e,e,e,e,e,e,e,e)}return A.d5(s,e,A.a8(A.b([r,o,p,m,l,i,j,new A.bQ(new A.a1(0,1/0,50,1/0),A.eH(!1,k,B.n,e,e,e,e,e,g,e,e),e)],n),B.af,B.h,B.f,0),e,e)}}
 A.aO4.prototype={
 $0(){var s=this.a,r=s.a

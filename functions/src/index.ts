@@ -53,84 +53,107 @@ exports.assignUser = onCall(async (request) => {
     return { result: true };
 });
 
-exports.scheduleRequested = onDocumentCreatedWithAuthContext("/schedules/{scheduleId}", async (change) => {
-    if(!change.data) {
-        logger.log("No data in created schedule");
-        return;
-    }
-    const scheduleData = change.data.data();
-
-    let emailAddress: string | undefined;
-    try {
-        emailAddress = await getEmailAddress();
-    } catch (e) {
-        logger.error("Failed to get email for export");
-        logger.error(e);
-        return;
-    }
-
-    if (!scheduleData["group_id"]) {
-        // single day schedule
-        const scheduleDate = parseDateFromDoc(scheduleData["date"]);
-        try {
-            await sendEmail(
-                "sonos@flavianz.ch",
-                "Sonos Dialoger",
-                emailAddress!,
-                "Sonos-Admin",
-                `Neue Standplatz-Anfrage`,
-                `Hallo Hannes\n\nEs wurde eine neue Standplatz-Anfrage am ${scheduleDate.getDay()}. ${scheduleDate.getMonth()}. ${scheduleDate.getFullYear()} eingereicht.\n\nSonos Dialoger-App`,
-            );
-        } catch (e) {
-            logger.error("Failed to send single schedule creation email");
-            logger.error(e);
+exports.scheduleRequested = onDocumentCreatedWithAuthContext(
+    "/schedules/{scheduleId}",
+    async (event) => {
+        if (!event.data) {
+            logger.log("No data in created schedule");
             return;
         }
-    } else {
-        // group schedule
-        const groupId: string = scheduleData["group_id"];
+        const scheduleData = event.data.data();
 
-        const firstScheduleGroupMemberQuery = await db.collection("schedules").where("group_id", "==", groupId).orderBy("date", "asc").limit(1).get();
-        if(firstScheduleGroupMemberQuery.empty) {
-            logger.error("No group schedule member found");
-            return;
-        }
-
-        const firstScheduleGroupMember = firstScheduleGroupMemberQuery.docs[0];
-        const firstScheduleGroupMemberData = firstScheduleGroupMember.data();
-        if(firstScheduleGroupMember.id != change.data.id) {
-            // only the first schedule of a group schedule sends the email,
-            // because else there would be one email per day of the group schedule
-            return;
-        }
-
-        const lastScheduleGroupMemberQuery = await db
-            .collection("schedules")
-            .where("group_id", "==", groupId)
-            .orderBy("date", "desc")
-            .limit(1)
+        const creatorDoc = await db
+            .collection("users")
+            .doc(scheduleData["creator"])
             .get();
-        const lastScheduleGroupMemberData = lastScheduleGroupMemberQuery.docs[0].data();
+        if ((creatorDoc.data() ?? {})["role"] === "admin") {
+            return;
+        }
 
-        const startDate = parseDateFromDoc(firstScheduleGroupMemberData["date"]);
-        const endDate = parseDateFromDoc(lastScheduleGroupMemberData["date"]);
-
+        let emailAddress: string | undefined;
         try {
-            await sendEmail(
-                "sonos@flavianz.ch",
-                "Sonos Dialoger",
-                emailAddress!,
-                "Sonos-Admin",
-                `Neue Standplatz-Anfrage`,
-                `Hallo Hannes\n\nEs wurde eine neue Standplatz-Anfrage vom ${startDate.getDay()}. ${startDate.getMonth()}. ${startDate.getFullYear()} bis zum ${endDate.getDay()}. ${endDate.getMonth()}. ${endDate.getFullYear()} eingereicht.\n\nSonos Dialoger-App`,
-            );
+            emailAddress = await getEmailAddress();
         } catch (e) {
-            logger.error("Failed to send group schedule creation email");
+            logger.error("Failed to get email for export");
             logger.error(e);
             return;
         }
-    }
-})
+
+        if (!scheduleData["group_id"]) {
+            // single day schedule
+            const scheduleDate = parseDateFromDoc(scheduleData["date"]);
+            try {
+                await sendEmail(
+                    "sonos@flavianz.ch",
+                    "Sonos Dialoger",
+                    emailAddress!,
+                    "Sonos-Admin",
+                    `Neue Standplatz-Anfrage`,
+                    `Hallo Hannes\n\nEs wurde eine neue Standplatz-Anfrage am ${scheduleDate.getDate()}. ${scheduleDate.getMonth() + 1}. ${scheduleDate.getFullYear()} eingereicht.\n\nSonos Dialoger-App`,
+                );
+            } catch (e) {
+                logger.error("Failed to send single schedule creation email");
+                logger.error(e);
+                return;
+            }
+        } else {
+            // group schedule
+            const groupId: string = scheduleData["group_id"];
+
+            const firstScheduleGroupMemberQuery = await db
+                .collection("schedules")
+                .where("group_id", "==", groupId)
+                .orderBy("date", "asc")
+                .limit(1)
+                .get();
+            if (firstScheduleGroupMemberQuery.empty) {
+                logger.error("No group schedule member found");
+                return;
+            }
+
+            const firstScheduleGroupMember =
+                firstScheduleGroupMemberQuery.docs[0];
+            const firstScheduleGroupMemberData =
+                firstScheduleGroupMember.data();
+            if (firstScheduleGroupMember.id != event.data.id) {
+                // only the first schedule of a group schedule sends the email,
+                // because else there would be one email per day of the group schedule
+                return;
+            }
+
+            const lastScheduleGroupMemberQuery = await db
+                .collection("schedules")
+                .where("group_id", "==", groupId)
+                .orderBy("date", "desc")
+                .limit(1)
+                .get();
+            const lastScheduleGroupMemberData =
+                lastScheduleGroupMemberQuery.docs[0].data();
+
+            const startDate = parseDateFromDoc(
+                firstScheduleGroupMemberData["date"],
+            );
+            const endDate = parseDateFromDoc(
+                lastScheduleGroupMemberData["date"],
+            );
+
+            try {
+                await sendEmail(
+                    "sonos@flavianz.ch",
+                    "Sonos Dialoger",
+                    emailAddress!,
+                    "Sonos-Admin",
+                    `Neue Standplatz-Anfrage`,
+                    `Hallo Hannes\n\nEs wurde eine neue Standplatz-Anfrage vom ${startDate.getDate()}. ${startDate.getMonth() + 1}. ${startDate.getFullYear()} bis zum ${endDate.getDate()}. ${endDate.getMonth() + 1}. ${endDate.getFullYear()} eingereicht.\n\nSonos Dialoger-App`,
+                );
+            } catch (e) {
+                logger.error("Failed to send group schedule creation email");
+                logger.error(e);
+                return;
+            }
+        }
+    },
+);
 
 exports.updateRole = onDocumentUpdated("/users/{userId}", async (change) => {
     const userId = change.params.userId;

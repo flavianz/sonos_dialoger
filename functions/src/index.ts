@@ -8,11 +8,13 @@ import { exportDate } from "./exports";
 import { Workbook } from "exceljs";
 import "dotenv/config";
 import { onSchedule } from "firebase-functions/scheduler";
-import { sendEmailWithExcel } from "./email";
+import { sendEmail, sendEmailWithExcel } from "./email";
 import {
+    onDocumentCreatedWithAuthContext,
     onDocumentDeleted,
     onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
+import { parseDateFromDoc } from "./utils";
 
 initializeApp();
 setGlobalOptions({ region: "europe-west3" });
@@ -50,6 +52,85 @@ exports.assignUser = onCall(async (request) => {
 
     return { result: true };
 });
+
+exports.scheduleRequested = onDocumentCreatedWithAuthContext("/schedules/{scheduleId}", async (change) => {
+    if(!change.data) {
+        logger.log("No data in created schedule");
+        return;
+    }
+    const scheduleData = change.data.data();
+
+    let emailAddress: string | undefined;
+    try {
+        emailAddress = await getEmailAddress();
+    } catch (e) {
+        logger.error("Failed to get email for export");
+        logger.error(e);
+        return;
+    }
+
+    if (!scheduleData["group_id"]) {
+        // single day schedule
+        const scheduleDate = parseDateFromDoc(scheduleData["date"]);
+        try {
+            await sendEmail(
+                "sonos@flavianz.ch",
+                "Sonos Dialoger",
+                emailAddress!,
+                "Sonos-Admin",
+                `Neue Standplatz-Anfrage`,
+                `Hallo Hannes\n\nEs wurde eine neue Standplatz-Anfrage am ${scheduleDate.getDay()}. ${scheduleDate.getMonth()}. ${scheduleDate.getFullYear()} eingereicht.\n\nSonos Dialoger-App`,
+            );
+        } catch (e) {
+            logger.error("Failed to send single schedule creation email");
+            logger.error(e);
+            return;
+        }
+    } else {
+        // group schedule
+        const groupId: string = scheduleData["group_id"];
+
+        const firstScheduleGroupMemberQuery = await db.collection("schedules").where("group_id", "==", groupId).orderBy("date", "asc").limit(1).get();
+        if(firstScheduleGroupMemberQuery.empty) {
+            logger.error("No group schedule member found");
+            return;
+        }
+
+        const firstScheduleGroupMember = firstScheduleGroupMemberQuery.docs[0];
+        const firstScheduleGroupMemberData = firstScheduleGroupMember.data();
+        if(firstScheduleGroupMember.id != change.data.id) {
+            // only the first schedule of a group schedule sends the email,
+            // because else there would be one email per day of the group schedule
+            return;
+        }
+
+        const lastScheduleGroupMemberQuery = await db
+            .collection("schedules")
+            .where("group_id", "==", groupId)
+            .orderBy("date", "desc")
+            .limit(1)
+            .get();
+        const lastScheduleGroupMemberData = lastScheduleGroupMemberQuery.docs[0].data();
+
+        const startDate = parseDateFromDoc(firstScheduleGroupMemberData["date"]);
+        const endDate = parseDateFromDoc(lastScheduleGroupMemberData["date"]);
+
+        try {
+            await sendEmail(
+                "sonos@flavianz.ch",
+                "Sonos Dialoger",
+                emailAddress!,
+                "Sonos-Admin",
+                `Neue Standplatz-Anfrage`,
+                `Hallo Hannes\n\nEs wurde eine neue Standplatz-Anfrage vom ${startDate.getDay()}. ${startDate.getMonth()}. ${startDate.getFullYear()} bis zum ${endDate.getDay()}. ${endDate.getMonth()}. ${endDate.getFullYear()} eingereicht.\n\nSonos Dialoger-App`,
+            );
+        } catch (e) {
+            logger.error("Failed to send group schedule creation email");
+            logger.error(e);
+            return;
+        }
+    }
+})
 
 exports.updateRole = onDocumentUpdated("/users/{userId}", async (change) => {
     const userId = change.params.userId;
@@ -137,8 +218,8 @@ exports.autoExportEmail = onSchedule(
 
         try {
             await sendEmailWithExcel(
-                "autoexport.sonos@flavianz.ch",
-                "Auto-Export Sonos Dialoger",
+                "sonos@flavianz.ch",
+                "Sonos Dialoger",
                 emailAddress!,
                 "Sonos-Admin",
                 workbook,
@@ -206,8 +287,8 @@ exports.exportPayments = onCall(async (request, _) => {
 
     try {
         await sendEmailWithExcel(
-            "export.sonos@flavianz.ch",
-            "Export Sonos Dialoger",
+            "sonos@flavianz.ch",
+            "Sonos Dialoger",
             emailAddress!,
             "Sonos-Admin",
             workbook,

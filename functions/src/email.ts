@@ -8,45 +8,76 @@ import {
 } from "mailersend";
 
 export async function sendEmailWithExcel(
-  senderEmail: string,
-  senderName: string,
-  recipientEmail: string,
-  recipientName: string,
-  attachmentWorkbook: Workbook,
-  attachmentName: string,
-  subject: string,
-  text: string,
+    senderEmail: string,
+    senderName: string,
+    recipientEmail: string,
+    recipientName: string,
+    attachmentWorkbook: Workbook,
+    attachmentName: string,
+    subject: string,
+    text: string,
 ) {
-  const mailerSendApiKey = process.env.MAILERSEND_KEY;
-  if (!mailerSendApiKey) {
-    throw new Error("No API key set for MailerSend");
-  }
+    const mailerSendApiKey = process.env.MAILERSEND_KEY;
+    if (!mailerSendApiKey) {
+        throw new Error("No API key set for MailerSend");
+    }
 
-  const mailerSend = new MailerSend({
-    apiKey: mailerSendApiKey,
-  });
+    const mailerSend = new MailerSend({
+        apiKey: mailerSendApiKey,
+    });
 
-  const sentFrom = new Sender(senderEmail, senderName);
+    const sentFrom = new Sender(senderEmail, senderName);
 
-  const recipients = [new Recipient(recipientEmail, recipientName)];
+    const recipients = [new Recipient(recipientEmail, recipientName)];
 
-  const attachments = [
-    new Attachment(
-      Buffer.from(await attachmentWorkbook.xlsx.writeBuffer()).toString(
-        "base64",
-      ),
-      attachmentName,
-      "attachment",
-    ),
-  ];
+    const attachments = [
+        new Attachment(
+            Buffer.from(await attachmentWorkbook.xlsx.writeBuffer()).toString(
+                "base64",
+            ),
+            attachmentName,
+            "attachment",
+        ),
+    ];
 
-  const emailParams = new EmailParams()
-    .setFrom(sentFrom)
-    .setTo(recipients)
-    .setReplyTo(sentFrom)
-    .setAttachments(attachments)
-    .setSubject(subject)
-    .setText(text);
+    const emailParams = new EmailParams()
+        .setFrom(sentFrom)
+        .setTo(recipients)
+        .setReplyTo(sentFrom)
+        .setAttachments(attachments)
+        .setSubject(subject)
+        .setText(text);
 
-  await mailerSend.email.send(emailParams);
+    await mailerSend.email.send(emailParams);
+}
+
+export async function sendEmail(
+    senderEmail: string,
+    senderName: string,
+    recipientEmail: string,
+    recipientName: string,
+    subject: string,
+    text: string,
+) {
+    const mailerSendApiKey = process.env.MAILERSEND_KEY;
+    if (!mailerSendApiKey) {
+        throw new Error("No API key set for MailerSend");
+    }
+
+    const mailerSend = new MailerSend({
+        apiKey: mailerSendApiKey,
+    });
+
+    const sentFrom = new Sender(senderEmail, senderName);
+
+    const recipients = [new Recipient(recipientEmail, recipientName)];
+
+    const emailParams = new EmailParams()
+        .setFrom(sentFrom)
+        .setTo(recipients)
+        .setReplyTo(sentFrom)
+        .setSubject(subject)
+        .setText(text);
+
+    await mailerSend.email.send(emailParams);
 }

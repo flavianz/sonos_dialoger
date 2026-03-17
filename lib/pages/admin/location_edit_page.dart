@@ -292,7 +292,11 @@ class _LocationEditPageState extends ConsumerState<LocationEditPage> {
                       if (widget.isCreate) {
                         await FirebaseFirestore.instance
                             .collection("locations")
-                            .add(writeLocation.toMap());
+                            .add({
+                              ...writeLocation.toMap(),
+                              "creation_timestamp":
+                                  FieldValue.serverTimestamp(),
+                            });
                       } else {
                         await FirebaseFirestore.instance
                             .collection("locations")

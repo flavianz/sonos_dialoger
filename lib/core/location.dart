@@ -21,6 +21,8 @@ class Location {
   String? usageRights;
   String? contract;
 
+  DateTime? creationTimestamp;
+
   Location(
     this.id,
     this.name,
@@ -36,8 +38,9 @@ class Location {
     this.notes,
     this.areaOverview,
     this.usageRights,
-    this.contract,
-  );
+    this.contract, {
+    this.creationTimestamp,
+  });
 
   factory Location.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -57,6 +60,7 @@ class Location {
       data["area_overview"] as String?,
       data["usage_rights"] as String?,
       data["contract"] as String?,
+      creationTimestamp: (data["creation_timestamp"] as Timestamp?)?.toDate(),
     );
   }
 

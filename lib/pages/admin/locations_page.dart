@@ -49,16 +49,69 @@ class LocationsPage extends ConsumerWidget {
                                   children: [
                                     Expanded(
                                       flex: 3,
-                                      child: Text(
-                                        location.name +
-                                            (location.space != null
-                                                ? ", ${location.space}"
-                                                : ""),
+                                      child: RichText(
+                                        text: TextSpan(
+                                          style: TextStyle(fontSize: 17),
+                                          children: [
+                                            TextSpan(
+                                              text:
+                                                  location.name +
+                                                  ((location.space != null &&
+                                                          location
+                                                              .space!
+                                                              .isNotEmpty)
+                                                      ? ", ${location.space}"
+                                                      : ""),
+                                            ),
+                                            WidgetSpan(
+                                              child:
+                                                  (location.creationTimestamp !=
+                                                              null &&
+                                                          location.creationTimestamp!
+                                                                  .difference(
+                                                                    DateTime.now(),
+                                                                  )
+                                                                  .inDays <
+                                                              7)
+                                                      ? Container(
+                                                        margin: EdgeInsets.only(
+                                                          left: 4,
+                                                        ),
+                                                        padding:
+                                                            EdgeInsets.symmetric(
+                                                              horizontal: 8,
+                                                              vertical: 3,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color:
+                                                              Theme.of(
+                                                                context,
+                                                              ).primaryColor,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                50,
+                                                              ),
+                                                        ),
+                                                        child: Text(
+                                                          "Neu",
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      )
+                                                      : SizedBox.shrink(),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                     Expanded(
                                       flex: 2,
-                                      child: Text(location.town ?? "-"),
+                                      child: Text(
+                                        location.town ?? "-",
+                                        style: TextStyle(fontSize: 17),
+                                      ),
                                     ),
                                     SizedBox(width: 5),
                                     IconButton(

@@ -62,6 +62,14 @@ class LocationsPage extends ConsumerWidget {
                                                               .isNotEmpty)
                                                       ? ", ${location.space}"
                                                       : ""),
+                                              style: TextStyle(
+                                                color:
+                                                    Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.color ??
+                                                    Colors.black12,
+                                              ),
                                             ),
                                             WidgetSpan(
                                               child:

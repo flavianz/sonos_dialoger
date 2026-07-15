@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonos_dialoger/components/misc.dart';
+import 'package:sonos_dialoger/components/schedule_overview.dart';
 import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 import 'package:sonos_dialoger/components/today_location_info.dart';
 import 'package:sonos_dialoger/providers/firestore_providers/user_providers.dart';
 
 import '../../app.dart';
+import '../../core/user.dart';
 import '../../providers.dart';
 import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
@@ -41,7 +43,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
             tabs: [
               Tab(text: "Kalender", icon: Icon(Icons.calendar_month)),
               Tab(text: "Heutige Infos", icon: Icon(Icons.info_outline)),
-              Tab(text: "Anfragen", icon: Icon(Icons.new_releases_outlined)),
+              Tab(text: "Übersicht", icon: Icon(Icons.list)),
             ],
           ),
           actions: [
@@ -61,7 +63,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
           children: [
             Column(
               children: [
-                SizedBox(height: 15),
+                SizedBox(height: 10),
                 TimespanDateSwitcher(),
                 Divider(color: Theme.of(context).primaryColor),
                 SizedBox(height: 15),
@@ -1011,92 +1013,7 @@ class _AdminSchedulePageState extends ConsumerState<AdminSchedulePage> {
               ],
             ),
             TodayLocationInfo(isAdmin: true),
-            ref
-                .watch(scheduleRequestsProvider)
-                .when(
-                  data:
-                      (scheduleRequestDocs) => Column(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 16, bottom: 4),
-                            child: Row(
-                              children: [
-                                Expanded(child: Text("Datum")),
-                                Expanded(child: Text("Erstellt am")),
-                              ],
-                            ),
-                          ),
-                          Divider(color: Theme.of(context).primaryColor),
-                          Expanded(
-                            child:
-                                scheduleRequestDocs.docs.isEmpty
-                                    ? Center(
-                                      child: Text("Keine Einteilungsanfragen"),
-                                    )
-                                    : ListView(
-                                      children:
-                                          scheduleRequestDocs.docs.map((
-                                            scheduleRequestDoc,
-                                          ) {
-                                            final scheduleRequestData =
-                                                scheduleRequestDoc.data();
-                                            final date =
-                                                ((scheduleRequestData["date"] ??
-                                                            Timestamp.now())
-                                                        as Timestamp)
-                                                    .toDate();
-                                            final creationTimestamp =
-                                                ((scheduleRequestData["creation_timestamp"] ??
-                                                            Timestamp.now())
-                                                        as Timestamp)
-                                                    .toDate();
-                                            return Column(
-                                              children: [
-                                                Tappable(
-                                                  onTap: () {
-                                                    context.push(
-                                                      "/admin/schedule-review/${scheduleRequestDoc.id}",
-                                                    );
-                                                  },
-                                                  child: Padding(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          vertical: 5,
-                                                        ),
-                                                    child: Row(
-                                                      children: [
-                                                        Expanded(
-                                                          child: Text(
-                                                            date.toFormattedDateString(),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          child: Text(
-                                                            creationTimestamp
-                                                                .toFormattedDateTimeString(),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Divider(),
-                                              ],
-                                            );
-                                          }).toList(),
-                                    ),
-                          ),
-                        ],
-                      ),
-                  error: (object, stackTrace) {
-                    print(object);
-                    print(stackTrace);
-                    return Center(
-                      child: Text("Ups, hier hat etwas nicht geklappt"),
-                    );
-                  },
-                  loading: () => Center(child: CircularProgressIndicator()),
-                ),
+            ScheduleOverview(),
           ],
         ),
       ),

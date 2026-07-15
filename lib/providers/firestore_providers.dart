@@ -73,7 +73,6 @@ final locationScheduleProvider = StreamProvider.family((
   ref,
   String locationId,
 ) {
-  print(locationId);
   ref.watch(userProvider);
   return FirebaseFirestore.instance
       .collection("schedules")
@@ -145,6 +144,26 @@ final schedulesProvider = StreamProvider((ref) {
   } else {
     endDate = DateTime(scheduleStartDate.year, scheduleStartDate.month + 1);
   }
+
+  return FirebaseFirestore.instance
+      .collection("schedules")
+      .where(
+        Filter.and(
+          Filter(
+            "date",
+            isGreaterThanOrEqualTo: Timestamp.fromDate(scheduleStartDate),
+          ),
+          Filter("date", isLessThan: Timestamp.fromDate(endDate)),
+        ),
+      )
+      .snapshots();
+});
+
+final yearSchedulesProvider = StreamProvider((ref) {
+  ref.watch(userProvider);
+  final scheduleStartDate = DateTime(ref.watch(scheduleStartDateProvider).year);
+
+  final DateTime endDate = DateTime(scheduleStartDate.year + 1);
 
   return FirebaseFirestore.instance
       .collection("schedules")

@@ -34,7 +34,7 @@ class TodayLocationInfo extends ConsumerWidget {
                 )
                 .toList();
         if (!isAdmin && assignments.isEmpty) {
-          return Center(child: Text("Heute bist du nicht eingeteilt 3"));
+          return Center(child: Text("Heute bist du nicht eingeteilt"));
         }
         final myAssignment =
             (scheduleData["personnel"] as Map<String, dynamic>? ?? {})

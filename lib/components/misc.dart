@@ -118,13 +118,15 @@ extension DateTimeFormatExtension on DateTime {
   }
 
   int get weekOfYear {
-    final startOfYear = DateTime(year, 1, 1);
-    int weekNumber =
-        ((difference(startOfYear).inDays + startOfYear.weekday) / 7).ceil();
-    if (weekNumber > 52) {
-      weekNumber = weekNumber % 52;
-    }
-    return weekNumber;
+    final date = DateTime.utc(year, month, day);
+
+    final thursday = DateTime.utc(year, month, day + 4 - date.weekday);
+
+    final firstDayOfYear = DateTime.utc(thursday.year, 1, 1);
+
+    final days = thursday.difference(firstDayOfYear).inDays;
+
+    return 1 + (days ~/ 7);
   }
 }
 

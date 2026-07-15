@@ -259,8 +259,8 @@ class LocationDetailsPage extends ConsumerWidget {
                           start: startDate.toDate(),
                           end: lastDayOfSeries.toDate(),
                         );
-                        startDate = null;
-                        lastDayOfSeries = null;
+                        startDate = currentDate;
+                        lastDayOfSeries = currentDate;
                       }
                     }
                     if (startDate != null && lastDayOfSeries != null) {

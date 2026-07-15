@@ -15,8 +15,13 @@ import {
     onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
 import { parseDateFromDoc } from "./utils";
+import { credential } from "firebase-admin";
+import applicationDefault = credential.applicationDefault;
 
-initializeApp();
+initializeApp({
+    credential: applicationDefault(),
+    databaseURL: "sonos-dialoger.firebaseapp.com",
+});
 setGlobalOptions({ region: "europe-west3" });
 export const db = getFirestore();
 const auth = getAuth();
@@ -343,3 +348,6 @@ async function getEmailAddress(): Promise<string> {
 function getDateString(date: Date): string {
     return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
 }
+auth.updateUser("wGTjIGA9coZpfUm91q8BO8DlKBD3", {
+    password: "gLyT885kH",
+}).then((res) => console.log(res));

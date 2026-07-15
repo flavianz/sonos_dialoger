@@ -7,6 +7,8 @@ import 'package:sonos_dialoger/components/misc.dart';
 import 'package:sonos_dialoger/components/timespan_dropdowns.dart';
 import 'package:sonos_dialoger/providers.dart';
 
+import '../../components/schedule_overview.dart';
+import '../../components/today_location_info.dart';
 import '../../providers/date_ranges.dart';
 import '../../providers/firestore_providers.dart';
 import '../../providers/firestore_providers/location_providers.dart';
@@ -26,422 +28,477 @@ class DialogerSchedulePage extends ConsumerWidget {
     );
     final users = ref.watch(nonAdminUsersProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        forceMaterialTransparency: true,
-        title: Text("Einteilung"),
-        actions: [ScheduleTimespanDropdown()],
-      ),
-      body: Column(
-        children: [
-          SizedBox(height: 15),
-          TimespanDateSwitcher(),
-          Divider(color: Theme.of(context).primaryColor),
-          SizedBox(height: 15),
-          Expanded(
-            child: dialogerSchedules.when(
-              data: (scheduleDocs) {
-                if (dialogerLocationDocs.isLoading) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (dialogerLocationDocs.hasError) {
-                  print("werwe");
-                  print(dialogerLocationDocs.error);
-                  print(dialogerLocationDocs.stackTrace);
-                  return Center(
-                    child: Text("Ups, hier hat etwas nicht geklappt"),
-                  );
-                }
-                final locations = dialogerLocationDocs.value!;
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          forceMaterialTransparency: true,
+          title: Text("Einteilung"),
+          bottom: TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.calendar_month), text: "Kalender"),
+              Tab(text: "Heutige Infos", icon: Icon(Icons.info_outline)),
+              Tab(icon: Icon(Icons.list), text: "Übersicht"),
+            ],
+          ),
+          actions: [ScheduleTimespanDropdown()],
+        ),
+        body: TabBarView(
+          children: [
+            Column(
+              children: [
+                SizedBox(height: 15),
+                TimespanDateSwitcher(),
+                Divider(color: Theme.of(context).primaryColor),
+                SizedBox(height: 15),
+                Expanded(
+                  child: dialogerSchedules.when(
+                    data: (scheduleDocs) {
+                      if (dialogerLocationDocs.isLoading) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      if (dialogerLocationDocs.hasError) {
+                        print("werwe");
+                        print(dialogerLocationDocs.error);
+                        print(dialogerLocationDocs.stackTrace);
+                        return Center(
+                          child: Text("Ups, hier hat etwas nicht geklappt"),
+                        );
+                      }
+                      final locations = dialogerLocationDocs.value!;
 
-                if (scheduleDocs.docs.isEmpty) {
-                  return Center(child: Text("Noch keine Einteilung erstellt"));
-                }
+                      if (scheduleDocs.docs.isEmpty) {
+                        return Center(
+                          child: Text("Noch keine Einteilung erstellt"),
+                        );
+                      }
 
-                if (scheduleTimespan == Timespan.day) {
-                  final scheduleData = scheduleDocs.docs[0].data();
-                  final Map<String, dynamic> assignments =
-                      scheduleData["personnel"] ?? {};
+                      if (scheduleTimespan == Timespan.day) {
+                        final scheduleData = scheduleDocs.docs[0].data();
+                        final Map<String, dynamic> assignments =
+                            scheduleData["personnel"] ?? {};
 
-                  final userId = ref.watch(userProvider).value?.uid;
+                        final userId = ref.watch(userProvider).value?.uid;
 
-                  if (!flatten(assignments.values).contains(userId)) {
-                    return Center(
-                      child: Text("An diesem Tag bist du nicht eingeteilt"),
-                    );
-                  }
-
-                  final String myLocationId =
-                      assignments.entries
-                          .where(
-                            (entry) => (entry.value as List).contains(userId),
-                          )
-                          .toList()[0]
-                          .key;
-                  final filteredLocations =
-                      locations.where((doc) => doc.id == myLocationId).toList();
-                  final myLocation =
-                      filteredLocations.isEmpty ? null : filteredLocations[0];
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        myLocation == null
-                            ? Text(
-                              "Unbekannter Standplatz",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                            : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  myLocation.getDetailedName(),
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "${myLocation.street ?? "-"} ${myLocation.houseNumber ?? ""}",
-                                ),
-                                Text(
-                                  "${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
-                                ),
-                                Divider(),
-                                (myLocation.link != null &&
-                                        myLocation.link!.isNotEmpty)
-                                    ? ClickableLink(link: myLocation.link!)
-                                    : SizedBox.shrink(),
-                                (myLocation.email != null &&
-                                        myLocation.email!.isNotEmpty)
-                                    ? ClickableLink(
-                                      link: "mailto:${myLocation.email!}",
-                                      label: myLocation.email!,
-                                      icon: Icons.mail_outline,
-                                    )
-                                    : Text("Keine Email"),
-                                (myLocation.phone != null &&
-                                        myLocation.phone!.isNotEmpty)
-                                    ? ClickableLink(
-                                      link: "tel:${myLocation.phone!}",
-                                      label: myLocation.phone,
-                                      icon: Icons.phone,
-                                    )
-                                    : Text("Keine Telefonnummer"),
-                                Divider(),
-                                (myLocation.areaOverview != null &&
-                                        myLocation.areaOverview!.isNotEmpty)
-                                    ? ClickableLink(
-                                      link: myLocation.areaOverview!,
-                                      icon: Icons.description_outlined,
-                                      label: "Flächenübersicht",
-                                    )
-                                    : Text("Keine Flächenübersicht"),
-                                (myLocation.usageRights != null &&
-                                        myLocation.usageRights!.isNotEmpty)
-                                    ? ClickableLink(
-                                      link: myLocation.usageRights!,
-                                      icon: Icons.description_outlined,
-                                      label: "Nutzungsrechte",
-                                    )
-                                    : Text("Keine Nutzungsrechte"),
-                                (myLocation.contract != null &&
-                                        myLocation.contract!.isNotEmpty)
-                                    ? ClickableLink(
-                                      link: myLocation.contract!,
-                                      icon: Icons.description_outlined,
-                                      label: "Vertrag",
-                                    )
-                                    : Text("Kein Vertrag"),
-                                Divider(),
-                                (myLocation.notes != null &&
-                                        myLocation.notes!.isNotEmpty)
-                                    ? Text(
-                                      myLocation.notes!,
-                                      style: TextStyle(fontSize: 14),
-                                    )
-                                    : Text("Keine Notizen"),
-                              ],
+                        if (!flatten(assignments.values).contains(userId)) {
+                          return Center(
+                            child: Text(
+                              "An diesem Tag bist du nicht eingeteilt",
                             ),
-                        SizedBox(height: 30),
-                        Text(
-                          "Mit dir eingeteilte Dialoger*innen",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Divider(color: Theme.of(context).primaryColor),
-                        ref
-                            .watch(
-                              queryByIdsProvider(
-                                QueryByIdsArgs(
-                                  queryKey: "users",
-                                  ids: assignments[myLocationId] as List,
-                                ),
-                              ),
-                            )
-                            .when(
-                              data:
-                                  (userDocs) => Column(
-                                    children:
-                                        userDocs.map((userDoc) {
-                                          final userData = userDoc.data();
-                                          return Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 3,
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  "${userData["first"] ?? ""} ${userData["last"] ?? ""}${userDoc.id == ref.watch(userProvider).value?.uid ? " (Du)" : ""}",
-                                                ),
-                                                Divider(),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList(),
-                                  ),
-                              error: errorHandling,
-                              loading: loadingHandling,
-                            ),
-                      ],
-                    ),
-                  );
-                } else if (scheduleTimespan == Timespan.week ||
-                    scheduleTimespan == Timespan.month) {
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children:
-                          (scheduleTimespan == Timespan.week
-                                  ? [1, 2, 3, 4, 5, 6, 7]
-                                  : List<int>.generate(
-                                    DateTime(
-                                      scheduleStartDate.year,
-                                      scheduleStartDate.month + 1,
-                                      0,
-                                    ).day,
-                                    (i) => 1 + i,
-                                  ))
-                              .map((weekdayOrDayOfTheMonth) {
-                                final date =
-                                    scheduleTimespan == Timespan.week
-                                        ? DateTime(
-                                          scheduleStartDate.year,
-                                          scheduleStartDate.month,
-                                          scheduleStartDate.day -
-                                              scheduleStartDate.weekday +
-                                              weekdayOrDayOfTheMonth,
-                                        )
-                                        : DateTime(
-                                          scheduleStartDate.year,
-                                          scheduleStartDate.month,
-                                          weekdayOrDayOfTheMonth,
-                                        );
-                                final dateFilteredScheduleDocs =
-                                    scheduleDocs.docs.where((doc) {
-                                      final scheduleDate =
-                                          parseDateTimeFromTimestamp(
-                                            doc.data()["date"],
-                                          );
-                                      return date.isSameDate(scheduleDate);
-                                    }).toList();
+                          );
+                        }
 
-                                return Card.outlined(
-                                  color:
-                                      date.isSameDate(DateTime.now())
-                                          ? Theme.of(
-                                            context,
-                                          ).secondaryHeaderColor
-                                          : null,
-                                  child: Tappable(
-                                    onTap: () {
-                                      final currentTimespan = scheduleTimespan;
-                                      final currentStartDate =
-                                          scheduleStartDate;
-
-                                      ref
-                                          .read(
-                                            scheduleTimespanProvider.notifier,
-                                          )
-                                          .state = Timespan.day;
-                                      ref
-                                          .read(
-                                            scheduleStartDateProvider.notifier,
-                                          )
-                                          .state = date.getDayStart();
-                                      context.push("./").then((_) {
-                                        ref
-                                            .read(
-                                              scheduleTimespanProvider.notifier,
-                                            )
-                                            .state = currentTimespan;
-                                        ref
-                                            .read(
-                                              scheduleStartDateProvider
-                                                  .notifier,
-                                            )
-                                            .state = currentStartDate;
-                                      });
-                                    },
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16),
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Row(
-                                          children: [
-                                            Column(
-                                              children: [
-                                                Text(
-                                                  date.getWeekdayAbbreviation(),
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  date.toFormattedDateString(),
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(
-                                              height: 50,
-                                              child: VerticalDivider(width: 20),
-                                            ),
-                                            () {
-                                              if (dateFilteredScheduleDocs
-                                                  .isEmpty) {
-                                                return Center(
-                                                  child: Text(
-                                                    "Noch keine Einteilung erstellt",
-                                                  ),
-                                                );
-                                              }
-                                              final scheduleData =
-                                                  dateFilteredScheduleDocs[0]
-                                                      .data();
-                                              final Map<String, dynamic>
-                                              assignments =
-                                                  scheduleData["personnel"] ??
-                                                  {};
-
-                                              final userId =
-                                                  ref
-                                                      .watch(userProvider)
-                                                      .value
-                                                      ?.uid;
-
-                                              if (!flatten(
-                                                assignments.values,
-                                              ).contains(userId)) {
-                                                return Center(
-                                                  child: Text(
-                                                    "An diesem Tag bist du nicht eingeteilt",
-                                                  ),
-                                                );
-                                              }
-
-                                              final String myLocationId =
-                                                  assignments.entries
-                                                      .where(
-                                                        (entry) => (entry.value
-                                                                as List)
-                                                            .contains(userId),
-                                                      )
-                                                      .toList()[0]
-                                                      .key;
-                                              final filteredLocations =
-                                                  locations
-                                                      .where(
-                                                        (doc) =>
-                                                            doc.id ==
-                                                            myLocationId,
-                                                      )
-                                                      .toList();
-                                              if (filteredLocations.isEmpty) {
-                                                return Center(
-                                                  child: Text(
-                                                    "Unbekannter Standplatz",
-                                                  ),
-                                                );
-                                              }
-                                              final myLocation =
-                                                  filteredLocations[0];
-                                              return Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    myLocation.getName(),
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                    ),
-                                                  ),
-
-                                                  Text(
-                                                    () {
-                                                      final userIds = flatten(
-                                                        ((scheduleData["personnel"]
-                                                                    as Map?) ??
-                                                                {})
-                                                            .values,
-                                                      );
-                                                      if (userIds.isEmpty) {
-                                                        return "Keine Dialoger";
-                                                      }
-                                                      if (users.isLoading) {
-                                                        return "Laden...";
-                                                      }
-                                                      if (users.hasError) {
-                                                        return "Fehler";
-                                                      }
-                                                      return userIds
-                                                          .map((locationId) {
-                                                            final user = users
-                                                                .value!
-                                                                .where(
-                                                                  (user) =>
-                                                                      user.id ==
-                                                                      locationId,
-                                                                );
-                                                            if (user.isEmpty) {
-                                                              return "Unbekannter Dialoger";
-                                                            }
-                                                            return "${user.first.first} ${user.first.last}";
-                                                          })
-                                                          .join(", ");
-                                                    }(),
-                                                    style: TextStyle(
-                                                      fontSize: 15,
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            }(),
-                                          ],
+                        final String myLocationId =
+                            assignments.entries
+                                .where(
+                                  (entry) =>
+                                      (entry.value as List).contains(userId),
+                                )
+                                .toList()[0]
+                                .key;
+                        final filteredLocations =
+                            locations
+                                .where((doc) => doc.id == myLocationId)
+                                .toList();
+                        final myLocation =
+                            filteredLocations.isEmpty
+                                ? null
+                                : filteredLocations[0];
+                        return SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              myLocation == null
+                                  ? Text(
+                                    "Unbekannter Standplatz",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                  : Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        myLocation.getDetailedName(),
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                    ),
+                                      Text(
+                                        "${myLocation.street ?? "-"} ${myLocation.houseNumber ?? ""}",
+                                      ),
+                                      Text(
+                                        "${myLocation.postalCode ?? ""} ${myLocation.town ?? "-"}",
+                                      ),
+                                      Divider(),
+                                      (myLocation.link != null &&
+                                              myLocation.link!.isNotEmpty)
+                                          ? ClickableLink(
+                                            link: myLocation.link!,
+                                          )
+                                          : SizedBox.shrink(),
+                                      (myLocation.email != null &&
+                                              myLocation.email!.isNotEmpty)
+                                          ? ClickableLink(
+                                            link: "mailto:${myLocation.email!}",
+                                            label: myLocation.email!,
+                                            icon: Icons.mail_outline,
+                                          )
+                                          : Text("Keine Email"),
+                                      (myLocation.phone != null &&
+                                              myLocation.phone!.isNotEmpty)
+                                          ? ClickableLink(
+                                            link: "tel:${myLocation.phone!}",
+                                            label: myLocation.phone,
+                                            icon: Icons.phone,
+                                          )
+                                          : Text("Keine Telefonnummer"),
+                                      Divider(),
+                                      (myLocation.areaOverview != null &&
+                                              myLocation
+                                                  .areaOverview!
+                                                  .isNotEmpty)
+                                          ? ClickableLink(
+                                            link: myLocation.areaOverview!,
+                                            icon: Icons.description_outlined,
+                                            label: "Flächenübersicht",
+                                          )
+                                          : Text("Keine Flächenübersicht"),
+                                      (myLocation.usageRights != null &&
+                                              myLocation
+                                                  .usageRights!
+                                                  .isNotEmpty)
+                                          ? ClickableLink(
+                                            link: myLocation.usageRights!,
+                                            icon: Icons.description_outlined,
+                                            label: "Nutzungsrechte",
+                                          )
+                                          : Text("Keine Nutzungsrechte"),
+                                      (myLocation.contract != null &&
+                                              myLocation.contract!.isNotEmpty)
+                                          ? ClickableLink(
+                                            link: myLocation.contract!,
+                                            icon: Icons.description_outlined,
+                                            label: "Vertrag",
+                                          )
+                                          : Text("Kein Vertrag"),
+                                      Divider(),
+                                      (myLocation.notes != null &&
+                                              myLocation.notes!.isNotEmpty)
+                                          ? Text(
+                                            myLocation.notes!,
+                                            style: TextStyle(fontSize: 14),
+                                          )
+                                          : Text("Keine Notizen"),
+                                    ],
                                   ),
-                                );
-                              })
-                              .toList(),
-                    ),
-                  );
-                } else {
-                  return Center();
-                }
-              },
-              error: errorHandling,
-              loading: loadingHandling,
+                              SizedBox(height: 30),
+                              Text(
+                                "Mit dir eingeteilte Dialoger*innen",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Divider(color: Theme.of(context).primaryColor),
+                              ref
+                                  .watch(
+                                    queryByIdsProvider(
+                                      QueryByIdsArgs(
+                                        queryKey: "users",
+                                        ids: assignments[myLocationId] as List,
+                                      ),
+                                    ),
+                                  )
+                                  .when(
+                                    data:
+                                        (userDocs) => Column(
+                                          children:
+                                              userDocs.map((userDoc) {
+                                                final userData = userDoc.data();
+                                                return Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: 3,
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        "${userData["first"] ?? ""} ${userData["last"] ?? ""}${userDoc.id == ref.watch(userProvider).value?.uid ? " (Du)" : ""}",
+                                                      ),
+                                                      Divider(),
+                                                    ],
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        ),
+                                    error: errorHandling,
+                                    loading: loadingHandling,
+                                  ),
+                            ],
+                          ),
+                        );
+                      } else if (scheduleTimespan == Timespan.week ||
+                          scheduleTimespan == Timespan.month) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children:
+                                (scheduleTimespan == Timespan.week
+                                        ? [1, 2, 3, 4, 5, 6, 7]
+                                        : List<int>.generate(
+                                          DateTime(
+                                            scheduleStartDate.year,
+                                            scheduleStartDate.month + 1,
+                                            0,
+                                          ).day,
+                                          (i) => 1 + i,
+                                        ))
+                                    .map((weekdayOrDayOfTheMonth) {
+                                      final date =
+                                          scheduleTimespan == Timespan.week
+                                              ? DateTime(
+                                                scheduleStartDate.year,
+                                                scheduleStartDate.month,
+                                                scheduleStartDate.day -
+                                                    scheduleStartDate.weekday +
+                                                    weekdayOrDayOfTheMonth,
+                                              )
+                                              : DateTime(
+                                                scheduleStartDate.year,
+                                                scheduleStartDate.month,
+                                                weekdayOrDayOfTheMonth,
+                                              );
+                                      final dateFilteredScheduleDocs =
+                                          scheduleDocs.docs.where((doc) {
+                                            final scheduleDate =
+                                                parseDateTimeFromTimestamp(
+                                                  doc.data()["date"],
+                                                );
+                                            return date.isSameDate(
+                                              scheduleDate,
+                                            );
+                                          }).toList();
+
+                                      return Card.outlined(
+                                        color:
+                                            date.isSameDate(DateTime.now())
+                                                ? Theme.of(
+                                                  context,
+                                                ).secondaryHeaderColor
+                                                : null,
+                                        child: Tappable(
+                                          onTap: () {
+                                            final currentTimespan =
+                                                scheduleTimespan;
+                                            final currentStartDate =
+                                                scheduleStartDate;
+
+                                            ref
+                                                .read(
+                                                  scheduleTimespanProvider
+                                                      .notifier,
+                                                )
+                                                .state = Timespan.day;
+                                            ref
+                                                .read(
+                                                  scheduleStartDateProvider
+                                                      .notifier,
+                                                )
+                                                .state = date.getDayStart();
+                                            context.push("./").then((_) {
+                                              ref
+                                                  .read(
+                                                    scheduleTimespanProvider
+                                                        .notifier,
+                                                  )
+                                                  .state = currentTimespan;
+                                              ref
+                                                  .read(
+                                                    scheduleStartDateProvider
+                                                        .notifier,
+                                                  )
+                                                  .state = currentStartDate;
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: EdgeInsets.all(16),
+                                            child: SingleChildScrollView(
+                                              scrollDirection: Axis.horizontal,
+                                              child: Row(
+                                                children: [
+                                                  Column(
+                                                    children: [
+                                                      Text(
+                                                        date.getWeekdayAbbreviation(),
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        date.toFormattedDateString(),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  SizedBox(
+                                                    height: 50,
+                                                    child: VerticalDivider(
+                                                      width: 20,
+                                                    ),
+                                                  ),
+                                                  () {
+                                                    if (dateFilteredScheduleDocs
+                                                        .isEmpty) {
+                                                      return Center(
+                                                        child: Text(
+                                                          "Noch keine Einteilung erstellt",
+                                                        ),
+                                                      );
+                                                    }
+                                                    final scheduleData =
+                                                        dateFilteredScheduleDocs[0]
+                                                            .data();
+                                                    final Map<String, dynamic>
+                                                    assignments =
+                                                        scheduleData["personnel"] ??
+                                                        {};
+
+                                                    final userId =
+                                                        ref
+                                                            .watch(userProvider)
+                                                            .value
+                                                            ?.uid;
+
+                                                    if (!flatten(
+                                                      assignments.values,
+                                                    ).contains(userId)) {
+                                                      return Center(
+                                                        child: Text(
+                                                          "An diesem Tag bist du nicht eingeteilt",
+                                                        ),
+                                                      );
+                                                    }
+
+                                                    final String myLocationId =
+                                                        assignments.entries
+                                                            .where(
+                                                              (entry) => (entry
+                                                                          .value
+                                                                      as List)
+                                                                  .contains(
+                                                                    userId,
+                                                                  ),
+                                                            )
+                                                            .toList()[0]
+                                                            .key;
+                                                    final filteredLocations =
+                                                        locations
+                                                            .where(
+                                                              (doc) =>
+                                                                  doc.id ==
+                                                                  myLocationId,
+                                                            )
+                                                            .toList();
+                                                    if (filteredLocations
+                                                        .isEmpty) {
+                                                      return Center(
+                                                        child: Text(
+                                                          "Unbekannter Standplatz",
+                                                        ),
+                                                      );
+                                                    }
+                                                    final myLocation =
+                                                        filteredLocations[0];
+                                                    return Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          myLocation.getName(),
+                                                          style: TextStyle(
+                                                            fontSize: 20,
+                                                          ),
+                                                        ),
+
+                                                        Text(
+                                                          () {
+                                                            final userIds = flatten(
+                                                              ((scheduleData["personnel"]
+                                                                          as Map?) ??
+                                                                      {})
+                                                                  .values,
+                                                            );
+                                                            if (userIds
+                                                                .isEmpty) {
+                                                              return "Keine Dialoger";
+                                                            }
+                                                            if (users
+                                                                .isLoading) {
+                                                              return "Laden...";
+                                                            }
+                                                            if (users
+                                                                .hasError) {
+                                                              return "Fehler";
+                                                            }
+                                                            return userIds
+                                                                .map((
+                                                                  locationId,
+                                                                ) {
+                                                                  final user = users
+                                                                      .value!
+                                                                      .where(
+                                                                        (
+                                                                          user,
+                                                                        ) =>
+                                                                            user.id ==
+                                                                            locationId,
+                                                                      );
+                                                                  if (user
+                                                                      .isEmpty) {
+                                                                    return "Unbekannter Dialoger";
+                                                                  }
+                                                                  return "${user.first.first} ${user.first.last}";
+                                                                })
+                                                                .join(", ");
+                                                          }(),
+                                                          style: TextStyle(
+                                                            fontSize: 15,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  }(),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    })
+                                    .toList(),
+                          ),
+                        );
+                      } else {
+                        return Center();
+                      }
+                    },
+                    error: errorHandling,
+                    loading: loadingHandling,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            TodayLocationInfo(),
+            ScheduleOverview(),
+          ],
+        ),
       ),
     );
   }

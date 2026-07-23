@@ -204,7 +204,7 @@ class _CreateSchedulePageState extends ConsumerState<CreateSchedulePage> {
                           while (!tempDate.isSameDate(endDate!.addDays(1)) &&
                               !tempDate.isAfter(endDate!.addDays(2)) &&
                               count <
-                                  9 /* limit a bit too generous on purpose to avoid off by one errors*/ ) {
+                                  16 /* limit a bit too generous on purpose to avoid off by one errors*/ ) {
                             batch.set(
                               FirebaseFirestore.instance
                                   .collection("schedules")

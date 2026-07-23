@@ -41,10 +41,13 @@ class ScheduleOverview extends ConsumerWidget {
                 continue;
               }
               if (currentDate
-                      .toDate()
-                      .difference(lastDayOfSeries.toDate())
-                      .inDays ==
-                  1) {
+                          .toDate()
+                          .difference(lastDayOfSeries.toDate())
+                          .inDays ==
+                      1 &&
+                  locationIds.first ==
+                      (schedule["confirmed_locations"] as List<dynamic>?)
+                          ?.first) {
                 lastDayOfSeries = currentDate;
               } else {
                 series[locationIds] = DateTimeRange(

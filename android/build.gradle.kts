@@ -13,6 +13,13 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 subprojects {
+    afterEvaluate {
+        if (name == "desktop_webview_auth") {
+            extensions.findByName("android")?.withGroovyBuilder {
+                "compileSdkVersion"(36)
+            }
+        }
+    }
     project.evaluationDependsOn(":app")
 }
 

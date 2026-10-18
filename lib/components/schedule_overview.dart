@@ -45,6 +45,7 @@ class ScheduleOverview extends ConsumerWidget {
                           .difference(lastDayOfSeries.toDate())
                           .inDays <=
                       1 &&
+                  locationIds.isNotEmpty &&
                   locationIds.first ==
                       (schedule["confirmed_locations"] as List<dynamic>?)
                           ?.first) {
